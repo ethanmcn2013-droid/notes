@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signal Notes - capture clarity</title>
+    <meta
+      name="description"
+      content="Signal Notes is capture clarity: fast notes, clean recall, and deliberate promotion into Signal Tasks."
+    />
+    <meta property="og:title" content="Signal Notes - capture clarity" />
+    <meta
+      property="og:description"
+      content="Capture in three seconds. Find it later. Promote it when it matters."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://notes.signalstudio.ie" />
+    <meta name="theme-color" content="#f7f8f2" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="suitebar" aria-label="Signal Studio suite">
+      <a href="https://signalstudio.ie">signal studio<span>.</span></a>
+      <nav>
+        <a href="https://tasks.signalstudio.ie">tasks</a>
+        <a href="https://roadmap.signalstudio.ie">roadmap</a>
+        <a href="https://analytics.signalstudio.ie">analytics</a>
+        <strong>notes</strong>
+      </nav>
+    </header>
+
+    <main class="shell">
+      <section class="notebook" aria-label="Signal Notes notebook">
+        <div class="notebook-top">
+          <a class="wordmark" href="/" aria-label="Signal Notes home">
+            notes<span>.</span>
+          </a>
+          <label class="search">
+            <span>Search</span>
+            <input id="search" type="search" autocomplete="off" spellcheck="false" />
+          </label>
+        </div>
+
+        <label class="capture">
+          <span class="sr-only">Capture a note</span>
+          <textarea
+            id="capture"
+            autofocus
+            rows="3"
+            placeholder="What needs writing down?"
+          ></textarea>
+        </label>
+
+        <div class="stream-head">
+          <span>Stream</span>
+          <output id="count" aria-live="polite"></output>
+        </div>
+
+        <ol id="stream" class="stream" aria-label="Recent notes"></ol>
+
+        <article id="open-note" class="open-note" hidden>
+          <div>
+            <span id="open-time"></span>
+            <button id="promote" type="button" aria-label="Promote note to Signal Tasks">
+              Task
+            </button>
+          </div>
+          <p id="open-body"></p>
+        </article>
+      </section>
+
+      <aside class="product">
+        <p class="eyebrow">Signal Notes</p>
+        <h1>Capture clarity.</h1>
+        <p class="promise">Capture in three seconds. Find it later. Promote it when it matters.</p>
+        <dl>
+          <div>
+            <dt>Status</dt>
+            <dd>Private build</dd>
+          </div>
+          <div>
+            <dt>Category</dt>
+            <dd>Operational clarity software</dd>
+          </div>
+          <div>
+            <dt>Contact</dt>
+            <dd><a href="mailto:hello@signalstudio.ie">hello@signalstudio.ie</a></dd>
+          </div>
+        </dl>
+      </aside>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
