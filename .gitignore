@@ -1,1 +1,22 @@
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Dependencies
+node_modules/
+
+# Build artefacts
+.swc/
+
+# Local env
+.env.local
+.env*.local
+
+# Vercel
 .vercel
+
+# Editor
+.DS_Store
+*.log
