@@ -9,7 +9,7 @@ export default function AppLayout({
       <header className="suitebar" aria-label="Signal Notes notebook chrome">
         <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
           <span className="word">notes</span>
-          <span className="dot">.</span>
+          <span className="dot" aria-hidden />
         </Link>
         <nav className="flex items-center gap-4">
           <a

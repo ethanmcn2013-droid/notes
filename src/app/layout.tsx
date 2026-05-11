@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+// Geist is the suite-wide wordmark font per the 2026-05-11 brand guide.
+// Inter remains the Notes product surface font per the locked aesthetic.
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
   display: "swap",
 });
 
@@ -43,7 +51,7 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="en" className={inter.variable}>
+      <html lang="en" className={`${inter.variable} ${geist.variable}`}>
         <body className="min-h-full">{children}</body>
       </html>
     </ClerkProvider>

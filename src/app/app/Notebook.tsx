@@ -220,7 +220,8 @@ export function Notebook({ initialNotes }: NotebookProps) {
       <section className="notebook" aria-label="Signal Notes notebook">
         <div className="notebook-top">
           <a href="/" className="wordmark" aria-label="Signal Notes home">
-            notes<span>.</span>
+            <span className="word">notes</span>
+            <span className="dot" aria-hidden />
           </a>
           <label className="search">
             <span>Search</span>
