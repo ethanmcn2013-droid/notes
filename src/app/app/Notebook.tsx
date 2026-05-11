@@ -61,8 +61,11 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [railOpen, setRailOpen] = useState(false);
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
+  const searchRef = useRef<HTMLInputElement | null>(null);
   const tickRef = useRef(0);
   const [, forceTick] = useState(0);
 
@@ -91,6 +94,47 @@ export function Notebook({ initialNotes }: NotebookProps) {
     }, 60_000);
     return () => window.clearInterval(id);
   }, []);
+
+  // ⌘K / Ctrl+K toggles the search rail. Universal pattern — no jargon.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setRailOpen((open) => {
+          const next = !open;
+          if (next) {
+            // Defer to next tick so the input is in the DOM
+            window.requestAnimationFrame(() => searchRef.current?.focus());
+          }
+          return next;
+        });
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  const filteredNotes = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return notes;
+    return notes.filter((n) => n.body.toLowerCase().includes(q));
+  }, [notes, query]);
+
+  const closeRail = useCallback(() => {
+    setQuery("");
+    setRailOpen(false);
+    captureRef.current?.focus();
+  }, []);
+
+  const onSearchKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeRail();
+      }
+    },
+    [closeRail]
+  );
 
   const commit = useCallback(() => {
     const body = draft.trim();
@@ -162,6 +206,83 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const openNote = notes.find((n) => n.id === openId) ?? null;
 
   return (
+    <>
+      {/* ── Search rail (PRODUCT.md §4 — collapsible, starts collapsed) ── */}
+      <aside
+        aria-label="Search notes"
+        className="fixed left-0 top-[42px] z-10 flex flex-col border-r"
+        style={{
+          height: "calc(100vh - 42px)",
+          width: railOpen ? 280 : 36,
+          borderColor: "var(--color-line)",
+          background: "var(--color-bg)",
+          transition: "width 220ms cubic-bezier(0.25, 1, 0.5, 1)",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setRailOpen((open) => {
+              const next = !open;
+              if (next) window.requestAnimationFrame(() => searchRef.current?.focus());
+              return next;
+            });
+          }}
+          aria-label={railOpen ? "Close search" : "Open search"}
+          aria-expanded={railOpen}
+          className="flex h-10 w-9 shrink-0 items-center justify-center"
+          style={{ color: "var(--color-ink-faint)" }}
+          title={railOpen ? "Close (Esc)" : "Search (⌘K)"}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
+            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.4" />
+            <path d="m11 11 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        {railOpen && (
+          <div className="flex flex-1 flex-col px-4 pt-2 pb-5">
+            <label className="sr-only" htmlFor="search">
+              Search notes
+            </label>
+            <input
+              id="search"
+              ref={searchRef}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={onSearchKeyDown}
+              placeholder="Search your notes"
+              spellCheck={false}
+              autoComplete="off"
+              className="w-full border-0 bg-transparent p-0 text-[15px] outline-0 placeholder:opacity-60"
+              style={{ color: "var(--color-ink)", caretColor: "var(--color-accent)" }}
+            />
+            <p
+              className="mt-3 font-mono text-[10px] tracking-wide"
+              style={{ color: "var(--color-ink-faint)" }}
+            >
+              {query.trim()
+                ? `${filteredNotes.length} ${filteredNotes.length === 1 ? "match" : "matches"}`
+                : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
+            </p>
+            <p
+              className="mt-auto font-mono text-[10px] tracking-wide"
+              style={{ color: "var(--color-ink-faint)" }}
+            >
+              Esc closes · ⌘K toggles
+            </p>
+          </div>
+        )}
+      </aside>
+
     <main
       className="mx-auto flex max-w-[760px] flex-col px-7 pt-14 pb-28"
       style={{ minHeight: "calc(100vh - 42px)" }}
@@ -213,7 +334,9 @@ export function Notebook({ initialNotes }: NotebookProps) {
           className="font-mono text-[11px] tracking-wide"
           style={{ color: "var(--color-ink-faint)" }}
         >
-          {notes.length} {notes.length === 1 ? "note" : "notes"}
+          {query.trim()
+            ? `${filteredNotes.length} of ${notes.length}`
+            : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
         </span>
       </div>
 
@@ -226,12 +349,21 @@ export function Notebook({ initialNotes }: NotebookProps) {
         </p>
       )}
 
+      {notes.length > 0 && filteredNotes.length === 0 && query.trim() && (
+        <p
+          className="mt-6 text-[15px]"
+          style={{ color: "var(--color-ink-soft)" }}
+        >
+          No notes match &ldquo;{query.trim()}&rdquo;.
+        </p>
+      )}
+
       <ol
         className="mt-2 flex flex-col"
         aria-label="Recent notes"
-        style={{ borderTop: notes.length ? `1px dashed var(--color-line)` : undefined }}
+        style={{ borderTop: filteredNotes.length ? `1px dashed var(--color-line)` : undefined }}
       >
-        {notes.map((note) => {
+        {filteredNotes.map((note) => {
           const isOpen = openId === note.id;
           return (
             <li
@@ -330,5 +462,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
         Notes sync to your Signal account. Promote-to-task ships in the next cycle.
       </p>
     </main>
+    </>
   );
 }
