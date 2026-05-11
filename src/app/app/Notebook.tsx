@@ -60,9 +60,9 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const [notes, setNotes] = useState<NoteRead[]>(initialNotes);
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [railOpen, setRailOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
@@ -75,10 +75,10 @@ export function Notebook({ initialNotes }: NotebookProps) {
     return CAPTURE_PROMPTS[idx];
   }, []);
 
-  // Refocus capture when the tab returns to foreground
+  // Refocus capture when the tab returns to foreground (PRODUCT.md §5 budget)
   useEffect(() => {
     const refocus = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === "visible" && document.activeElement !== searchRef.current) {
         captureRef.current?.focus();
       }
     };
@@ -95,19 +95,13 @@ export function Notebook({ initialNotes }: NotebookProps) {
     return () => window.clearInterval(id);
   }, []);
 
-  // ⌘K / Ctrl+K toggles the search rail. Universal pattern — no jargon.
+  // ⌘K / Ctrl+K focuses search inline. Universal pattern — no jargon.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setRailOpen((open) => {
-          const next = !open;
-          if (next) {
-            // Defer to next tick so the input is in the DOM
-            window.requestAnimationFrame(() => searchRef.current?.focus());
-          }
-          return next;
-        });
+        searchRef.current?.focus();
+        searchRef.current?.select();
       }
     };
     document.addEventListener("keydown", onKey);
@@ -120,28 +114,12 @@ export function Notebook({ initialNotes }: NotebookProps) {
     return notes.filter((n) => n.body.toLowerCase().includes(q));
   }, [notes, query]);
 
-  const closeRail = useCallback(() => {
-    setQuery("");
-    setRailOpen(false);
-    captureRef.current?.focus();
-  }, []);
-
-  const onSearchKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeRail();
-      }
-    },
-    [closeRail]
-  );
+  const lastSavedTs = notes[0]?.createdAt ?? null;
 
   const commit = useCallback(() => {
     const body = draft.trim();
     if (!body) return;
 
-    // Optimistic write: render in the stream immediately (PRODUCT.md §5
-    // 'Save: < 100ms perceived'). Server action fires in the background.
     const tempId = makeOptimisticId();
     const now = Date.now();
     const optimistic: NoteRead = {
@@ -152,18 +130,37 @@ export function Notebook({ initialNotes }: NotebookProps) {
       promotedTaskId: null,
     };
     setNotes((prev) => [optimistic, ...prev]);
+    setFreshIds((prev) => new Set(prev).add(tempId));
     setDraft("");
     setError(null);
+
+    // Clear the "fresh" marker after the entry animation finishes
+    window.setTimeout(() => {
+      setFreshIds((prev) => {
+        const next = new Set(prev);
+        next.delete(tempId);
+        return next;
+      });
+    }, 500);
 
     startTransition(async () => {
       try {
         const saved = await createNote(body);
-        // Reconcile: replace the optimistic row with the server row.
-        setNotes((prev) =>
-          prev.map((n) => (n.id === tempId ? saved : n))
-        );
+        setNotes((prev) => prev.map((n) => (n.id === tempId ? saved : n)));
+        // Carry the fresh marker over to the real id briefly
+        setFreshIds((prev) => {
+          const next = new Set(prev);
+          next.add(saved.id);
+          window.setTimeout(() => {
+            setFreshIds((p) => {
+              const n2 = new Set(p);
+              n2.delete(saved.id);
+              return n2;
+            });
+          }, 500);
+          return next;
+        });
       } catch (err) {
-        // Roll back the optimistic row.
         setNotes((prev) => prev.filter((n) => n.id !== tempId));
         setError(err instanceof Error ? err.message : "Could not save");
       }
@@ -172,7 +169,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
 
   const remove = useCallback(
     (id: string) => {
-      // Optimistic remove.
       const previousNotes = notes;
       setNotes((prev) => prev.filter((n) => n.id !== id));
       setOpenId((current) => (current === id ? null : current));
@@ -188,14 +184,16 @@ export function Notebook({ initialNotes }: NotebookProps) {
     [notes]
   );
 
-  const onKeyDown = useCallback(
+  const onCaptureKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === "Escape") {
         event.preventDefault();
         setDraft("");
         return;
       }
-      if (event.key === "Enter") {
+      // Enter saves; Shift+Enter for newline (slight refinement over PRODUCT.md
+      // §4 — keeps multi-line bodies easy without losing the 3-second budget).
+      if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         commit();
       }
@@ -203,265 +201,178 @@ export function Notebook({ initialNotes }: NotebookProps) {
     [commit]
   );
 
+  const onSearchKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setQuery("");
+        captureRef.current?.focus();
+      }
+    },
+    []
+  );
+
   const openNote = notes.find((n) => n.id === openId) ?? null;
 
   return (
-    <>
-      {/* ── Search rail (PRODUCT.md §4 — collapsible, starts collapsed) ── */}
-      <aside
-        aria-label="Search notes"
-        className="fixed left-0 top-[42px] z-10 flex flex-col border-r"
-        style={{
-          height: "calc(100vh - 42px)",
-          width: railOpen ? 280 : 36,
-          borderColor: "var(--color-line)",
-          background: "var(--color-bg)",
-          transition: "width 220ms cubic-bezier(0.25, 1, 0.5, 1)",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => {
-            setRailOpen((open) => {
-              const next = !open;
-              if (next) window.requestAnimationFrame(() => searchRef.current?.focus());
-              return next;
-            });
-          }}
-          aria-label={railOpen ? "Close search" : "Open search"}
-          aria-expanded={railOpen}
-          className="flex h-10 w-9 shrink-0 items-center justify-center"
-          style={{ color: "var(--color-ink-faint)" }}
-          title={railOpen ? "Close (Esc)" : "Search (⌘K)"}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.4" />
-            <path d="m11 11 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-        </button>
-
-        {railOpen && (
-          <div className="flex flex-1 flex-col px-4 pt-2 pb-5">
-            <label className="sr-only" htmlFor="search">
-              Search notes
-            </label>
+    <main className="shell">
+      {/* ── The notebook ────────────────────────────────────────── */}
+      <section className="notebook" aria-label="Signal Notes notebook">
+        <div className="notebook-top">
+          <a href="/" className="wordmark" aria-label="Signal Notes home">
+            notes<span>.</span>
+          </a>
+          <label className="search">
+            <span>Search</span>
             <input
-              id="search"
               ref={searchRef}
+              id="search"
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={onSearchKeyDown}
-              placeholder="Search your notes"
+              placeholder="anything"
               spellCheck={false}
               autoComplete="off"
-              className="w-full border-0 bg-transparent p-0 text-[15px] outline-0 placeholder:opacity-60"
-              style={{ color: "var(--color-ink)", caretColor: "var(--color-accent)" }}
             />
+          </label>
+        </div>
+
+        <label className="capture">
+          <span className="sr-only">Capture a note</span>
+          <textarea
+            id="capture"
+            ref={captureRef}
+            autoFocus
+            rows={3}
+            placeholder={placeholder}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={onCaptureKeyDown}
+            spellCheck
+          />
+          <p className="capture-hint">
+            <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
+          </p>
+          {error && (
             <p
-              className="mt-3 font-mono text-[10px] tracking-wide"
-              style={{ color: "var(--color-ink-faint)" }}
+              role="alert"
+              className="capture-hint"
+              style={{ color: "#b04848", marginTop: 8 }}
             >
-              {query.trim()
-                ? `${filteredNotes.length} ${filteredNotes.length === 1 ? "match" : "matches"}`
-                : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
+              {error}
             </p>
-            <p
-              className="mt-auto font-mono text-[10px] tracking-wide"
-              style={{ color: "var(--color-ink-faint)" }}
-            >
-              Esc closes · ⌘K toggles
-            </p>
-          </div>
+          )}
+        </label>
+
+        <div className="stream-head">
+          <span>Stream</span>
+          <span>
+            {query.trim()
+              ? `${filteredNotes.length} of ${notes.length}`
+              : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
+          </span>
+        </div>
+
+        {notes.length === 0 && (
+          <p className="empty-state">
+            <em>Nothing here yet.</em> Start typing.
+          </p>
         )}
-      </aside>
 
-    <main
-      className="mx-auto flex max-w-[760px] flex-col px-7 pt-14 pb-28"
-      style={{ minHeight: "calc(100vh - 42px)" }}
-    >
-      <label className="sr-only" htmlFor="capture">
-        Capture a note
-      </label>
-      <textarea
-        id="capture"
-        ref={captureRef}
-        autoFocus
-        rows={3}
-        placeholder={placeholder}
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={onKeyDown}
-        spellCheck
-        className="w-full resize-none border-0 bg-transparent p-0 text-[18px] leading-[1.55] outline-0 placeholder:opacity-60"
-        style={{ color: "var(--color-ink)", caretColor: "var(--color-accent)" }}
-      />
-      <p
-        className="mt-2 font-mono text-[11px] tracking-wide"
-        style={{ color: "var(--color-ink-faint)" }}
-      >
-        Enter saves · Esc clears · first line becomes the title
-      </p>
+        {notes.length > 0 && filteredNotes.length === 0 && query.trim() && (
+          <p className="empty-state">
+            No notes match <em>“{query.trim()}”</em>.
+          </p>
+        )}
 
-      {error && (
-        <p
-          className="mt-2 text-[12px]"
-          role="alert"
-          style={{ color: "#b04848" }}
-        >
-          {error}
-        </p>
-      )}
-
-      <div
-        className="mt-14 mb-4 flex items-baseline justify-between border-t pt-6"
-        style={{ borderColor: "var(--color-line)" }}
-      >
-        <span
-          className="font-mono text-[11px] uppercase tracking-[0.14em] font-semibold"
-          style={{ color: "var(--color-ink-faint)" }}
-        >
-          Stream
-        </span>
-        <span
-          className="font-mono text-[11px] tracking-wide"
-          style={{ color: "var(--color-ink-faint)" }}
-        >
-          {query.trim()
-            ? `${filteredNotes.length} of ${notes.length}`
-            : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
-        </span>
-      </div>
-
-      {notes.length === 0 && (
-        <p
-          className="mt-6 text-[15px]"
-          style={{ color: "var(--color-ink-soft)" }}
-        >
-          Nothing here yet. Start typing.
-        </p>
-      )}
-
-      {notes.length > 0 && filteredNotes.length === 0 && query.trim() && (
-        <p
-          className="mt-6 text-[15px]"
-          style={{ color: "var(--color-ink-soft)" }}
-        >
-          No notes match &ldquo;{query.trim()}&rdquo;.
-        </p>
-      )}
-
-      <ol
-        className="mt-2 flex flex-col"
-        aria-label="Recent notes"
-        style={{ borderTop: filteredNotes.length ? `1px dashed var(--color-line)` : undefined }}
-      >
-        {filteredNotes.map((note) => {
-          const isOpen = openId === note.id;
-          return (
-            <li
-              key={note.id}
-              className="border-b py-4"
-              style={{ borderColor: "var(--color-line)", borderStyle: "dashed" }}
-            >
-              <button
-                type="button"
-                onClick={() => setOpenId(isOpen ? null : note.id)}
-                className="w-full text-left"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <span
-                    className="flex-1 truncate text-[15.5px] font-medium"
-                    style={{ color: "var(--color-ink)" }}
-                  >
-                    {firstLine(note.body)}
+        <ol className="stream" aria-label="Recent notes">
+          {filteredNotes.map((note) => {
+            const isOpen = openId === note.id;
+            return (
+              <li key={note.id}>
+                <button
+                  type="button"
+                  className={`note-row${freshIds.has(note.id) ? " is-fresh" : ""}`}
+                  onClick={() => setOpenId(isOpen ? null : note.id)}
+                  aria-expanded={isOpen}
+                >
+                  <span>
+                    <span className="note-title">{firstLine(note.body)}</span>
+                    {preview(note.body) && !isOpen && (
+                      <span className="note-preview">{preview(note.body)}</span>
+                    )}
                   </span>
-                  <span className="flex items-center gap-2">
+                  <span className="note-meta">
                     {note.promotedTaskId && (
                       <span
                         aria-label="Promoted to a task"
-                        className="inline-block h-1.5 w-1.5 rounded-full"
-                        style={{ background: "var(--color-signal)" }}
+                        className="note-dot"
                       />
                     )}
-                    <span
-                      className="font-mono text-[11px] tracking-wide whitespace-nowrap"
-                      style={{ color: "var(--color-ink-faint)" }}
-                    >
-                      {relativeTime(note.createdAt)}
-                    </span>
+                    <span>{relativeTime(note.createdAt)}</span>
                   </span>
-                </div>
-                {preview(note.body) && !isOpen && (
-                  <p
-                    className="mt-1 truncate text-[13.5px]"
-                    style={{ color: "var(--color-ink-soft)" }}
-                  >
-                    {preview(note.body)}
-                  </p>
-                )}
-              </button>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
 
-              {isOpen && openNote && openNote.id === note.id && (
-                <div className="mt-3">
-                  <p
-                    className="whitespace-pre-line text-[15.5px] leading-[1.6]"
-                    style={{ color: "var(--color-ink)" }}
-                  >
-                    {openNote.body}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span
-                      className="font-mono text-[11px] tracking-wide"
-                      style={{ color: "var(--color-ink-faint)" }}
-                    >
-                      Captured {relativeTime(openNote.createdAt)}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => remove(note.id)}
-                        className="text-[12px] underline decoration-dotted underline-offset-2"
-                        style={{ color: "var(--color-ink-faint)" }}
-                      >
-                        Delete
-                      </button>
-                      <button
-                        type="button"
-                        disabled
-                        aria-label="Promote to task (ships in next cycle)"
-                        title="Promote to task — ships next cycle"
-                        className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[12px] font-medium opacity-50"
-                        style={{
-                          borderColor: "var(--color-line-strong)",
-                          color: "var(--color-ink-soft)",
-                        }}
-                      >
-                        Promote to task
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ol>
+        {openNote && (
+          <article className="open-note" aria-label="Open note">
+            <div className="open-note-head">
+              <span>Captured {relativeTime(openNote.createdAt)}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <button
+                  type="button"
+                  className="btn-delete"
+                  onClick={() => remove(openNote.id)}
+                  aria-label="Delete note"
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  className="btn-promote"
+                  disabled
+                  title="Promote to task — ships next cycle"
+                  aria-label="Promote to task (ships in next cycle)"
+                >
+                  Task
+                </button>
+              </div>
+            </div>
+            <p className="open-note-body">{openNote.body}</p>
+          </article>
+        )}
+      </section>
 
-      <p
-        className="mt-16 font-mono text-[11px] tracking-wide"
-        style={{ color: "var(--color-ink-faint)" }}
-      >
-        Notes sync to your Signal account. Promote-to-task ships in the next cycle.
-      </p>
+      {/* ── Brand aside (right column) ──────────────────────────── */}
+      <aside className="product">
+        <p className="product-eyebrow">Signal Notes</p>
+        <h1 className="product-h1">Capture clarity.</h1>
+        <p className="product-promise">
+          Capture in three seconds. Find it later. Promote it when it matters.
+        </p>
+        <dl className="product-stats">
+          <div>
+            <dt>Stream</dt>
+            <dd>
+              <em>{notes.length}</em> {notes.length === 1 ? "note" : "notes"}
+            </dd>
+          </div>
+          <div>
+            <dt>Last saved</dt>
+            <dd>
+              {lastSavedTs ? <em>{relativeTime(lastSavedTs)}</em> : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>Private build</dd>
+          </div>
+        </dl>
+      </aside>
     </main>
-    </>
   );
 }
