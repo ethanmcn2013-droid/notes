@@ -1,19 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
-// ── Locked types (PRODUCT.md §6) ───────────────────────────────────
-type Note = {
-  id: string;
-  body: string;
-  createdAt: number;
-  updatedAt: number;
-  promotedTaskId?: string;
-};
+import { createNote, deleteNote, type NoteRead } from "@/server/actions/notes";
 
 // ── Locked capture placeholders (PRODUCT.md §9) ────────────────────
-// Hand-curated, drawn from the audience. Same discipline as the
-// Analytics prose library. Rotation on each mount.
 const CAPTURE_PROMPTS = [
   "What just came up?",
   "What's the one thing to remember?",
@@ -23,31 +21,8 @@ const CAPTURE_PROMPTS = [
   "Three seconds. Type it now.",
 ] as const;
 
-const STORAGE_KEY = "signal-notes-v1";
-
-function loadNotes(): Note[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Note[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveNotes(notes: Note[]) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  } catch {
-    // Quota or private-browsing — swallow. Server sync in 9.2.
-  }
-}
-
-function makeId() {
-  return `n_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+function makeOptimisticId() {
+  return `opt_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function firstLine(body: string) {
@@ -60,7 +35,6 @@ function firstLine(body: string) {
 function preview(body: string) {
   const lines = body.trim().split(/\r?\n/).slice(1).join(" ").trim();
   if (lines) return lines.length > 120 ? lines.slice(0, 117) + "…" : lines;
-  // No second line — fall through to a substring of the first line beyond the title length.
   return "";
 }
 
@@ -78,34 +52,27 @@ function relativeTime(ts: number, now = Date.now()) {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function Notebook() {
-  const [notes, setNotes] = useState<Note[]>([]);
+interface NotebookProps {
+  initialNotes: NoteRead[];
+}
+
+export function Notebook({ initialNotes }: NotebookProps) {
+  const [notes, setNotes] = useState<NoteRead[]>(initialNotes);
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [hydrated, setHydrated] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const tickRef = useRef(0);
   const [, forceTick] = useState(0);
 
-  // Pick one placeholder per mount (PRODUCT.md §9 — hand-curated rotation)
+  // One placeholder per mount (PRODUCT.md §9)
   const placeholder = useMemo(() => {
     const idx = Math.floor(Math.random() * CAPTURE_PROMPTS.length);
     return CAPTURE_PROMPTS[idx];
   }, []);
 
-  // Hydrate from localStorage on mount
-  useEffect(() => {
-    setNotes(loadNotes());
-    setHydrated(true);
-  }, []);
-
-  // Persist on every change after hydration
-  useEffect(() => {
-    if (!hydrated) return;
-    saveNotes(notes);
-  }, [notes, hydrated]);
-
-  // Refocus capture when the tab returns to foreground (PRODUCT.md §5 budget)
+  // Refocus capture when the tab returns to foreground
   useEffect(() => {
     const refocus = () => {
       if (document.visibilityState === "visible") {
@@ -128,29 +95,62 @@ export function Notebook() {
   const commit = useCallback(() => {
     const body = draft.trim();
     if (!body) return;
+
+    // Optimistic write: render in the stream immediately (PRODUCT.md §5
+    // 'Save: < 100ms perceived'). Server action fires in the background.
+    const tempId = makeOptimisticId();
     const now = Date.now();
-    const note: Note = {
-      id: makeId(),
+    const optimistic: NoteRead = {
+      id: tempId,
       body,
       createdAt: now,
       updatedAt: now,
+      promotedTaskId: null,
     };
-    setNotes((prev) => [note, ...prev]);
+    setNotes((prev) => [optimistic, ...prev]);
     setDraft("");
-    setOpenId(null);
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        const saved = await createNote(body);
+        // Reconcile: replace the optimistic row with the server row.
+        setNotes((prev) =>
+          prev.map((n) => (n.id === tempId ? saved : n))
+        );
+      } catch (err) {
+        // Roll back the optimistic row.
+        setNotes((prev) => prev.filter((n) => n.id !== tempId));
+        setError(err instanceof Error ? err.message : "Could not save");
+      }
+    });
   }, [draft]);
+
+  const remove = useCallback(
+    (id: string) => {
+      // Optimistic remove.
+      const previousNotes = notes;
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+      setOpenId((current) => (current === id ? null : current));
+      startTransition(async () => {
+        try {
+          await deleteNote(id);
+        } catch (err) {
+          setNotes(previousNotes);
+          setError(err instanceof Error ? err.message : "Could not delete");
+        }
+      });
+    },
+    [notes]
+  );
 
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      // Esc → discard (PRODUCT.md §4)
       if (event.key === "Escape") {
         event.preventDefault();
         setDraft("");
         return;
       }
-      // Enter without modifier → save (PRODUCT.md §4 — three-second capture)
-      // Shift+Enter or Cmd+Enter both also save (also per PRODUCT.md §4 "⌘↵ or ⇧↵ to commit").
-      // Plain Enter is the primary; modifier combos are accelerators that mean the same thing.
       if (event.key === "Enter") {
         event.preventDefault();
         commit();
@@ -166,13 +166,6 @@ export function Notebook() {
       className="mx-auto flex max-w-[760px] flex-col px-7 pt-14 pb-28"
       style={{ minHeight: "calc(100vh - 42px)" }}
     >
-      {/* Wordmark gesture (BRAND.md §4) */}
-      <a href="/" className="notes-mark mb-10 text-[28px]" aria-label="Signal Notes home">
-        <span className="word">notes</span>
-        <span className="dot">.</span>
-      </a>
-
-      {/* ── Capture field (PRODUCT.md §4) ────────────────────────── */}
       <label className="sr-only" htmlFor="capture">
         Capture a note
       </label>
@@ -196,7 +189,16 @@ export function Notebook() {
         Enter saves · Esc clears · first line becomes the title
       </p>
 
-      {/* ── Stream (PRODUCT.md §4) ───────────────────────────────── */}
+      {error && (
+        <p
+          className="mt-2 text-[12px]"
+          role="alert"
+          style={{ color: "#b04848" }}
+        >
+          {error}
+        </p>
+      )}
+
       <div
         className="mt-14 mb-4 flex items-baseline justify-between border-t pt-6"
         style={{ borderColor: "var(--color-line)" }}
@@ -211,12 +213,11 @@ export function Notebook() {
           className="font-mono text-[11px] tracking-wide"
           style={{ color: "var(--color-ink-faint)" }}
         >
-          {hydrated ? `${notes.length} ${notes.length === 1 ? "note" : "notes"}` : ""}
+          {notes.length} {notes.length === 1 ? "note" : "notes"}
         </span>
       </div>
 
-      {/* Empty state — PRODUCT.md §9 (literal copy) */}
-      {hydrated && notes.length === 0 && (
+      {notes.length === 0 && (
         <p
           className="mt-6 text-[15px]"
           style={{ color: "var(--color-ink-soft)" }}
@@ -291,19 +292,29 @@ export function Notebook() {
                     >
                       Captured {relativeTime(openNote.createdAt)}
                     </span>
-                    <button
-                      type="button"
-                      disabled
-                      aria-label="Promote to task (ships in next cycle)"
-                      title="Promote to task — ships next cycle"
-                      className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[12px] font-medium opacity-50"
-                      style={{
-                        borderColor: "var(--color-line-strong)",
-                        color: "var(--color-ink-soft)",
-                      }}
-                    >
-                      Promote to task
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => remove(note.id)}
+                        className="text-[12px] underline decoration-dotted underline-offset-2"
+                        style={{ color: "var(--color-ink-faint)" }}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        type="button"
+                        disabled
+                        aria-label="Promote to task (ships in next cycle)"
+                        title="Promote to task — ships next cycle"
+                        className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[12px] font-medium opacity-50"
+                        style={{
+                          borderColor: "var(--color-line-strong)",
+                          color: "var(--color-ink-soft)",
+                        }}
+                      >
+                        Promote to task
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -312,13 +323,11 @@ export function Notebook() {
         })}
       </ol>
 
-      {/* ── Honest scaffold note (removable in 9.5) ─────────────── */}
       <p
         className="mt-16 font-mono text-[11px] tracking-wide"
         style={{ color: "var(--color-ink-faint)" }}
       >
-        Notes are saved locally on this device. Cross-device sync and
-        promote-to-task ship in upcoming cycles.
+        Notes sync to your Signal account. Promote-to-task ships in the next cycle.
       </p>
     </main>
   );

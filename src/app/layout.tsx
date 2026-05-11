@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,8 +27,25 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="min-h-full">{children}</body>
-    </html>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "#335f54",
+          colorBackground: "#fffefa",
+          colorText: "#161815",
+          fontFamily: "var(--font-inter)",
+          borderRadius: "0.6rem",
+        },
+        elements: {
+          formButtonPrimary:
+            "bg-[#161815] hover:bg-[#335f54] text-[#fffefa] rounded-full",
+          card: "shadow-[0_22px_70px_rgba(41,48,37,0.12)]",
+        },
+      }}
+    >
+      <html lang="en" className={inter.variable}>
+        <body className="min-h-full">{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }
