@@ -68,3 +68,26 @@ For the wedding/events wedge, a venue meeting note should produce:
 - a planning risk if something is waiting
 - a short shareable follow-up for the couple or supplier
 
+## Cycle 2: Invite And First View
+
+Notes owns the "What was decided" part of the invited collaborator's first view.
+
+Role defaults for Notes:
+
+- Creator controls which notes or summaries are shared.
+- Collaborator can see shared summaries and relevant decisions.
+- Guest can open a selected follow-up or decision summary.
+- Client / supplier can see questions and decisions relevant to them.
+- Viewer can see only intentionally public summaries.
+
+Cycle 2 implementation targets:
+
+- meeting follow-up summary
+- decision summary visibility rules
+- action extraction into Tasks with creator approval
+- private-note protection
+- note follow-up source tracking
+
+Acceptance test:
+
+A couple receives a venue meeting follow-up with decisions, open questions, and follow-up actions, without seeing the venue's internal notes.
