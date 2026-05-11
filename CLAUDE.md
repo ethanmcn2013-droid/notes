@@ -3,3 +3,5 @@
 Read `AGENTS.md` and `docs/PRODUCT.md` first.
 
 Claude Code must follow the Signal HQ sync rule: meaningful Notes changes must be reflected in the Studio repo's Signal HQ data before the task is complete.
+
+Before note extraction, decision, action, risk, sharing, guest-facing, or cross-product work, read `docs/COLLABORATION_LOOP.md`.

@@ -10,6 +10,8 @@ Signal HQ lives in the Studio repo at `ethanmcn2013-droid/studio` and is the int
 
 When a change in Notes affects product state, roadmap, launch readiness, GTM, messaging, campaigns, demos, templates, outreach, pilots, metrics, decisions, risks, or strategic learning, update Signal HQ before the task is complete.
 
+Before note extraction, decision, action, risk, sharing, guest-facing, or cross-product work, read `docs/COLLABORATION_LOOP.md`. Notes owns the context-to-work moment in the collaboration loop.
+
 In practice, open or update a Studio PR that changes:
 
 - `src/lib/hq/data.ts`
