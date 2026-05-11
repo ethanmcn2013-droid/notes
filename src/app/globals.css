@@ -96,7 +96,10 @@ button, input, textarea { font: inherit; }
 }
 .suitebar a, .suitebar strong { text-decoration: none; font-weight: 500; }
 .suitebar > a { color: var(--color-ink); }
-.suitebar > a span { color: var(--color-accent-2); }
+/* Suite chrome 'signal studio.' dot uses indigo per the locked brand
+   guide (2026-05-11). The mustard accent-2 remains for product-internal
+   warmth, not suite chrome. */
+.suitebar > a span { color: #4f46e5; }
 .suitebar nav { display: flex; align-items: center; gap: 18px; }
 .suitebar nav a { color: var(--color-ink-faint); transition: color 120ms ease; }
 .suitebar nav a:hover { color: var(--color-ink); }
