@@ -1,0 +1,49 @@
+# Signal Notes · Changelog
+
+## 2026-05-12
+
+### Cycle 11.5 shipped — cinematic notebook demo at the Tasks bar.
+
+The homepage used to be hero copy + an anti-feature grid. The
+notebook demo I shipped earlier in the day was a tight three-capture
++ search loop — fine as a starter, light against the rebuilt
+Roadmap and Analytics demos. That's been replaced wholesale.
+
+Hero is now Tasks-pattern: eyebrow + H1 ("Your private layer.
+Capture the thought. Decide later.") + body + CTAs + status pip
+("Demo is live · choose an audience to reseed") + an AudienceToggle
++ the cinematic notebook full-width below. Four audience packs
+share the suite axis with Roadmap and Analytics: Wedding (default
+per the locked GTM wedge), Building project, Product launch,
+Startup plan. Each pack ships its own capture script (three notes
+the demo types), per-capture placeholders that rotate, per-capture
+tags, and a search query + matching capture for the search beat.
+
+The demo runs a 17-scene loop. Three rapid captures with type-on
+typing; each commits with a timestamp pip and tag chips that
+stagger-land 120ms apart with a soft spring (the chips don't
+appear all-at-once anymore — each one pops onto the note like the
+user just tapped it). Then the search field focuses, types the
+query, and the matched substring inside the hit note's body wraps
+in a mustard `<mark>` while the surrounding ring lights up.
+
+The whole stream then morphs to a Tags view — notes regrouped by
+their `#tag` with each group fading in on a 60ms stagger. Holds.
+Morphs back to Stream. The locked Notes → Tasks promote gesture
+fires: a long-press ring grows around the search-hit note, the
+PromoteMenu pops up beneath it (single item — "Promote to Tasks",
+no other actions, no auto-detect, the discipline as the
+differentiator). The menu item flashes brand-accent. The note's
+body morphs into a flying card silhouette, slides 520px rightward
++ 40px down + scales to 0.6 + fades. The TasksEdge indicator on
+the right margin pulses active during the flight. Reset.
+
+The one-way promotion that lived only in copy ("nothing
+auto-promotes") is now legible in motion: the user presses, the
+card flies.
+
+Stack: motion/react, DOM-measured note refs for the flight start
+position, useReducedMotion guard collapses to a populated stream
+with empty capture field. Notes keeps its locked product-surface
+register (warm green / mustard / Inter) per the 2026-05-10 owner
+decision.
