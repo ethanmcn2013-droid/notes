@@ -1,5 +1,43 @@
 # Signal Notes · Changelog
 
+## 2026-05-12 (later still)
+
+### Cycle 9.4b second half · the cross-repo edge is real.
+
+The drafted action no longer sits in Notes labeled "pending Tasks
+send" forever — it actually goes. The Send to Tasks button on the
+drafted block calls `sendExtractToTasks` which hits the new
+`POST /api/notes-extract` route on `tasks.signalstudio.ie`. The
+returned taskId persists to the note's `promoted_task_id`, and the
+drafted block flips to "Sent to [workspace name]" with an Open in
+Tasks link that deep-links to the board.
+
+Auth: shared bearer secret `NOTES_TO_TASKS_SECRET` (server-only,
+both sides) + the user's Clerk userId in the body. First-party
+service-to-service pattern; documenting clearly that this can evolve
+to Clerk session-token forwarding when the deploy environment
+supports it. Threat model: external attackers, not first-party
+products.
+
+Idempotency: Tasks keys on `(userId, noteId)` via a new
+`source_note_id` column on the tasks table. A repeat Send-to-Tasks
+returns the existing task instead of creating a duplicate — Notes
+retries are safe.
+
+Privacy guardrail: only `extract_body` crosses the boundary. The
+raw note body never leaves Notes. The created task title = the
+extract body verbatim, with a small description "Drafted from a
+private note in Signal Notes." No note metadata travels.
+
+Workspace selection: the user's first workspace membership wins.
+The response carries the workspace name so the drafted block reads
+"Sent to [Wedding planning]", not the abstract "Sent to Tasks".
+
+What's needed to deploy:
+- ALTER TABLE notes ADD COLUMN extract_body TEXT (from earlier today)
+- ALTER TABLE tasks ADD COLUMN source_note_id TEXT (new today)
+- NOTES_TO_TASKS_SECRET env var on both Notes and Tasks (Vercel)
+
 ## 2026-05-12 (later)
 
 ### Cycle 9.4b · the Draft action gesture lands real.

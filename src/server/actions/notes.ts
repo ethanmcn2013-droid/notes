@@ -103,11 +103,9 @@ export async function deleteNote(id: string): Promise<void> {
  * authors the action wording deliberately — Notes never auto-detects
  * todos from raw note bodies (PRODUCT.md §8 refusal).
  *
- * The extract_body lives alongside the raw note. Cross-repo write to
- * Signal Tasks (and population of promoted_task_id) is the second
- * half of Cycle 9.4b and lands in a follow-up cycle. Until then, the
- * extract is "drafted, pending Tasks send" — visible to the creator
- * only.
+ * The extract_body lives alongside the raw note. The cross-repo write
+ * to Signal Tasks (and population of promoted_task_id) runs through
+ * sendExtractToTasks below.
  */
 export async function setNoteExtract(
   id: string,
@@ -176,4 +174,109 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
 
   revalidatePath("/app");
   return row;
+}
+
+/**
+ * Cross-repo Notes -> Tasks write (Cycle 9.4b second half,
+ * 2026-05-12). Calls the Tasks endpoint with the drafted extract,
+ * stores the resulting taskId on the note, returns the destination
+ * workspace name + deep link so the UI can label "Sent to [workspace]
+ * — open in Tasks."
+ *
+ * Privacy guardrail: only extract_body crosses the boundary. The raw
+ * note body never leaves Notes.
+ *
+ * Idempotency: Tasks keys on (userId, noteId) — a repeat call returns
+ * the same task instead of creating a duplicate. Safe to retry.
+ */
+export type ExtractSendResult = {
+  taskId: string;
+  workspaceName: string;
+  workspaceSlug: string;
+  taskUrl: string;
+  created: boolean;
+};
+
+export async function sendExtractToTasks(
+  noteId: string
+): Promise<{ note: NoteRead; result: ExtractSendResult }> {
+  const userId = await requireUser();
+  const tasksUrl = (
+    process.env.TASKS_API_URL ?? "https://tasks.signalstudio.ie"
+  ).replace(/\/+$/, "");
+  const secret = process.env.NOTES_TO_TASKS_SECRET;
+  if (!secret) {
+    throw new Error(
+      "Cross-repo send is not configured (NOTES_TO_TASKS_SECRET missing)"
+    );
+  }
+
+  // Read the note's extract so the network call sees the freshest
+  // creator-authored wording — not whatever the client passed.
+  const [note] = await db
+    .select({
+      id: notes.id,
+      body: notes.body,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+      extractBody: notes.extractBody,
+      promotedTaskId: notes.promotedTaskId,
+    })
+    .from(notes)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .limit(1);
+
+  if (!note) {
+    throw new Error("Note not found");
+  }
+  const extract = note.extractBody?.trim() ?? "";
+  if (!extract) {
+    throw new Error("Draft an action first");
+  }
+
+  const response = await fetch(`${tasksUrl}/api/notes-extract`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${secret}`,
+    },
+    body: JSON.stringify({ userId, noteId, body: extract }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let detail = `Tasks returned ${response.status}`;
+    try {
+      const data = (await response.json()) as { error?: string };
+      if (data.error) detail = data.error;
+    } catch {
+      // ignore — keep the status-code fallback
+    }
+    throw new Error(detail);
+  }
+
+  const result = (await response.json()) as ExtractSendResult;
+
+  // Persist the task id Notes-side so the next render shows the
+  // "Sent to [workspace]" state without re-calling Tasks.
+  const updated = await db
+    .update(notes)
+    .set({ promotedTaskId: result.taskId, updatedAt: Date.now() })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .returning({
+      id: notes.id,
+      body: notes.body,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+      extractBody: notes.extractBody,
+      promotedTaskId: notes.promotedTaskId,
+    });
+
+  const noteRow = updated[0];
+  if (!noteRow) {
+    throw new Error("Note vanished between send and store");
+  }
+
+  revalidatePath("/app");
+  return { note: noteRow, result };
 }

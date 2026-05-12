@@ -14,7 +14,9 @@ import {
   clearNoteExtract,
   createNote,
   deleteNote,
+  sendExtractToTasks,
   setNoteExtract,
+  type ExtractSendResult,
   type NoteRead,
 } from "@/server/actions/notes";
 
@@ -63,6 +65,10 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const [editingExtractFor, setEditingExtractFor] = useState<string | null>(null);
   const [draftAction, setDraftAction] = useState("");
   const [extractError, setExtractError] = useState<string | null>(null);
+  const [sendingExtractFor, setSendingExtractFor] = useState<string | null>(null);
+  const [sentResults, setSentResults] = useState<Map<string, ExtractSendResult>>(
+    new Map()
+  );
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
@@ -270,6 +276,33 @@ export function Notebook({ initialNotes }: NotebookProps) {
     [cancelEditingExtract, commitExtract]
   );
 
+  const sendToTasks = useCallback(
+    (noteId: string) => {
+      setSendingExtractFor(noteId);
+      setExtractError(null);
+      startTransition(async () => {
+        try {
+          const { note: updated, result } = await sendExtractToTasks(noteId);
+          setNotes((prev) =>
+            prev.map((n) => (n.id === noteId ? updated : n))
+          );
+          setSentResults((prev) => {
+            const next = new Map(prev);
+            next.set(noteId, result);
+            return next;
+          });
+        } catch (err) {
+          setExtractError(
+            err instanceof Error ? err.message : "Could not send to Tasks"
+          );
+        } finally {
+          setSendingExtractFor(null);
+        }
+      });
+    },
+    []
+  );
+
   const onCaptureKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === "Escape") {
@@ -475,25 +508,61 @@ export function Notebook({ initialNotes }: NotebookProps) {
 
             {openNote.extractBody && editingExtractFor !== openNote.id && (
               <div className="extract-drafted" aria-label="Action drafted">
-                <p className="extract-drafted-meta">
-                  Action drafted &middot; pending Tasks send
-                </p>
+                {openNote.promotedTaskId ? (
+                  <p className="extract-drafted-meta">
+                    Sent to{" "}
+                    {sentResults.get(openNote.id)?.workspaceName ?? "Tasks"}
+                  </p>
+                ) : (
+                  <p className="extract-drafted-meta">
+                    Action drafted &middot; pending Tasks send
+                  </p>
+                )}
                 <p className="extract-drafted-body">{openNote.extractBody}</p>
                 <div className="extract-drafted-controls">
-                  <button
-                    type="button"
-                    className="btn-delete"
-                    onClick={() => startEditingExtract(openNote)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-delete"
-                    onClick={() => removeExtract(openNote.id)}
-                  >
-                    Remove
-                  </button>
+                  {openNote.promotedTaskId ? (
+                    sentResults.get(openNote.id)?.taskUrl && (
+                      <a
+                        className="btn-delete"
+                        href={sentResults.get(openNote.id)!.taskUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open in Tasks
+                      </a>
+                    )
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-draft-action"
+                      onClick={() => sendToTasks(openNote.id)}
+                      disabled={sendingExtractFor === openNote.id}
+                    >
+                      {sendingExtractFor === openNote.id
+                        ? "Sending…"
+                        : "Send to Tasks"}
+                    </button>
+                  )}
+                  {!openNote.promotedTaskId && (
+                    <button
+                      type="button"
+                      className="btn-delete"
+                      onClick={() => startEditingExtract(openNote)}
+                      disabled={sendingExtractFor === openNote.id}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {!openNote.promotedTaskId && (
+                    <button
+                      type="button"
+                      className="btn-delete"
+                      onClick={() => removeExtract(openNote.id)}
+                      disabled={sendingExtractFor === openNote.id}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               </div>
             )}
