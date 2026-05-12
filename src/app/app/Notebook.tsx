@@ -319,18 +319,12 @@ export function Notebook({ initialNotes }: NotebookProps) {
                 >
                   Delete
                 </button>
-                {/* Notes are intentionally excluded from collaborative sharing.
-                    This future edge should create only a user-approved action
-                    extract, never expose the raw note body. */}
-                <button
-                  type="button"
-                  className="btn-promote"
-                  disabled
-                  title="Approved action extraction ships next cycle"
-                  aria-label="Draft action from this note (approved extraction ships next cycle)"
+                <span
+                  className="promote-soon"
+                  aria-hidden
                 >
-                  Draft action
-                </button>
+                  Promote to Tasks &middot; arrives next cycle
+                </span>
               </div>
             </div>
             <p className="open-note-body">{openNote.body}</p>

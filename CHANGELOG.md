@@ -2,6 +2,32 @@
 
 ## 2026-05-12
 
+### Suite review patch — the wedding-planning door, and the button that was lying.
+
+Two small fixes against the suite review the same day Cycle 11.5
+shipped. Both were the kind of thing that's easy to miss until
+someone follows a link.
+
+Notes had a hero CTA that read "See a worked example" and pointed
+at `/wedding-planning`. There was no file at that path. A first-time
+visitor tapping the only demo link in the hero got a 404. The Studio
+weddings page also linked to it. The Analytics wedding-planning page
+linked to it. Three surfaces, one missing route. Fixed by scaffolding
+a static seeded venue-meeting note — a planner sitting in her car
+after a Sunday-evening walkthrough, writing down what was said, what
+was decided, what still needs an answer by Tuesday. A worked example,
+clearly labeled as such, transitional until the T-2.2 cycle replaces
+it with a real seeded note flowing through the four-layer loop.
+
+The notebook also shipped with a Draft action button that has been
+`disabled` since the day it was added, with a hover tooltip reading
+"Approved action extraction ships next cycle." A button that doesn't
+work, telling you when it might, is a broken promise rendered in the
+UI. The fix wasn't to enable it — that's 9.4b's job. The fix was to
+not render a disabled button at all. It's now a quiet mono caption
+that says "Promote to Tasks · arrives next cycle." Same information,
+no `cursor: not-allowed`, no false affordance.
+
 ### Cycle 11.5 shipped — cinematic notebook demo at the Tasks bar.
 
 The homepage used to be hero copy + an anti-feature grid. The
