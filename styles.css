@@ -361,6 +361,72 @@ dd a {
   text-underline-offset: 3px;
 }
 
+.follow-up {
+  margin-top: 44px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 74%, white);
+  padding: 22px;
+}
+
+.follow-up-label {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.follow-up h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.follow-up > p:not(.follow-up-label) {
+  margin: 12px 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.extract-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.extract-grid article {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.extract-grid span {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.extract-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.extract-grid p {
+  margin: 7px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

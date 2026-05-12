@@ -2,6 +2,12 @@ const STORAGE_KEY = "signal-notes-demo";
 
 const seedNotes = [
   {
+    id: "n-0",
+    body: "Venue meeting follow-up\nDecision: ceremony layout is confirmed.\nAction: confirm supplier arrival times before Friday.\nRisk: final-week walkthrough slips if guest numbers are late.",
+    createdAt: Date.now() - 1000 * 60 * 6,
+    promoted: true,
+  },
+  {
     id: "n-1",
     body: "Florist confirms pink, not red.\nUpdate the venue checklist after lunch.",
     createdAt: Date.now() - 1000 * 60 * 18,

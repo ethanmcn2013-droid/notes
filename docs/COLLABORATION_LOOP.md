@@ -91,3 +91,20 @@ Cycle 2 implementation targets:
 Acceptance test:
 
 A couple receives a venue meeting follow-up with decisions, open questions, and follow-up actions, without seeing the venue's internal notes.
+
+## Cycle 7: Wedding Meeting Follow-Up
+
+Notes now shows the wedding/events proof scene directly:
+
+- a seeded venue meeting follow-up
+- action, decision, question, and risk extraction blocks
+- a public-safe explanation of how meeting context becomes workspace work
+
+This is the context layer for the same scene already used by Tasks and Roadmap.
+
+Next implementation targets:
+
+- user-approved extraction into Signal Tasks
+- decision summary sharing
+- private/internal note protection
+- source tracking for shared follow-up links
