@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NotesDemo } from "@/components/showcase/notes-demo";
 
 export default function HomePage() {
   return (
@@ -63,6 +64,11 @@ export default function HomePage() {
           >
             See a worked example
           </Link>
+        </div>
+
+        {/* ── Animated demo ────────────────────────────────────────────────── */}
+        <div className="mt-20">
+          <NotesDemo />
         </div>
 
         {/* ── Anti-feature register (BRAND.md §6) ─────────────────────────── */}
