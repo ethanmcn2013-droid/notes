@@ -6,9 +6,9 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
  * one-way approved extraction edge to Signal Tasks.
  *
  * v1 surface: { id, body, created_at, updated_at, extract_body?,
- * promoted_task_id? }. No tags, no folders, no metadata. Search is on
- * body text via the upcoming FTS5 layer (Cycle 9.4); for now, the
- * (user_id, created_at) index drives the stream.
+ * promoted_task_id? }. No tags, no folders, no metadata.
+ * v1 search: client-side substring filter over all notes (acceptable up to ~500 notes per user).
+ * The (user_id, created_at) index drives the stream.
  *
  * Privacy guardrail: body is private to the owner. Collaborative views
  * should store/read approved extracts, never raw note rows. Only the
@@ -16,9 +16,9 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
  *
  * extract_body holds the creator-authored action wording — never the
  * raw note body, never auto-detected. Set by setNoteExtract, cleared
- * by clearNoteExtract. promoted_task_id is filled in by the future
- * cross-repo write (Cycle 9.4b second half) once the action lands as
- * a Task. Both null = no extract drafted.
+ * by clearNoteExtract. promoted_task_id is filled in by the cross-repo
+ * write (Cycle 9.4b, shipped) once the action lands as a Task. Both
+ * null = no extract drafted.
  */
 
 export const notes = sqliteTable(

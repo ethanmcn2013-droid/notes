@@ -8,7 +8,7 @@ import { db } from "@/server/db/client";
 import { notes, type Note } from "@/server/db/schema";
 
 function makeId() {
-  return `n_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  return `n_${crypto.randomUUID().replace(/-/g, "")}`;
 }
 
 export type NoteRead = Pick<
@@ -234,15 +234,24 @@ export async function sendExtractToTasks(
     throw new Error("Draft an action first");
   }
 
-  const response = await fetch(`${tasksUrl}/api/notes-extract`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${secret}`,
-    },
-    body: JSON.stringify({ userId, noteId, body: extract }),
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${tasksUrl}/api/notes-extract`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify({ userId, noteId, body: extract }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "TimeoutError") {
+      throw new Error("Tasks timed out — try again in a moment");
+    }
+    throw err;
+  }
 
   if (!response.ok) {
     let detail = `Tasks returned ${response.status}`;
@@ -255,7 +264,16 @@ export async function sendExtractToTasks(
     throw new Error(detail);
   }
 
-  const result = (await response.json()) as ExtractSendResult;
+  const raw = await response.json();
+  if (
+    typeof raw !== "object" ||
+    !raw ||
+    typeof (raw as Record<string, unknown>).taskId !== "string" ||
+    typeof (raw as Record<string, unknown>).taskUrl !== "string"
+  ) {
+    throw new Error("Tasks returned an invalid response — try again");
+  }
+  const result = raw as ExtractSendResult;
 
   // Persist the task id Notes-side so the next render shows the
   // "Sent to [workspace]" state without re-calling Tasks.

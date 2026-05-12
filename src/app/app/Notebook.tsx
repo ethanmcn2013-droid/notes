@@ -69,12 +69,17 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const [sentResults, setSentResults] = useState<Map<string, ExtractSendResult>>(
     new Map()
   );
+  const [undoTarget, setUndoTarget] = useState<NoteRead | null>(null);
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const extractInputRef = useRef<HTMLInputElement | null>(null);
   const tickRef = useRef(0);
   const [, forceTick] = useState(0);
+  // Pending fresh-marker timers keyed by note id; cleared on unmount.
+  const freshTimersRef = useRef<Map<string, number>>(new Map());
+  // Undo-dismiss timer — cleared before each new undo or on unmount.
+  const undoTimerRef = useRef<number | null>(null);
 
   // Refocus capture when the tab returns to foreground (PRODUCT.md §5 budget)
   useEffect(() => {
@@ -94,6 +99,16 @@ export function Notebook({ initialNotes }: NotebookProps) {
       forceTick(tickRef.current);
     }, 60_000);
     return () => window.clearInterval(id);
+  }, []);
+
+  // Cancel all pending timers on unmount to avoid calling setState on an
+  // unmounted component.
+  useEffect(() => {
+    return () => {
+      freshTimersRef.current.forEach((id) => window.clearTimeout(id));
+      if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current);
+      if (extractFocusTimerRef.current !== null) window.clearTimeout(extractFocusTimerRef.current);
+    };
   }, []);
 
   // ⌘K / Ctrl+K focuses search inline. Universal pattern — no jargon.
@@ -137,30 +152,41 @@ export function Notebook({ initialNotes }: NotebookProps) {
     setDraft("");
     setError(null);
 
-    // Clear the "fresh" marker after the entry animation finishes
-    window.setTimeout(() => {
-      setFreshIds((prev) => {
-        const next = new Set(prev);
-        next.delete(tempId);
-        return next;
-      });
-    }, 500);
+    // Clear the "fresh" marker after the entry animation finishes.
+    // Cancel any prior timer for this id before registering a new one.
+    window.clearTimeout(freshTimersRef.current.get(tempId));
+    freshTimersRef.current.set(
+      tempId,
+      window.setTimeout(() => {
+        freshTimersRef.current.delete(tempId);
+        setFreshIds((prev) => {
+          const next = new Set(prev);
+          next.delete(tempId);
+          return next;
+        });
+      }, 500)
+    );
 
     startTransition(async () => {
       try {
         const saved = await createNote(body);
         setNotes((prev) => prev.map((n) => (n.id === tempId ? saved : n)));
-        // Carry the fresh marker over to the real id briefly
+        // Carry the fresh marker over to the real id briefly.
         setFreshIds((prev) => {
           const next = new Set(prev);
           next.add(saved.id);
-          window.setTimeout(() => {
-            setFreshIds((p) => {
-              const n2 = new Set(p);
-              n2.delete(saved.id);
-              return n2;
-            });
-          }, 500);
+          window.clearTimeout(freshTimersRef.current.get(saved.id));
+          freshTimersRef.current.set(
+            saved.id,
+            window.setTimeout(() => {
+              freshTimersRef.current.delete(saved.id);
+              setFreshIds((p) => {
+                const n2 = new Set(p);
+                n2.delete(saved.id);
+                return n2;
+              });
+            }, 500)
+          );
           return next;
         });
       } catch (err) {
@@ -170,29 +196,81 @@ export function Notebook({ initialNotes }: NotebookProps) {
     });
   }, [draft]);
 
+  // Ref holding the note pending deletion — used for undo re-insert.
+  const pendingDeleteRef = useRef<{ note: NoteRead; timer: number } | null>(null);
+
+  const commitDelete = useCallback((noteToDelete: NoteRead) => {
+    startTransition(async () => {
+      try {
+        await deleteNote(noteToDelete.id);
+      } catch (err) {
+        // Restore the note if the server delete failed.
+        setNotes((prev) => {
+          // Re-insert in original position (sorted newest-first by createdAt).
+          const next = [...prev, noteToDelete].sort((a, b) => b.createdAt - a.createdAt);
+          return next;
+        });
+        setError(err instanceof Error ? err.message : "Could not delete");
+      }
+    });
+  }, []);
+
+  const undoDelete = useCallback(() => {
+    if (!pendingDeleteRef.current) return;
+    window.clearTimeout(pendingDeleteRef.current.timer);
+    const restored = pendingDeleteRef.current.note;
+    pendingDeleteRef.current = null;
+    startTransition(() => {
+      setUndoTarget(null);
+      setNotes((prev) => {
+        const next = [...prev, restored].sort((a, b) => b.createdAt - a.createdAt);
+        return next;
+      });
+    });
+  }, []);
+
   const remove = useCallback(
     (id: string) => {
-      const previousNotes = notes;
-      setNotes((prev) => prev.filter((n) => n.id !== id));
-      setOpenId((current) => (current === id ? null : current));
-      startTransition(async () => {
-        try {
-          await deleteNote(id);
-        } catch (err) {
-          setNotes(previousNotes);
-          setError(err instanceof Error ? err.message : "Could not delete");
-        }
+      const noteToDelete = notes.find((n) => n.id === id);
+      if (!noteToDelete) return;
+
+      // Cancel any prior pending delete before starting a new one.
+      if (pendingDeleteRef.current) {
+        window.clearTimeout(pendingDeleteRef.current.timer);
+        // The prior one still needs to actually delete — fire it now.
+        commitDelete(pendingDeleteRef.current.note);
+        pendingDeleteRef.current = null;
+      }
+
+      startTransition(() => {
+        setNotes((prev) => prev.filter((n) => n.id !== id));
+        setOpenId((current) => (current === id ? null : current));
+        setUndoTarget(noteToDelete);
       });
+
+      const timer = window.setTimeout(() => {
+        pendingDeleteRef.current = null;
+        setUndoTarget(null);
+        commitDelete(noteToDelete);
+      }, 4_000);
+
+      pendingDeleteRef.current = { note: noteToDelete, timer };
     },
-    [notes]
+    [notes, commitDelete]
   );
+
+  const extractFocusTimerRef = useRef<number | null>(null);
 
   const startEditingExtract = useCallback((note: NoteRead) => {
     setEditingExtractFor(note.id);
     setDraftAction(note.extractBody ?? "");
     setExtractError(null);
-    // Focus runs on next paint
-    window.setTimeout(() => {
+    // Focus runs on next paint — cancel any pending focus timer first.
+    if (extractFocusTimerRef.current !== null) {
+      window.clearTimeout(extractFocusTimerRef.current);
+    }
+    extractFocusTimerRef.current = window.setTimeout(() => {
+      extractFocusTimerRef.current = null;
       extractInputRef.current?.focus();
       extractInputRef.current?.select();
     }, 0);
@@ -501,7 +579,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
                   </button>
                 </div>
                 <p className="extract-hint">
-                  <kbd>Enter</kbd> saves · <kbd>Esc</kbd> cancels · cross-repo send to Tasks lands next cycle
+                  <kbd>Enter</kbd> saves · <kbd>Esc</kbd> cancels
                 </p>
               </div>
             )}
@@ -578,6 +656,16 @@ export function Notebook({ initialNotes }: NotebookProps) {
           </article>
         )}
       </section>
+
+      {/* ── Undo toast ──────────────────────────────────────────── */}
+      {undoTarget && (
+        <div className="undo-toast" role="status" aria-live="polite">
+          <span>Note deleted.</span>
+          <button type="button" className="undo-toast-btn" onClick={undoDelete}>
+            Undo
+          </button>
+        </div>
+      )}
 
       {/* ── Brand aside (right column) ──────────────────────────── */}
       <aside className="product">
