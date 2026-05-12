@@ -88,7 +88,7 @@ button, input, textarea { font: inherit; }
   .notes-mark .dot { animation: none; opacity: 1; }
 }
 
-/* ── Suitebar (cross-product nav) ───────────────────────────────── */
+/* ── Suitebar (notebook chrome) ─────────────────────────────────── */
 .suitebar {
   display: flex;
   align-items: center;
@@ -99,16 +99,16 @@ button, input, textarea { font: inherit; }
   color: var(--color-ink-soft);
   font-size: 12px;
 }
-.suitebar a, .suitebar strong { text-decoration: none; font-weight: 500; }
-.suitebar > a { color: var(--color-ink); }
-/* Suite chrome 'signal studio.' dot uses indigo per the locked brand
-   guide (2026-05-11). The mustard accent-2 remains for product-internal
-   warmth, not suite chrome. */
-.suitebar > a span { color: #4f46e5; }
-.suitebar nav { display: flex; align-items: center; gap: 18px; }
-.suitebar nav a { color: var(--color-ink-faint); transition: color 120ms ease; }
-.suitebar nav a:hover { color: var(--color-ink); }
-.suitebar nav strong { color: var(--color-ink); }
+.suitebar a { text-decoration: none; }
+/* Breadcrumb group: small "signal studio." back-link, "/" separator,
+   product wordmark. Replaces the prior cross-product strip. */
+.suite-breadcrumb {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.suite-breadcrumb > a:first-child { transition: color 120ms ease; }
+.suite-breadcrumb > a:first-child:hover { color: var(--color-ink); }
 
 .sr-only {
   position: absolute;

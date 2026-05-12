@@ -7,26 +7,27 @@ export default function AppLayout({
   return (
     <>
       <header className="suitebar" aria-label="Signal Notes notebook chrome">
-        <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
-          <span className="word">notes</span>
-          <span className="dot" aria-hidden />
-        </Link>
-        <nav className="flex items-center gap-4">
+        <div className="suite-breadcrumb">
           <a
             href="https://signalstudio.ie"
             className="text-[12px]"
             style={{ color: "var(--color-ink-faint)" }}
           >
-            signal studio
+            signal studio<span style={{ color: "#4f46e5" }}>.</span>
           </a>
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-7 w-7",
-              },
-            }}
-          />
-        </nav>
+          <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
+          <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
+            <span className="word">notes</span>
+            <span className="dot" aria-hidden />
+          </Link>
+        </div>
+        <UserButton
+          appearance={{
+            elements: {
+              avatarBox: "h-7 w-7",
+            },
+          }}
+        />
       </header>
       {children}
     </>

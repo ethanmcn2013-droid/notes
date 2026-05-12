@@ -1,5 +1,18 @@
 # Signal Notes · Changelog
 
+## 2026-05-12 (latest)
+
+### Suite chrome consolidated — one bar, breadcrumb prefix.
+
+The Notes suitebar was the odd one out — splitting left/right with
+no active state on "notes" even when sitting on notes.signalstudio.ie.
+Replaced suite-wide with the breadcrumb pattern: small "signal
+studio. /" back-link, then the "notes." wordmark, all on one row.
+Same treatment applied to /app and /wedding-planning. The notebook
+aesthetic (warm cream, mustard accent, Inter) is untouched — only
+the chrome above it changed. See the umbrella changelog for the
+dissent captured inside the decision.
+
 ## 2026-05-12 (later still)
 
 ### Cycle 9.4b second half · the cross-repo edge is real.

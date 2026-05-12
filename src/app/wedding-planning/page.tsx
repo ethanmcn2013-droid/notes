@@ -90,14 +90,13 @@ export default function WeddingPlanningNotePage() {
   return (
     <div style={{ background: PAGE_BG, minHeight: "100vh" }}>
       <header
-        className="suitebar"
-        aria-label="Signal Studio suite"
+        aria-label="Signal Notes notebook chrome"
         style={{
           maxWidth: 1040,
           margin: "0 auto",
           padding: "20px 24px",
           display: "flex",
-          gap: 28,
+          gap: 12,
           alignItems: "baseline",
           fontSize: 13,
           fontFamily: "var(--font-geist, ui-sans-serif)",
@@ -105,24 +104,17 @@ export default function WeddingPlanningNotePage() {
       >
         <a
           href="https://signalstudio.ie"
-          style={{ color: "var(--color-ink, #14151a)", textDecoration: "none" }}
+          style={{ color: "var(--color-ink-faint, #9b9b94)", textDecoration: "none", fontSize: 12 }}
         >
           signal studio<span style={{ color: "var(--accent, #4f46e5)" }}>.</span>
         </a>
-        <nav
-          aria-label="suite"
-          style={{
-            display: "flex",
-            gap: 18,
-            color: "var(--color-ink-faint, #9b9b94)",
-            fontSize: 12,
-          }}
+        <span aria-hidden style={{ color: "var(--color-ink-faint, #9b9b94)", fontSize: 12 }}>/</span>
+        <a
+          href="/"
+          style={{ color: "var(--color-ink, #14151a)", textDecoration: "none", fontWeight: 600 }}
         >
-          <a href="https://tasks.signalstudio.ie" style={{ color: "inherit", textDecoration: "none" }}>tasks</a>
-          <a href="https://roadmap.signalstudio.ie" style={{ color: "inherit", textDecoration: "none" }}>roadmap</a>
-          <a href="https://analytics.signalstudio.ie" style={{ color: "inherit", textDecoration: "none" }}>analytics</a>
-          <strong style={{ color: "var(--color-ink, #14151a)", fontWeight: 600 }}>notes</strong>
-        </nav>
+          notes<span style={{ color: "var(--accent-2, #d4a534)" }}>.</span>
+        </a>
       </header>
 
       <main

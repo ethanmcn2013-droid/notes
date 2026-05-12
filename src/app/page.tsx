@@ -1,18 +1,24 @@
+import Link from "next/link";
 import { Hero } from "@/components/showcase/hero";
 
 export default function HomePage() {
   return (
     <>
-      <header className="suitebar" aria-label="Signal Studio suite">
-        <a href="https://signalstudio.ie">
-          signal studio<span>.</span>
-        </a>
-        <nav>
-          <a href="https://tasks.signalstudio.ie">tasks</a>
-          <a href="https://roadmap.signalstudio.ie">roadmap</a>
-          <a href="https://analytics.signalstudio.ie">analytics</a>
-          <strong>notes</strong>
-        </nav>
+      <header className="suitebar" aria-label="Signal Notes notebook chrome">
+        <div className="suite-breadcrumb">
+          <a
+            href="https://signalstudio.ie"
+            className="text-[12px]"
+            style={{ color: "var(--color-ink-faint)" }}
+          >
+            signal studio<span style={{ color: "#4f46e5" }}>.</span>
+          </a>
+          <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
+          <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
+            <span className="word">notes</span>
+            <span className="dot" aria-hidden />
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-[860px] px-7 pt-24 pb-32 sm:pt-28">
