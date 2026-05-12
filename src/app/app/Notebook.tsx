@@ -10,7 +10,13 @@ import {
 } from "react";
 
 import { PrivateNotesEmptyState } from "@/app/app/PrivateNotesEmptyState";
-import { createNote, deleteNote, type NoteRead } from "@/server/actions/notes";
+import {
+  clearNoteExtract,
+  createNote,
+  deleteNote,
+  setNoteExtract,
+  type NoteRead,
+} from "@/server/actions/notes";
 
 function makeOptimisticId() {
   return `opt_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -54,9 +60,13 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
+  const [editingExtractFor, setEditingExtractFor] = useState<string | null>(null);
+  const [draftAction, setDraftAction] = useState("");
+  const [extractError, setExtractError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const extractInputRef = useRef<HTMLInputElement | null>(null);
   const tickRef = useRef(0);
   const [, forceTick] = useState(0);
 
@@ -113,6 +123,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
       body,
       createdAt: now,
       updatedAt: now,
+      extractBody: null,
       promotedTaskId: null,
     };
     setNotes((prev) => [optimistic, ...prev]);
@@ -168,6 +179,95 @@ export function Notebook({ initialNotes }: NotebookProps) {
       });
     },
     [notes]
+  );
+
+  const startEditingExtract = useCallback((note: NoteRead) => {
+    setEditingExtractFor(note.id);
+    setDraftAction(note.extractBody ?? "");
+    setExtractError(null);
+    // Focus runs on next paint
+    window.setTimeout(() => {
+      extractInputRef.current?.focus();
+      extractInputRef.current?.select();
+    }, 0);
+  }, []);
+
+  const cancelEditingExtract = useCallback(() => {
+    setEditingExtractFor(null);
+    setDraftAction("");
+    setExtractError(null);
+  }, []);
+
+  const commitExtract = useCallback(
+    (noteId: string) => {
+      const trimmed = draftAction.trim();
+      if (!trimmed) {
+        cancelEditingExtract();
+        return;
+      }
+      const previousNotes = notes;
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === noteId
+            ? { ...n, extractBody: trimmed, updatedAt: Date.now() }
+            : n
+        )
+      );
+      setEditingExtractFor(null);
+      setDraftAction("");
+      setExtractError(null);
+      startTransition(async () => {
+        try {
+          const saved = await setNoteExtract(noteId, trimmed);
+          setNotes((prev) => prev.map((n) => (n.id === noteId ? saved : n)));
+        } catch (err) {
+          setNotes(previousNotes);
+          setExtractError(
+            err instanceof Error ? err.message : "Could not draft action"
+          );
+        }
+      });
+    },
+    [draftAction, notes, cancelEditingExtract]
+  );
+
+  const removeExtract = useCallback(
+    (noteId: string) => {
+      const previousNotes = notes;
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === noteId ? { ...n, extractBody: null, updatedAt: Date.now() } : n
+        )
+      );
+      setExtractError(null);
+      startTransition(async () => {
+        try {
+          const saved = await clearNoteExtract(noteId);
+          setNotes((prev) => prev.map((n) => (n.id === noteId ? saved : n)));
+        } catch (err) {
+          setNotes(previousNotes);
+          setExtractError(
+            err instanceof Error ? err.message : "Could not clear action"
+          );
+        }
+      });
+    },
+    [notes]
+  );
+
+  const onExtractKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>, noteId: string) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancelEditingExtract();
+        return;
+      }
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        commitExtract(noteId);
+      }
+    },
+    [cancelEditingExtract, commitExtract]
   );
 
   const onCaptureKeyDown = useCallback(
@@ -292,7 +392,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
                     )}
                   </span>
                   <span className="note-meta">
-                    {note.promotedTaskId && (
+                    {(note.extractBody || note.promotedTaskId) && (
                       <span
                         aria-label="Private action drafted"
                         className="note-dot"
@@ -310,7 +410,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
           <article className="open-note" aria-label="Open note">
             <div className="open-note-head">
               <span>Captured {relativeTime(openNote.createdAt)}</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div className="open-note-head-controls">
                 <button
                   type="button"
                   className="btn-delete"
@@ -319,15 +419,93 @@ export function Notebook({ initialNotes }: NotebookProps) {
                 >
                   Delete
                 </button>
-                <span
-                  className="promote-soon"
-                  aria-hidden
-                >
-                  Promote to Tasks &middot; arrives next cycle
-                </span>
+                {!openNote.extractBody &&
+                  editingExtractFor !== openNote.id && (
+                    <button
+                      type="button"
+                      className="btn-draft-action"
+                      onClick={() => startEditingExtract(openNote)}
+                    >
+                      Draft action
+                    </button>
+                  )}
               </div>
             </div>
             <p className="open-note-body">{openNote.body}</p>
+
+            {editingExtractFor === openNote.id && (
+              <div className="extract-input" role="group" aria-label="Draft action">
+                <label className="sr-only" htmlFor="extract-input-field">
+                  Action wording
+                </label>
+                <input
+                  ref={extractInputRef}
+                  id="extract-input-field"
+                  type="text"
+                  value={draftAction}
+                  onChange={(event) => setDraftAction(event.target.value)}
+                  onKeyDown={(event) => onExtractKeyDown(event, openNote.id)}
+                  placeholder="Type the action wording — be deliberate."
+                  maxLength={280}
+                  spellCheck
+                  autoComplete="off"
+                />
+                <div className="extract-input-controls">
+                  <button
+                    type="button"
+                    className="btn-delete"
+                    onClick={cancelEditingExtract}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-draft-action"
+                    onClick={() => commitExtract(openNote.id)}
+                    disabled={draftAction.trim().length === 0}
+                  >
+                    Save
+                  </button>
+                </div>
+                <p className="extract-hint">
+                  <kbd>Enter</kbd> saves · <kbd>Esc</kbd> cancels · cross-repo send to Tasks lands next cycle
+                </p>
+              </div>
+            )}
+
+            {openNote.extractBody && editingExtractFor !== openNote.id && (
+              <div className="extract-drafted" aria-label="Action drafted">
+                <p className="extract-drafted-meta">
+                  Action drafted &middot; pending Tasks send
+                </p>
+                <p className="extract-drafted-body">{openNote.extractBody}</p>
+                <div className="extract-drafted-controls">
+                  <button
+                    type="button"
+                    className="btn-delete"
+                    onClick={() => startEditingExtract(openNote)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-delete"
+                    onClick={() => removeExtract(openNote.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {extractError && (
+              <p
+                role="alert"
+                className="extract-error"
+              >
+                {extractError}
+              </p>
+            )}
           </article>
         )}
       </section>

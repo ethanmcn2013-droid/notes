@@ -88,7 +88,7 @@ The product surface is one screen. It is called the **notebook**.
 
 **Notes reads:** nothing automatically. It is purely a capture surface.
 
-**Notes writes:** to its own database. Notes are stored as `{id, body, created_at, updated_at, promoted_task_id?}`. That is the whole schema in v1.
+**Notes writes:** to its own database. Notes are stored as `{id, body, created_at, updated_at, extract_body?, promoted_task_id?}`. That is the whole schema in v1. `extract_body` holds the creator-authored action wording (added Cycle 9.4b extraction-half, 2026-05-12); `promoted_task_id` is filled in by the future cross-repo write to Tasks. Both null until the user deliberately drafts an action.
 
 **Notes privacy boundary:** raw note bodies are private by default and are intentionally excluded from shared workspaces, roadmap views, task views, analytics summaries, and public collaboration surfaces. Notes can create work from a note only through explicit user approval.
 

@@ -1,5 +1,33 @@
 # Signal Notes · Changelog
 
+## 2026-05-12 (later)
+
+### Cycle 9.4b · the Draft action gesture lands real.
+
+The "Promote to Tasks · arrives next cycle" placeholder in the open
+note's head is gone. In its place: a real Draft action button that
+opens a small deliberate-authoring input. The user types the action
+wording themselves — Notes refuses auto-detection per PRODUCT.md §8
+locked refusal. Saved actions sit in a brand-tinted block below the
+note body labeled "Action drafted · pending Tasks send". The note
+row gets the indigo dot. Edit and Remove sit on the drafted block.
+
+Schema gained `extract_body` (nullable text) on the notes table.
+PRODUCT.md §6 schema definition updated. Production Turso ALTER TABLE
+is an operator action (Ethan, via Turso CLI) — code ships ready.
+
+What's NOT in this cycle: the cross-repo write to Tasks. That's the
+second half of 9.4b and is gated on the contract design with Tasks's
+write surface. Until it lands, drafted actions live in Notes only,
+labeled honestly as pending. Closing the gesture-half now means the
+venue walkthrough no longer hand-waves at the four-layer loop's
+Notes → Tasks edge — the extraction is real; the cross-repo write
+ships next cycle.
+
+Privacy guardrails tightened: schema comment reinforces that
+extract_body is the only thing that ever leaves Notes (creator-
+authored, deliberate). Raw note bodies stay private by design.
+
 ## 2026-05-12
 
 ### Suite review patch — the wedding-planning door, and the button that was lying.

@@ -453,6 +453,11 @@ button, input, textarea { font: inherit; }
   font-family: var(--font-mono-stack, ui-monospace, SFMono-Regular, Menlo, monospace);
   white-space: nowrap;
 }
+.open-note-head-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
 .btn-delete {
   background: transparent;
   border: 0;
@@ -465,6 +470,105 @@ button, input, textarea { font: inherit; }
   padding: 0 8px;
 }
 .btn-delete:hover { color: var(--color-ink); }
+
+.btn-draft-action {
+  background: transparent;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 8px;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 6px 12px;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+.btn-draft-action:hover {
+  border-color: var(--color-signal);
+  color: var(--color-ink);
+}
+.btn-draft-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.extract-input {
+  margin-top: 14px;
+  padding: 12px 14px 10px;
+  border-left: 2px solid var(--color-signal);
+  background: color-mix(in srgb, var(--color-paper) 96%, var(--color-signal) 4%);
+  border-radius: 0 6px 6px 0;
+}
+.extract-input input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 4px 0;
+  outline: none;
+}
+.extract-input input::placeholder {
+  color: var(--color-ink-faint);
+}
+.extract-input-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+.extract-hint {
+  margin: 6px 0 0;
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+.extract-hint kbd {
+  font-family: var(--font-mono-stack, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10.5px;
+  padding: 1px 4px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 3px;
+  color: var(--color-ink-soft);
+}
+
+.extract-drafted {
+  margin-top: 14px;
+  padding: 10px 14px 10px;
+  border-left: 2px solid var(--color-signal);
+  background: color-mix(in srgb, var(--color-paper) 96%, var(--color-signal) 4%);
+  border-radius: 0 6px 6px 0;
+}
+.extract-drafted-meta {
+  margin: 0;
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.extract-drafted-body {
+  margin: 4px 0 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.extract-drafted-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.extract-error {
+  margin: 10px 0 0;
+  padding: 0;
+  color: #b04848;
+  font-size: 12px;
+}
 
 /* ── Empty states (PRODUCT.md §9) ────────────────────────────────── */
 
