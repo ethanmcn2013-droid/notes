@@ -20,13 +20,13 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "Signal Notes — capture clarity",
   description:
-    "Capture in three seconds. Find it later. Promote it when it matters. Signal Notes is the context layer of Signal Studio.",
+    "A private capture layer for thoughts before they become work. Signal Notes is the context layer of Signal Studio.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://notes.signalstudio.ie"
   ),
   openGraph: {
     title: "Signal Notes — capture clarity",
-    description: "Capture in three seconds. Find it later. Promote it when it matters.",
+    description: "A private place for thoughts before they become work.",
     type: "website",
   },
 };

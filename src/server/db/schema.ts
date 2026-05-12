@@ -3,12 +3,15 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /**
  * Locked schema (PRODUCT.md §6) — one row per note, plus the
- * one-way promotion edge to Signal Tasks.
+ * one-way approved extraction edge to Signal Tasks.
  *
  * v1 surface: { id, body, created_at, updated_at, promoted_task_id? }.
  * No tags, no folders, no metadata. Search is on body text via the
  * upcoming FTS5 layer (Cycle 9.4); for now, the (user_id, created_at)
  * index drives the stream.
+ *
+ * Privacy guardrail: body is private to the owner. Collaborative views
+ * should store/read approved extracts, never raw note rows.
  */
 
 export const notes = sqliteTable(

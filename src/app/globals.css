@@ -222,11 +222,15 @@ button, input, textarea { font: inherit; }
 .search input:focus { border-color: var(--color-accent); }
 
 .capture {
+  --capture-pad: clamp(20px, 4vw, 42px);
+  position: relative;
   display: block;
-  padding: clamp(20px, 4vw, 42px);
+  padding: var(--capture-pad);
   border-bottom: 1px solid var(--color-line);
 }
 .capture textarea {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   min-height: 138px;
@@ -238,11 +242,64 @@ button, input, textarea { font: inherit; }
   font-size: clamp(28px, 5vw, 56px);
   font-weight: 560;
   line-height: 1.03;
-  letter-spacing: -0.015em;
+  letter-spacing: 0;
   caret-color: var(--color-accent);
   font-family: inherit;
 }
-.capture textarea::placeholder { color: #a7ad9d; }
+
+.private-notes-empty-state {
+  position: absolute;
+  top: var(--capture-pad);
+  left: var(--capture-pad);
+  z-index: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  width: min(100% - (var(--capture-pad) * 2), 24ch);
+  color: color-mix(in srgb, var(--color-ink-faint) 72%, var(--color-paper));
+  font-size: clamp(24px, 3.9vw, 44px);
+  font-weight: 520;
+  letter-spacing: 0;
+  line-height: 1.12;
+  opacity: 1;
+  pointer-events: none;
+  transform: translateY(0);
+  transition:
+    opacity 520ms ease,
+    transform 640ms ease;
+}
+
+.private-notes-empty-state.is-changing,
+.private-notes-empty-state.is-hidden {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.private-notes-empty-caret {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 0.82em;
+  background: color-mix(in srgb, var(--color-accent) 58%, var(--color-paper));
+  animation: private-notes-caret 1.35s ease-in-out infinite;
+}
+
+@keyframes private-notes-caret {
+  0%, 46% { opacity: 0.22; }
+  50%, 92% { opacity: 1; }
+  100% { opacity: 0.22; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .private-notes-empty-state {
+    transform: none;
+    transition: none;
+  }
+
+  .private-notes-empty-caret {
+    animation: none;
+    opacity: 0.72;
+  }
+}
 
 .capture-hint {
   margin-top: 14px;

@@ -20,6 +20,10 @@ export type NoteRead = Pick<
  * Server action: create a note for the signed-in user.
  * Returns the created note so the client can update its UI without a
  * second round-trip.
+ *
+ * Privacy guardrail: raw note bodies are private account data. Shared
+ * workspace, roadmap, task, and analytics surfaces must use future
+ * creator-approved extract endpoints, not this raw note action.
  */
 export async function createNote(body: string): Promise<NoteRead> {
   const userId = await requireUser();
@@ -52,6 +56,11 @@ export async function createNote(body: string): Promise<NoteRead> {
 
 /**
  * Server action: list notes for the signed-in user, newest first.
+ *
+ * Notes are intentionally excluded from collaborative sharing surfaces:
+ * this query is always scoped to the current Clerk user and must not be
+ * reused for guest, public, workspace, roadmap, or analytics views.
+ *
  * v1: no pagination — the stream is bounded by the user's own
  * notebook size. Pagination/virtualisation lands when a real user
  * crosses 500 notes.

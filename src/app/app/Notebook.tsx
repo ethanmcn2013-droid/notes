@@ -9,17 +9,8 @@ import {
   useTransition,
 } from "react";
 
+import { PrivateNotesEmptyState } from "@/app/app/PrivateNotesEmptyState";
 import { createNote, deleteNote, type NoteRead } from "@/server/actions/notes";
-
-// ── Locked capture placeholders (PRODUCT.md §9) ────────────────────
-const CAPTURE_PROMPTS = [
-  "What just came up?",
-  "What's the one thing to remember?",
-  "What needs writing down?",
-  "What did the meeting just decide?",
-  "What's worth remembering before you forget?",
-  "Three seconds. Type it now.",
-] as const;
 
 function makeOptimisticId() {
   return `opt_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -69,12 +60,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const tickRef = useRef(0);
   const [, forceTick] = useState(0);
 
-  // One placeholder per mount (PRODUCT.md §9)
-  const placeholder = useMemo(() => {
-    const idx = Math.floor(Math.random() * CAPTURE_PROMPTS.length);
-    return CAPTURE_PROMPTS[idx];
-  }, []);
-
   // Refocus capture when the tab returns to foreground (PRODUCT.md §5 budget)
   useEffect(() => {
     const refocus = () => {
@@ -115,6 +100,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
   }, [notes, query]);
 
   const lastSavedTs = notes[0]?.createdAt ?? null;
+  const draftIsEmpty = draft.trim().length === 0;
 
   const commit = useCallback(() => {
     const body = draft.trim();
@@ -240,18 +226,19 @@ export function Notebook({ initialNotes }: NotebookProps) {
         </div>
 
         <label className="capture">
-          <span className="sr-only">Capture a note</span>
+          <span className="sr-only">Capture a private note</span>
           <textarea
             id="capture"
             ref={captureRef}
             autoFocus
             rows={3}
-            placeholder={placeholder}
+            placeholder=""
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onCaptureKeyDown}
             spellCheck
           />
+          <PrivateNotesEmptyState visible={draftIsEmpty} />
           <p className="capture-hint">
             <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
           </p>
@@ -307,7 +294,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
                   <span className="note-meta">
                     {note.promotedTaskId && (
                       <span
-                        aria-label="Promoted to a task"
+                        aria-label="Private action drafted"
                         className="note-dot"
                       />
                     )}
@@ -332,14 +319,17 @@ export function Notebook({ initialNotes }: NotebookProps) {
                 >
                   Delete
                 </button>
+                {/* Notes are intentionally excluded from collaborative sharing.
+                    This future edge should create only a user-approved action
+                    extract, never expose the raw note body. */}
                 <button
                   type="button"
                   className="btn-promote"
                   disabled
-                  title="Promote to task — ships next cycle"
-                  aria-label="Promote to task (ships in next cycle)"
+                  title="Approved action extraction ships next cycle"
+                  aria-label="Draft action from this note (approved extraction ships next cycle)"
                 >
-                  Task
+                  Draft action
                 </button>
               </div>
             </div>
@@ -353,9 +343,13 @@ export function Notebook({ initialNotes }: NotebookProps) {
         <p className="product-eyebrow">Signal Notes</p>
         <h1 className="product-h1">Capture clarity.</h1>
         <p className="product-promise">
-          Capture in three seconds. Find it later. Promote it when it matters.
+          A private layer for thoughts before they become work.
         </p>
         <dl className="product-stats">
+          <div>
+            <dt>Privacy</dt>
+            <dd>Private by default</dd>
+          </div>
           <div>
             <dt>Stream</dt>
             <dd>

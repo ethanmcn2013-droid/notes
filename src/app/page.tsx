@@ -24,23 +24,22 @@ export default function HomePage() {
         </p>
 
         <h1
-          className="text-[clamp(2.8rem,1.6rem+4vw,5rem)] font-semibold leading-[0.98] tracking-[-0.045em]"
+          className="text-[clamp(2.8rem,1.6rem+4vw,5rem)] font-semibold leading-[0.98] tracking-normal"
           style={{ color: "var(--color-ink)" }}
         >
-          Capture in three seconds.
+          Your private layer.
           <br />
-          Find it later.
+          Capture the thought.
           <br />
-          Promote it when it matters.
+          Decide later.
         </h1>
 
         <p
           className="mt-7 max-w-[36rem] text-[17px] leading-[1.6]"
           style={{ color: "var(--color-ink-soft)" }}
         >
-          A notebook for the half-formed thought, the thing the meeting just
-          decided, the fact that came up in passing. Capture happens in life,
-          not in front of a desk.
+          A notebook for the half-formed thought, the thing not ready for the
+          room, and the decision you need to understand before it becomes work.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-3">

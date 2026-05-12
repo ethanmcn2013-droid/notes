@@ -34,13 +34,13 @@ Banned framings: "second brain", "personal knowledge management", "Zettelkasten"
 
 ## 3 · The promise
 
-> Capture in three seconds. Find it later. Promote it when it matters.
+> Capture in three seconds. Find it later. Decide what becomes work.
 
 The promise has three parts and they are non-negotiable:
 
 1. **Three-second capture.** From "I need to write this down" to *written* in under three seconds. This is the design budget. Anything that costs the third second is a bug.
 2. **Findable, not organised.** No required folders, tags, projects, or hierarchy. Search and recency are the access pattern. Organisation is opt-in for users who want it; default is flat.
-3. **One-way promotion to Tasks.** A note becomes a task when the user says so — never automatically. Tasks does not become Notes. The flow is one direction, capture → commitment.
+3. **One-way extraction to Tasks.** A note can produce an action when the user says so — never automatically. Tasks does not become Notes. The flow is one direction, private capture → deliberate commitment.
 
 If any of these three drift, the product is no longer Signal Notes — it has become a different category of product (a wiki, a knowledge base, a journaling app, a second brain) and is no longer brand-coherent.
 
@@ -52,11 +52,11 @@ The product surface is one screen. It is called the **notebook**.
 
 **Top:** the capture field. Always-visible, always-focused on open. Cursor lives here. Pressing Enter saves. There is no "save" button. There is no title field — the first line becomes the title. There is no folder picker. There is no tag picker. There is one keystroke (`⌘↵` or `⇧↵`) to commit; one keystroke (`Esc`) to discard.
 
-**Below:** the stream. Recent notes, newest first. Each note shows: title (first line), one-line preview (next line), captured-at (relative time), one indigo dot if the note has been promoted to a Task. Clicking opens the note in place; the stream below scrolls down.
+**Below:** the stream. Recent notes, newest first. Each note shows: title (first line), one-line preview (next line), captured-at (relative time), one indigo dot if the note has produced an approved action draft. Clicking opens the note in place; the stream below scrolls down.
 
 **Left rail (collapsible):** search. That's it. No folder tree. No tag cloud. No graph view. Search is fuzzy, full-text, and the only navigation primitive in v1.
 
-**Bottom-right corner:** a single icon — the promote-to-task button — visible only when a note is open. One click sends the note's content to Signal Tasks as a new task and adds the indigo dot to the note. The note itself is unchanged. The promotion is a one-way edge, not a move.
+**Bottom-right corner:** a single icon — the draft-action button — visible only when a note is open. One click should let the user approve a selected action extract for Signal Tasks and add the indigo dot to the note. The note itself is unchanged and private. The extraction is a one-way edge, not a move.
 
 **No views.** No "card view", "outline view", "timeline view", "kanban view". One stream. Search to find. Recency to browse.
 
@@ -90,10 +90,12 @@ The product surface is one screen. It is called the **notebook**.
 
 **Notes writes:** to its own database. Notes are stored as `{id, body, created_at, updated_at, promoted_task_id?}`. That is the whole schema in v1.
 
+**Notes privacy boundary:** raw note bodies are private by default and are intentionally excluded from shared workspaces, roadmap views, task views, analytics summaries, and public collaboration surfaces. Notes can create work from a note only through explicit user approval.
+
 **Notes shares with the suite:**
-- *Notes → Tasks:* one-way promotion. User clicks "promote to task", note body is sent to Tasks API, a new task is created. Notes stores the resulting task id and renders the indigo dot.
-- *Notes → Analytics:* deferred to v2+. There is a real signal in note frequency, repeated-mention patterns, and capture velocity, but extracting that signal requires NLP-adjacent work that v1 will not take on.
-- *Tasks → Notes:* never. A task does not become a note. A task can *reference* a note (via the promotion edge), but the data flows one way.
+- *Notes → Tasks:* one-way extraction. User approves a selected action from the note, that action is sent to Tasks, and Notes stores the resulting task id. The full note body stays private.
+- *Notes → Analytics:* deferred to v2+. Analytics may receive approved, non-sensitive extracts or aggregate signals, but raw note text does not enter briefings by default.
+- *Tasks → Notes:* never. A task does not become a note. A task can *reference* a note through an approved extraction edge, but the data flows one way.
 
 **No exports in v1** beyond a single-note copy-to-clipboard. Bulk export, OPML, JSON-dump etc. are deferred to demand.
 
@@ -107,7 +109,7 @@ These are decisions to *never* build in Notes. They make the product distinct fr
 - **Not a knowledge base.** No taxonomy. No required tagging. No "topic" or "category" abstraction.
 - **Not a second brain.** The brand will not use the phrase. It positions Notes as a self-improvement aid; that's not what this is.
 - **Not journaling.** No daily note. No "today" template. No date-based scaffolding. The user can use Notes for journaling — that's their choice — but the product won't shape itself around it.
-- **Not collaborative.** Notes is single-user in v1. No sharing. No comments. No real-time. (Tasks is where shared work lives.)
+- **Not collaborative.** Notes is single-user in v1. No sharing. No comments. No real-time. Tasks and Roadmaps are where shared work lives.
 - **Not configurable.** No themes. No fonts. No layout options. No "appearance" panel. Same restraint as Tasks and Analytics.
 - **Not AI-marketed.** No "AI summary". No "AI tagging". No "AI search". The voice rules apply.
 - **Not infinite-canvas.** No spatial canvas. No mind-map. Notes is a stream and a search field.
@@ -126,12 +128,12 @@ This is the question Plan 1.2 was created to answer. Notes and Tasks both let th
 | Required: title | Optional: title (first line is title) |
 | Required: status | No status concept |
 | Optional: due date, assignee, project | None of these exist in Notes |
-| Lifecycle: open → done | Lifecycle: written, optionally promoted |
+| Lifecycle: open → done | Lifecycle: written, optionally extracted |
 | Belongs to a project | Belongs to a stream |
 | Surfaces in a briefing (Analytics) | Does not surface in a briefing |
 | Multiplayer | Single-user |
 
-**The mental model:** Notes is the inbox of thought. Tasks is the commitment ledger. Promotion is the act of crossing from one to the other.
+**The mental model:** Notes is the private inbox of thought. Tasks is the commitment ledger. Extraction is the act of choosing what crosses from one to the other.
 
 **Why one-way only:** a task carries structure (status, due date, assignee, project) that a note does not have. Demoting a task to a note would discard that structure silently — a destructive operation hidden behind a button. Better: the user closes the task, optionally writes a note about why. The two are kept honest.
 
@@ -140,7 +142,7 @@ This is the question Plan 1.2 was created to answer. Notes and Tasks both let th
 - *"I want to write a long-form note about a task"* — that's a Note that mentions the task. Or a comment on the task itself. Both work. We don't enforce.
 - *"I want to keep meeting minutes"* — that's a Note, plus zero or more promotions. Notes is the right surface.
 
-**Refusal:** we will not build a "smart" Notes-to-Tasks promotion that auto-detects todo-shaped sentences. That moves the line back into fuzzy territory and breaks promise #3 ("never automatically"). Promotion is always a deliberate user action.
+**Refusal:** we will not build a "smart" Notes-to-Tasks extraction that auto-detects todo-shaped sentences. That moves the line back into fuzzy territory and breaks promise #3 ("never automatically"). Extraction is always a deliberate user action.
 
 ---
 
@@ -161,7 +163,7 @@ A capture product is brand-coherent only if capture is genuinely fast. Below the
 - The notebook wordmark gesture (per BRAND.md): `notes·` with the *underline-writes-itself* on first paint. Once. Not on subsequent renders.
 
 **Locked voice in the product itself:**
-- The placeholder in the capture field rotates among ~6 phrasings drawn from the audience (e.g., "What just came up?", "What's the one thing to remember?", "What needs writing down?"). Hand-curated, same discipline as the Analytics prose library.
+- The empty capture field shows a quiet private-writing line with a blinking caret. It uses the locked seven-line set from Cycle 9.4b and disappears the moment the user begins typing.
 - Empty state on a brand-new account: "Nothing here yet. Start typing." Period. Not a tour, not a tutorial, not a sample-data offer.
 - Zero notifications. Notes never pings. The product is silent by default.
 
@@ -169,18 +171,22 @@ A capture product is brand-coherent only if capture is genuinely fast. Below the
 
 ## 10 · Implementation map
 
-Notes is **not yet scaffolded**. This section is a forward-looking pointer to where things will live when Plan 9 (deferred) opens it up.
+Notes is now scaffolded as a Next.js 16 private preview with Clerk auth,
+Turso-backed persistence, and the locked notebook surface live at `/app`.
 
 | Concern | Where it gets built | Plan |
 |---|---|---|
-| Project scaffold | New repo `~/Projects/personal/notes` (Next 16, Turso, Clerk) | Plan 9 |
-| Capture field + stream | `src/app/app/page.tsx` + minimal client wrapper | Plan 9 |
-| Search | Turso FTS5 (full-text search) | Plan 9 |
-| Promote-to-Tasks edge | Tasks API endpoint (new) `/api/external/promote-from-notes` | Plan 9 + Tasks update |
+| Project scaffold | Next 16, Turso, Drizzle, Clerk | Shipped |
+| Capture field + stream | `src/app/app/Notebook.tsx` | Shipped |
+| Private empty state | `src/app/app/PrivateNotesEmptyState.tsx` | Shipped |
+| Search | Client-side filter now; Turso FTS5 later | Cycle 9.4 |
+| Approved action extraction | Future Tasks API endpoint for selected extracts only | Cycle 9.4b |
 | Email capture | Resend inbound or Mailgun routing → API endpoint | Plan 9.x |
-| Marketing site | Same chrome system as Tasks/Roadmap/Analytics | Plan 9 |
+| Marketing site | `src/app/page.tsx` | Shipped |
 
-**Pre-Plan-9 ownership** (already done): brand-tier added 2026-05-09 — placeholder card on Studio products-grid, dimmed nav/footer entries, `NOTES_URL` env-var fallback.
+**Important:** raw note reads live behind `requireUser()` and stay scoped
+to the signed-in creator. Collaboration must happen through approved
+extracts, summaries, or linked tasks, never through raw note exposure.
 
 ---
 
