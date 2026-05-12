@@ -1,22 +1,46 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { forwardRef } from "react";
 import type { Note } from "./types";
 import { NotePip } from "./note-pip";
+import { PromoteMenu } from "./promote-menu";
 
 type Props = {
   notes: Note[];
   highlightId: string | null;
+  /** Substring to highlight inside a hit note's body, or null. */
+  highlightQuery?: string;
+  /** Note id currently being "long-pressed" — shows the press ring + menu. */
+  pressedNoteId?: string | null;
+  /** True when the promote-menu's "Promote to Tasks" item is being clicked. */
+  promotePressed?: boolean;
+  /** Note id currently flying off to Tasks — render it ghosted/hidden. */
+  promotingNoteId?: string | null;
+  /** Callback to register each note's DOM element for animation targeting. */
+  onRegister?: (id: string, el: HTMLDivElement | null) => void;
 };
 
 /**
- * The stream of captured notes. Newest first. Items animate in on commit.
- * Search hits get a subtle ring; misses dim slightly so the eye lands on
- * the match without any "result count" UI fanfare.
+ * The stream of captured notes. Newest first.
  *
- * Tag chips render next to the timestamp pip when a note has tags.
+ * Tag chips animate in with a staggered landing after the note commits.
+ * Search highlights wrap matched substrings in a soft accent background.
+ * Long-press ring + promote menu appear when pressedNoteId is set.
+ * Promoted notes hide (the flying silhouette is rendered separately).
  */
-export function NoteStream({ notes, highlightId }: Props) {
+export const NoteStream = forwardRef<HTMLDivElement, Props>(function NoteStream(
+  {
+    notes,
+    highlightId,
+    highlightQuery,
+    pressedNoteId,
+    promotePressed,
+    promotingNoteId,
+    onRegister,
+  },
+  _ref
+) {
   return (
     <div
       style={{
@@ -27,11 +51,16 @@ export function NoteStream({ notes, highlightId }: Props) {
     >
       <AnimatePresence initial={false}>
         {notes.map((note) => {
+          if (promotingNoteId === note.id) return null;
           const isHighlight = highlightId === note.id;
           const isDimmed = highlightId !== null && highlightId !== note.id;
+          const isPressed = pressedNoteId === note.id;
           return (
             <motion.div
               key={note.id}
+              ref={(el) => {
+                onRegister?.(note.id, el);
+              }}
               layout
               initial={
                 note.fresh
@@ -51,6 +80,7 @@ export function NoteStream({ notes, highlightId }: Props) {
                 layout: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
               }}
               style={{
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 gap: 4,
@@ -60,6 +90,8 @@ export function NoteStream({ notes, highlightId }: Props) {
                 border: "1px solid var(--color-line)",
                 boxShadow: isHighlight
                   ? "0 0 0 2px color-mix(in srgb, var(--color-accent) 32%, transparent)"
+                  : isPressed
+                  ? "0 0 0 2px color-mix(in srgb, var(--color-accent) 22%, transparent)"
                   : "none",
                 transition: "box-shadow 220ms cubic-bezier(.16,1,.3,1)",
               }}
@@ -77,9 +109,12 @@ export function NoteStream({ notes, highlightId }: Props) {
                     flex: 1,
                   }}
                 >
-                  {note.body}
+                  {isHighlight && highlightQuery
+                    ? renderWithHighlight(note.body, highlightQuery)
+                    : note.body}
                 </p>
               </div>
+
               {note.tags && note.tags.length > 0 ? (
                 <div
                   style={{
@@ -89,9 +124,20 @@ export function NoteStream({ notes, highlightId }: Props) {
                     marginLeft: 60,
                   }}
                 >
-                  {note.tags.map((tag) => (
-                    <span
+                  {note.tags.map((tag, i) => (
+                    <motion.span
                       key={tag}
+                      initial={
+                        note.fresh
+                          ? { opacity: 0, scale: 0.7, y: -4 }
+                          : false
+                      }
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{
+                        duration: 0.36,
+                        ease: [0.16, 1, 0.3, 1],
+                        delay: note.fresh ? 0.18 + i * 0.12 : 0,
+                      }}
                       className="font-mono"
                       style={{
                         fontSize: 9.5,
@@ -106,14 +152,63 @@ export function NoteStream({ notes, highlightId }: Props) {
                       }}
                     >
                       #{tag}
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
               ) : null}
+
+              {/* Long-press ring */}
+              {isPressed ? (
+                <motion.span
+                  aria-hidden
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 0.32, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.6 }}
+                  transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+                  style={{
+                    position: "absolute",
+                    inset: -4,
+                    borderRadius: 12,
+                    background:
+                      "radial-gradient(circle at center, color-mix(in srgb, var(--color-accent) 28%, transparent), transparent 70%)",
+                    pointerEvents: "none",
+                  }}
+                />
+              ) : null}
+
+              <PromoteMenu visible={isPressed} pressed={promotePressed} />
             </motion.div>
           );
         })}
       </AnimatePresence>
     </div>
+  );
+});
+
+/** Render body with the query substring wrapped in a highlight. */
+function renderWithHighlight(body: string, query: string) {
+  if (!query) return body;
+  const lower = body.toLowerCase();
+  const idx = lower.indexOf(query.toLowerCase());
+  if (idx === -1) return body;
+  const before = body.slice(0, idx);
+  const match = body.slice(idx, idx + query.length);
+  const after = body.slice(idx + query.length);
+  return (
+    <>
+      {before}
+      <mark
+        style={{
+          background:
+            "color-mix(in srgb, var(--color-accent-2) 30%, transparent)",
+          color: "var(--color-ink)",
+          padding: "1px 3px",
+          borderRadius: 3,
+        }}
+      >
+        {match}
+      </mark>
+      {after}
+    </>
   );
 }
