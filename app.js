@@ -1,4 +1,64 @@
 const STORAGE_KEY = "signal-notes-demo";
+const PRIVATE_EMPTY_LINES = [
+  "Writings you can’t say out loud.",
+  "For things not ready for the room yet.",
+  "Ideas before they become decisions.",
+  "Not everything needs to be shared.",
+  "A place to think before you speak.",
+  "For thoughts still forming.",
+  "Some things are only for you.",
+];
+
+class PrivateNotesEmptyState {
+  constructor({ copy, root, textarea }) {
+    this.copy = copy;
+    this.root = root;
+    this.textarea = textarea;
+    this.index = 0;
+    this.timer = null;
+    this.reducedMotion = prefersReducedMotion();
+  }
+
+  start() {
+    this.render();
+    this.sync();
+  }
+
+  sync() {
+    const empty = this.textarea.value.trim().length === 0;
+    this.root.classList.toggle("is-hidden", !empty);
+
+    if (!empty || this.reducedMotion) {
+      this.stopRotation();
+      return;
+    }
+
+    this.startRotation();
+  }
+
+  startRotation() {
+    if (this.timer) return;
+    this.timer = window.setInterval(() => this.rotate(), 5200);
+  }
+
+  stopRotation() {
+    window.clearInterval(this.timer);
+    this.timer = null;
+  }
+
+  rotate() {
+    this.root.classList.add("is-changing");
+    window.setTimeout(() => {
+      this.index = nextIndex(this.index, PRIVATE_EMPTY_LINES.length);
+      this.render();
+      this.root.classList.remove("is-changing");
+    }, 320);
+  }
+
+  render() {
+    this.copy.textContent = PRIVATE_EMPTY_LINES[this.index];
+  }
+}
 
 const seedNotes = [
   {
@@ -35,11 +95,17 @@ const openNote = document.querySelector("#open-note");
 const openBody = document.querySelector("#open-body");
 const openTime = document.querySelector("#open-time");
 const promote = document.querySelector("#promote");
+const privateEmptyState = new PrivateNotesEmptyState({
+  copy: document.querySelector("#private-empty-copy"),
+  root: document.querySelector("#private-empty-state"),
+  textarea: capture,
+});
 
 let notes = readNotes();
 let selectedId = null;
 
 render();
+privateEmptyState.start();
 capture.focus({ preventScroll: true });
 
 capture.addEventListener("keydown", (event) => {
@@ -48,9 +114,16 @@ capture.addEventListener("keydown", (event) => {
   saveCapture();
 });
 
+capture.addEventListener("input", () => {
+  privateEmptyState.sync();
+});
+
 search.addEventListener("input", render);
 promote.addEventListener("click", () => {
   if (!selectedId) return;
+  // Privacy guardrail: Notes never shares the full note body into collaborative
+  // surfaces. This demo only marks that the user drafted an action privately;
+  // future Tasks extraction must be explicit, selected, and user-approved.
   notes = notes.map((note) =>
     note.id === selectedId ? { ...note, promoted: true } : note,
   );
@@ -72,6 +145,7 @@ function saveCapture() {
   notes = [note, ...notes];
   selectedId = note.id;
   capture.value = "";
+  privateEmptyState.sync();
   writeNotes();
   render();
 }
@@ -108,7 +182,7 @@ function render() {
     if (note.promoted) {
       const dot = document.createElement("span");
       dot.className = "dot";
-      dot.setAttribute("aria-label", "Promoted to Signal Tasks");
+      dot.setAttribute("aria-label", "Private action drafted");
       meta.prepend(dot);
     }
 
@@ -129,7 +203,7 @@ function renderOpenNote(note) {
   openNote.hidden = false;
   openTime.textContent = relativeTime(note.createdAt);
   openBody.textContent = note.body;
-  promote.textContent = note.promoted ? "Task linked" : "Task";
+  promote.textContent = note.promoted ? "Action drafted" : "Draft action";
   promote.disabled = note.promoted;
 }
 
@@ -161,4 +235,13 @@ function readNotes() {
 
 function writeNotes() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function nextIndex(current, length) {
+  if (length <= 1) return 0;
+  return (current + 1) % length;
 }

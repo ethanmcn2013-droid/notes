@@ -158,12 +158,16 @@ textarea {
 }
 
 .capture {
+  --capture-pad: clamp(20px, 4vw, 42px);
+  position: relative;
   display: block;
-  padding: clamp(20px, 4vw, 42px);
+  padding: var(--capture-pad);
   border-bottom: 1px solid var(--line);
 }
 
 .capture textarea {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   min-height: 138px;
@@ -175,10 +179,43 @@ textarea {
   font-size: clamp(28px, 5vw, 56px);
   font-weight: 560;
   line-height: 1.03;
+  caret-color: var(--accent);
 }
 
-.capture textarea::placeholder {
-  color: #a7ad9d;
+.private-empty-state {
+  position: absolute;
+  top: var(--capture-pad);
+  left: var(--capture-pad);
+  z-index: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  max-width: calc(100% - (var(--capture-pad) * 2));
+  color: color-mix(in srgb, var(--ink-faint) 76%, var(--paper));
+  font-size: clamp(28px, 5vw, 56px);
+  font-weight: 540;
+  letter-spacing: 0;
+  line-height: 1.03;
+  opacity: 1;
+  pointer-events: none;
+  transform: translateY(0);
+  transition:
+    opacity 520ms ease,
+    transform 640ms ease;
+}
+
+.private-empty-state.is-changing,
+.private-empty-state.is-hidden {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.private-empty-caret {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 0.82em;
+  background: color-mix(in srgb, var(--accent) 58%, var(--paper));
+  animation: private-caret 1.35s ease-in-out infinite;
 }
 
 .stream-head {
@@ -442,6 +479,37 @@ dd a {
   }
   to {
     transform: scaleX(1);
+  }
+}
+
+@keyframes private-caret {
+  0%,
+  46% {
+    opacity: 0.2;
+  }
+
+  50%,
+  92% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .private-empty-state {
+    transform: none;
   }
 }
 

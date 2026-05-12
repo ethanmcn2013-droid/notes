@@ -6,12 +6,12 @@
     <title>Signal Notes - capture clarity</title>
     <meta
       name="description"
-      content="Signal Notes is capture clarity: fast notes, clean recall, and deliberate promotion into Signal Tasks."
+      content="Signal Notes is the private capture layer of Signal Studio: fast notes, clean recall, and deliberate action drafts."
     />
     <meta property="og:title" content="Signal Notes - capture clarity" />
     <meta
       property="og:description"
-      content="Capture in three seconds. Find it later. Promote it when it matters."
+      content="A private place for thoughts before they become work."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://notes.signalstudio.ie" />
@@ -42,13 +42,21 @@
         </div>
 
         <label class="capture">
-          <span class="sr-only">Capture a note</span>
+          <span class="sr-only">Capture a private note</span>
           <textarea
             id="capture"
             autofocus
             rows="3"
-            placeholder="What needs writing down?"
+            placeholder=""
           ></textarea>
+          <span
+            id="private-empty-state"
+            class="private-empty-state"
+            aria-hidden="true"
+          >
+            <span id="private-empty-copy">Writings you can’t say out loud.</span>
+            <span class="private-empty-caret"></span>
+          </span>
         </label>
 
         <div class="stream-head">
@@ -61,8 +69,8 @@
         <article id="open-note" class="open-note" hidden>
           <div>
             <span id="open-time"></span>
-            <button id="promote" type="button" aria-label="Promote note to Signal Tasks">
-              Task
+            <button id="promote" type="button" aria-label="Draft a private action from this note">
+              Draft action
             </button>
           </div>
           <p id="open-body"></p>
@@ -72,7 +80,7 @@
       <aside class="product">
         <p class="eyebrow">Signal Notes</p>
         <h1>Capture clarity.</h1>
-        <p class="promise">Capture in three seconds. Find it later. Promote it when it matters.</p>
+        <p class="promise">A private layer for thoughts before they become work.</p>
         <dl>
           <div>
             <dt>Status</dt>
@@ -81,6 +89,10 @@
           <div>
             <dt>Category</dt>
             <dd>Operational clarity software</dd>
+          </div>
+          <div>
+            <dt>Privacy</dt>
+            <dd>Private by default</dd>
           </div>
           <div>
             <dt>Contact</dt>
@@ -92,8 +104,8 @@
           <p class="follow-up-label">Wedding workspace proof</p>
           <h2>Venue meeting follow-up</h2>
           <p>
-            Signal Notes turns the meeting into the pieces the rest of the
-            workspace needs.
+            Signal Notes keeps the raw thought private. Only approved extracts
+            become work.
           </p>
 
           <div class="extract-grid">

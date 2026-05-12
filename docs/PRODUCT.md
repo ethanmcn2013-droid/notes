@@ -40,7 +40,7 @@ The promise has three parts and they are non-negotiable:
 
 1. **Three-second capture.** From "I need to write this down" to *written* in under three seconds. This is the design budget. Anything that costs the third second is a bug.
 2. **Findable, not organised.** No required folders, tags, projects, or hierarchy. Search and recency are the access pattern. Organisation is opt-in for users who want it; default is flat.
-3. **One-way promotion to Tasks.** A note becomes a task when the user says so — never automatically. Tasks does not become Notes. The flow is one direction, capture → commitment.
+3. **One-way extraction to Tasks.** A note can produce an action when the user says so — never automatically. Tasks does not become Notes. The flow is one direction, private capture -> deliberate commitment.
 
 If any of these three drift, the product is no longer Signal Notes — it has become a different category of product (a wiki, a knowledge base, a journaling app, a second brain) and is no longer brand-coherent.
 
@@ -90,10 +90,12 @@ The product surface is one screen. It is called the **notebook**.
 
 **Notes writes:** to its own database. Notes are stored as `{id, body, created_at, updated_at, promoted_task_id?}`. That is the whole schema in v1.
 
+**Notes privacy boundary:** raw note bodies are private by default and are intentionally excluded from shared workspaces, roadmap views, task views, analytics summaries, and public collaboration surfaces. Notes can create work from a note only through explicit user approval.
+
 **Notes shares with the suite:**
-- *Notes → Tasks:* one-way promotion. User clicks "promote to task", note body is sent to Tasks API, a new task is created. Notes stores the resulting task id and renders the indigo dot.
-- *Notes → Analytics:* deferred to v2+. There is a real signal in note frequency, repeated-mention patterns, and capture velocity, but extracting that signal requires NLP-adjacent work that v1 will not take on.
-- *Tasks → Notes:* never. A task does not become a note. A task can *reference* a note (via the promotion edge), but the data flows one way.
+- *Notes -> Tasks:* one-way extraction. User approves a selected action from the note, that action is sent to Tasks, and Notes stores the resulting task id. The full note body stays private.
+- *Notes -> Analytics:* deferred to v2+. Analytics may receive approved, non-sensitive extracts or aggregate signals, but raw note text does not enter briefings by default.
+- *Tasks → Notes:* never. A task does not become a note. A task can *reference* a note through an approved extraction edge, but the data flows one way.
 
 **No exports in v1** beyond a single-note copy-to-clipboard. Bulk export, OPML, JSON-dump etc. are deferred to demand.
 
@@ -107,7 +109,7 @@ These are decisions to *never* build in Notes. They make the product distinct fr
 - **Not a knowledge base.** No taxonomy. No required tagging. No "topic" or "category" abstraction.
 - **Not a second brain.** The brand will not use the phrase. It positions Notes as a self-improvement aid; that's not what this is.
 - **Not journaling.** No daily note. No "today" template. No date-based scaffolding. The user can use Notes for journaling — that's their choice — but the product won't shape itself around it.
-- **Not collaborative.** Notes is single-user in v1. No sharing. No comments. No real-time. (Tasks is where shared work lives.)
+- **Not collaborative.** Notes is single-user in v1. No sharing. No comments. No real-time. Tasks and Roadmaps are where shared work lives.
 - **Not configurable.** No themes. No fonts. No layout options. No "appearance" panel. Same restraint as Tasks and Analytics.
 - **Not AI-marketed.** No "AI summary". No "AI tagging". No "AI search". The voice rules apply.
 - **Not infinite-canvas.** No spatial canvas. No mind-map. Notes is a stream and a search field.
@@ -161,7 +163,7 @@ A capture product is brand-coherent only if capture is genuinely fast. Below the
 - The notebook wordmark gesture (per BRAND.md): `notes·` with the *underline-writes-itself* on first paint. Once. Not on subsequent renders.
 
 **Locked voice in the product itself:**
-- The placeholder in the capture field rotates among ~6 phrasings drawn from the audience (e.g., "What just came up?", "What's the one thing to remember?", "What needs writing down?"). Hand-curated, same discipline as the Analytics prose library.
+- The empty capture field shows a quiet private-writing line with a blinking caret. It uses the locked seven-line set from Cycle 8 and disappears the moment the user begins typing.
 - Empty state on a brand-new account: "Nothing here yet. Start typing." Period. Not a tour, not a tutorial, not a sample-data offer.
 - Zero notifications. Notes never pings. The product is silent by default.
 

@@ -1,6 +1,8 @@
 # Signal Notes Collaboration Loop
 
 Signal Notes owns the context layer of the Signal Studio collaboration loop.
+It is private by design: the raw note is for the creator unless the
+creator deliberately turns part of it into work.
 
 Core question:
 
@@ -20,7 +22,9 @@ It should help creators and collaborators understand:
 
 ## Growth Loop Responsibility
 
-Notes gives a shared workspace its memory. It should make collaboration feel serious without making it complicated.
+Notes gives a shared workspace its memory without exposing the creator's
+private thinking. It should make collaboration feel serious without making
+it complicated.
 
 It supports this loop:
 
@@ -34,11 +38,24 @@ Notes is responsible for the "context becomes work" moment.
 | --- | --- |
 | Workspace | The place where captured context belongs. |
 | Person | Attendee, owner, decision maker, collaborator, supplier, or client. |
-| Note | Captured context with extractable actions, decisions, risks, questions, and references. |
+| Note | Private captured context with extractable actions, decisions, risks, questions, and references. |
 | Decision | A dated choice with reason, owner, and linked work. |
 | Risk | Captured concern that can connect to tasks, roadmap, and analytics. |
 | Update | A meaningful note, decision, or extracted item that can feed activity and briefings. |
-| Shareable output | Meeting summary, decision summary, action summary, or follow-up note. |
+| Shareable output | Creator-approved summary, decision summary, action summary, or follow-up note. |
+
+## Privacy Guardrail
+
+Notes are intentionally excluded from collaborative sharing surfaces.
+
+- No raw note body appears in Tasks, Roadmap, Analytics, shared updates, public pages, or workspace briefings by default.
+- Only selected extracts can leave Notes, and only after creator approval.
+- Shared outputs should say what was decided, what is waiting, and what needs doing without exposing private wording.
+- The current static demo stores notes locally and only marks an action as privately drafted.
+
+TODO: When the real auth/workspace model lands, enforce this boundary
+server-side with private note ownership, extract-level permissions, and
+tests that shared workspace views cannot query raw note bodies.
 
 ## Cycle 1 Product Work
 
@@ -74,7 +91,7 @@ Notes owns the "What was decided" part of the invited collaborator's first view.
 
 Role defaults for Notes:
 
-- Creator controls which notes or summaries are shared.
+- Creator controls which extracts or summaries are shared.
 - Collaborator can see shared summaries and relevant decisions.
 - Guest can open a selected follow-up or decision summary.
 - Client / supplier can see questions and decisions relevant to them.
@@ -99,6 +116,7 @@ Notes now shows the wedding/events proof scene directly:
 - a seeded venue meeting follow-up
 - action, decision, question, and risk extraction blocks
 - a public-safe explanation of how meeting context becomes workspace work
+- private-by-default copy that makes raw notes feel protected
 
 This is the context layer for the same scene already used by Tasks and Roadmap.
 
@@ -106,5 +124,15 @@ Next implementation targets:
 
 - user-approved extraction into Signal Tasks
 - decision summary sharing
-- private/internal note protection
+- server-enforced private/internal note protection
 - source tracking for shared follow-up links
+
+## Cycle 8: Private Notes Empty State
+
+The capture field now treats an empty note as a protected writing space.
+It shows one quiet rotating line with a blinking caret, fades out when the
+user types, and remains hidden from assistive technologies so it does not
+announce repeatedly.
+
+This reinforces the product boundary: some work becomes shared, but the
+raw note is only for the creator.
