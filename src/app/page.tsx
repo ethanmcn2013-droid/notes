@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { NotesDemo } from "@/components/showcase/notes-demo";
+import { Hero } from "@/components/showcase/hero";
 
 export default function HomePage() {
   return (
@@ -17,59 +16,7 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto max-w-[860px] px-7 pt-24 pb-32 sm:pt-28">
-        <p
-          className="mb-5 font-mono text-[11px] uppercase tracking-[0.14em] font-semibold"
-          style={{ color: "var(--color-ink-faint)" }}
-        >
-          Signal Notes <span style={{ color: "var(--color-accent-2)" }}>·</span> capture clarity
-        </p>
-
-        <h1
-          className="text-[clamp(2.8rem,1.6rem+4vw,5rem)] font-semibold leading-[0.98] tracking-normal"
-          style={{ color: "var(--color-ink)" }}
-        >
-          Your private layer.
-          <br />
-          Capture the thought.
-          <br />
-          Decide later.
-        </h1>
-
-        <p
-          className="mt-7 max-w-[36rem] text-[17px] leading-[1.6]"
-          style={{ color: "var(--color-ink-soft)" }}
-        >
-          A notebook for the half-formed thought, the thing not ready for the
-          room, and the decision you need to understand before it becomes work.
-        </p>
-
-        <div className="mt-10 flex flex-wrap items-center gap-3">
-          <Link
-            href="/app"
-            className="inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-medium transition-opacity hover:opacity-90"
-            style={{
-              background: "var(--color-ink)",
-              color: "var(--color-paper)",
-            }}
-          >
-            Open the notebook
-          </Link>
-          <Link
-            href="/wedding-planning"
-            className="inline-flex min-h-11 items-center rounded-full border px-5 text-[14px] font-medium transition-colors"
-            style={{
-              borderColor: "var(--color-line-strong)",
-              color: "var(--color-ink-soft)",
-            }}
-          >
-            See a worked example
-          </Link>
-        </div>
-
-        {/* ── Animated demo ────────────────────────────────────────────────── */}
-        <div className="mt-20">
-          <NotesDemo />
-        </div>
+        <Hero />
 
         {/* ── Anti-feature register (BRAND.md §6) ─────────────────────────── */}
         <section className="mt-28 grid gap-5 sm:grid-cols-3">

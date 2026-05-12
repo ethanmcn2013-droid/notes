@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { DOMAINS, type DomainId } from "@/lib/domains";
 import {
-  CAPTURE_SCRIPT,
   type DemoState,
   type Field,
   type Note,
   type Scene,
-  SEARCH_QUERY,
 } from "./types";
 import { CaptureField } from "./capture-field";
 import { NoteStream } from "./note-stream";
@@ -16,22 +15,21 @@ import { Caret } from "./caret";
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** Time per keystroke in milliseconds — varied slightly for human rhythm. */
-const TYPE_INTERVAL_MS = 45;
-const TYPE_JITTER_MS = 30;
+const TYPE_INTERVAL_MS = 38;
+const TYPE_JITTER_MS = 26;
+const SEARCH_TYPE_MS = 78;
 
-const SEARCH_TYPE_MS = 80;
+function buildReducedNotes(domain: DomainId): Note[] {
+  return DOMAINS[domain].captures.map((entry, i) => ({
+    id: `note-${i}`,
+    body: entry.text,
+    stamp: entry.stamp,
+    tags: entry.tags,
+  }));
+}
 
-/** Reduced-motion fallback: a fully populated stream + empty capture field. */
-const REDUCED_NOTES: Note[] = CAPTURE_SCRIPT.map((entry, i) => ({
-  id: `note-${i}`,
-  body: entry.text,
-  stamp: entry.stamp,
-}));
-
-export function NotesDemo() {
-  const reducedMotion = useReducedMotion();
-  const [state, setState] = useState<DemoState>({
+function buildInitialState(domain: DomainId): DemoState {
+  return {
     notes: [],
     scene: "boot",
     field: "capture",
@@ -39,8 +37,25 @@ export function NotesDemo() {
     searchText: "",
     searchHit: null,
     placeholderIndex: 0,
-  });
+    domain,
+  };
+}
+
+type Props = {
+  domain?: DomainId;
+};
+
+export function NotesDemo({ domain = "wedding" }: Props = {}) {
+  const reducedMotion = useReducedMotion();
+  const pack = DOMAINS[domain];
+  const [state, setState] = useState<DemoState>(() => buildInitialState(domain));
   const aliveRef = useRef(true);
+  const loopKeyRef = useRef(0);
+
+  useEffect(() => {
+    setState(buildInitialState(domain));
+    loopKeyRef.current += 1;
+  }, [domain]);
 
   const setScene = useCallback((scene: Scene) => {
     setState((s) => ({ ...s, scene }));
@@ -50,18 +65,14 @@ export function NotesDemo() {
     setState((s) => ({ ...s, field }));
   }, []);
 
-  /** Type out a string into the capture field, char by char. Bails on unmount. */
-  const typeCapture = useCallback(
-    async (text: string) => {
-      for (let i = 1; i <= text.length; i++) {
-        if (!aliveRef.current) return;
-        setState((s) => ({ ...s, captureText: text.slice(0, i) }));
-        const jitter = Math.random() * TYPE_JITTER_MS;
-        await wait(TYPE_INTERVAL_MS + jitter);
-      }
-    },
-    []
-  );
+  const typeCapture = useCallback(async (text: string) => {
+    for (let i = 1; i <= text.length; i++) {
+      if (!aliveRef.current) return;
+      setState((s) => ({ ...s, captureText: text.slice(0, i) }));
+      const jitter = Math.random() * TYPE_JITTER_MS;
+      await wait(TYPE_INTERVAL_MS + jitter);
+    }
+  }, []);
 
   const typeSearch = useCallback(async (text: string) => {
     for (let i = 1; i <= text.length; i++) {
@@ -71,133 +82,136 @@ export function NotesDemo() {
     }
   }, []);
 
-  /** Commit current capture to the note stream and clear the field. */
-  const commit = useCallback((index: number) => {
-    const entry = CAPTURE_SCRIPT[index];
-    if (!entry) return;
-    const newNote: Note = {
-      id: `note-${index}`,
-      body: entry.text,
-      stamp: entry.stamp,
-      fresh: true,
-    };
-    setState((s) => ({
-      ...s,
-      // Newest at top — prepend.
-      notes: [
-        newNote,
-        ...s.notes.map((n) => ({ ...n, fresh: false })),
-      ],
-      captureText: "",
-      placeholderIndex: (index + 1) % CAPTURE_SCRIPT.length,
-    }));
-  }, []);
+  const commit = useCallback(
+    (index: number) => {
+      const entry = pack.captures[index];
+      if (!entry) return;
+      const newNote: Note = {
+        id: `note-${index}`,
+        body: entry.text,
+        stamp: entry.stamp,
+        tags: entry.tags,
+        fresh: true,
+      };
+      setState((s) => ({
+        ...s,
+        notes: [
+          newNote,
+          ...s.notes.map((n) => ({ ...n, fresh: false })),
+        ],
+        captureText: "",
+        placeholderIndex: (index + 1) % pack.captures.length,
+      }));
+    },
+    [pack]
+  );
 
   const setSearchHit = useCallback((id: string | null) => {
     setState((s) => ({ ...s, searchHit: id }));
   }, []);
 
-  const reset = useCallback(() => {
-    setState({
-      notes: [],
-      scene: "boot",
-      field: "capture",
-      captureText: "",
-      searchText: "",
-      searchHit: null,
-      placeholderIndex: 0,
-    });
-  }, []);
-
-  /** The main timeline. */
+  /** Main timeline. */
   useEffect(() => {
     if (reducedMotion) return;
     aliveRef.current = true;
+    const myLoopKey = loopKeyRef.current;
+    const isCurrent = () =>
+      aliveRef.current && myLoopKey === loopKeyRef.current;
 
     async function runLoop() {
-      reset();
+      setState(buildInitialState(domain));
       await wait(900);
-      if (!aliveRef.current) return;
+      if (!isCurrent()) return;
 
-      // Capture 1.
+      // Capture 1
       setScene("capture-1-type");
-      await wait(400);
-      await typeCapture(CAPTURE_SCRIPT[0].text);
-      if (!aliveRef.current) return;
-      await wait(380);
+      await wait(420);
+      await typeCapture(pack.captures[0].text);
+      if (!isCurrent()) return;
+      await wait(360);
       setScene("capture-1-commit");
       commit(0);
       await wait(900);
-      if (!aliveRef.current) return;
+      if (!isCurrent()) return;
 
-      // Capture 2.
+      // Capture 2
       setScene("capture-2-type");
-      await wait(560);
-      await typeCapture(CAPTURE_SCRIPT[1].text);
-      if (!aliveRef.current) return;
-      await wait(380);
+      await wait(520);
+      await typeCapture(pack.captures[1].text);
+      if (!isCurrent()) return;
+      await wait(360);
       setScene("capture-2-commit");
       commit(1);
       await wait(900);
-      if (!aliveRef.current) return;
+      if (!isCurrent()) return;
 
-      // Capture 3.
+      // Capture 3
       setScene("capture-3-type");
       await wait(420);
-      await typeCapture(CAPTURE_SCRIPT[2].text);
-      if (!aliveRef.current) return;
-      await wait(360);
+      await typeCapture(pack.captures[2].text);
+      if (!isCurrent()) return;
+      await wait(340);
       setScene("capture-3-commit");
       commit(2);
       await wait(1100);
-      if (!aliveRef.current) return;
+      if (!isCurrent()) return;
 
-      // Search.
-      setScene("search-type");
+      // Search
+      setScene("search-focus");
       setField("search");
-      await wait(600);
-      await typeSearch(SEARCH_QUERY);
-      if (!aliveRef.current) return;
+      await wait(560);
+      if (!isCurrent()) return;
+      setScene("search-type");
+      await typeSearch(pack.searchQuery);
+      if (!isCurrent()) return;
       await wait(220);
       setScene("search-result");
-      setSearchHit("note-0"); // Lamb's Hill — the note with "contract".
+      setSearchHit(`note-${pack.searchHitIndex}`);
       await wait(2400);
-      if (!aliveRef.current) return;
+      if (!isCurrent()) return;
 
-      // Quiet hold then loop.
       setScene("reset");
       setSearchHit(null);
       setState((s) => ({ ...s, searchText: "" }));
       setField("capture");
       await wait(900);
-      if (!aliveRef.current) return;
     }
 
     let cancelled = false;
     (async function loop() {
-      while (!cancelled && aliveRef.current) {
+      while (!cancelled && isCurrent()) {
         await runLoop();
       }
     })();
 
     return () => {
       cancelled = true;
-      aliveRef.current = false;
     };
-  }, [reducedMotion, reset, setScene, setField, typeCapture, typeSearch, commit, setSearchHit]);
+  }, [
+    reducedMotion,
+    domain,
+    pack,
+    setScene,
+    setField,
+    typeCapture,
+    typeSearch,
+    commit,
+    setSearchHit,
+  ]);
 
   const placeholder =
-    CAPTURE_SCRIPT[state.placeholderIndex]?.placeholder ?? "What just came up?";
+    pack.captures[state.placeholderIndex]?.placeholder ?? "What just came up?";
 
-  const renderNotes = reducedMotion ? REDUCED_NOTES : state.notes;
+  const renderNotes = useMemo<Note[]>(
+    () => (reducedMotion ? buildReducedNotes(domain) : state.notes),
+    [reducedMotion, domain, state.notes]
+  );
 
   return (
     <section
       style={{
         display: "flex",
         justifyContent: "center",
-        paddingTop: 40,
-        paddingBottom: 24,
       }}
     >
       <motion.div
@@ -207,11 +221,11 @@ export function NotesDemo() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         style={{
           width: "100%",
-          maxWidth: 520,
+          maxWidth: 560,
           background: "var(--color-bg)",
           border: "1px solid var(--color-line)",
           borderRadius: 18,
-          padding: "26px 24px 24px",
+          padding: "26px 26px 26px",
           boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
         }}
       >
@@ -221,7 +235,7 @@ export function NotesDemo() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: 14,
+            marginBottom: 16,
           }}
         >
           <span
@@ -234,7 +248,7 @@ export function NotesDemo() {
               fontWeight: 600,
             }}
           >
-            Notebook
+            {pack.notebookEyebrow}
           </span>
           <span
             className="font-mono"
@@ -245,7 +259,7 @@ export function NotesDemo() {
               letterSpacing: "0.02em",
             }}
           >
-            today
+            private
           </span>
         </div>
 

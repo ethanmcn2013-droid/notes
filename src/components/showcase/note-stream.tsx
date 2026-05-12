@@ -6,7 +6,6 @@ import { NotePip } from "./note-pip";
 
 type Props = {
   notes: Note[];
-  /** Note id that should highlight (search hit). null = no highlight. */
   highlightId: string | null;
 };
 
@@ -14,6 +13,8 @@ type Props = {
  * The stream of captured notes. Newest first. Items animate in on commit.
  * Search hits get a subtle ring; misses dim slightly so the eye lands on
  * the match without any "result count" UI fanfare.
+ *
+ * Tag chips render next to the timestamp pip when a note has tags.
  */
 export function NoteStream({ notes, highlightId }: Props) {
   return (
@@ -51,8 +52,8 @@ export function NoteStream({ notes, highlightId }: Props) {
               }}
               style={{
                 display: "flex",
-                alignItems: "baseline",
-                gap: 14,
+                flexDirection: "column",
+                gap: 4,
                 padding: "12px 16px",
                 borderRadius: 10,
                 background: "var(--color-paper)",
@@ -63,19 +64,52 @@ export function NoteStream({ notes, highlightId }: Props) {
                 transition: "box-shadow 220ms cubic-bezier(.16,1,.3,1)",
               }}
             >
-              <NotePip stamp={note.stamp} />
-              <p
-                style={{
-                  fontFamily: "var(--font-inter)",
-                  fontSize: 14.5,
-                  lineHeight: 1.5,
-                  color: "var(--color-ink)",
-                  margin: 0,
-                  fontWeight: 400,
-                }}
-              >
-                {note.body}
-              </p>
+              <div className="flex items-start gap-3">
+                <NotePip stamp={note.stamp} />
+                <p
+                  style={{
+                    fontFamily: "var(--font-inter)",
+                    fontSize: 14.5,
+                    lineHeight: 1.5,
+                    color: "var(--color-ink)",
+                    margin: 0,
+                    fontWeight: 400,
+                    flex: 1,
+                  }}
+                >
+                  {note.body}
+                </p>
+              </div>
+              {note.tags && note.tags.length > 0 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 4,
+                    marginLeft: 60,
+                  }}
+                >
+                  {note.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="font-mono"
+                      style={{
+                        fontSize: 9.5,
+                        color: "var(--color-accent)",
+                        background:
+                          "color-mix(in srgb, var(--color-accent) 8%, transparent)",
+                        borderRadius: 999,
+                        padding: "1px 6px",
+                        letterSpacing: "0.02em",
+                        fontWeight: 600,
+                        textTransform: "lowercase",
+                      }}
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </motion.div>
           );
         })}
