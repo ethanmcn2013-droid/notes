@@ -1,5 +1,147 @@
 # Signal Notes · Changelog
 
+## 2026-05-13 · Suite design-system v1 · The dot learns to settle (notebook stays warm)
+
+Fifth and final product across the suite design-system line.
+
+**The wordmark dot learns to settle.** Notes's gesture swapped from
+the **caret blink** (sharp on/off, 1.1s) to **M·05 settle — a slow
+breath, scales 0.92→1.05 with a faint opacity drift every 3.2s.**
+The slowest motion in the system. A thought arriving. The prior caret
+blink belonged to capture itself, not the brand — moving it into the
+notebook chrome where it actually lives.
+
+**What stays.** Notes's locked notebook aesthetic — warm-cream paper
+`#fffefa`, off-white background `#f7f8f2`, ink `#161815`, accent
+`#335f54` (deep green), accent-2 `#b4863f` (mustard), Inter as body
+register. All of it intact, per the 2026-05-10 feedback that confirmed
+the green/mustard/Inter palette as the deliberate notebook voice.
+Notes is the one product whose surface diverges from the suite's
+white-paper / Geist register — the wordmark is the seam that ties
+it back. The wordmark stays in suite-grammar (Geist 500 + indigo dot
++ settle); the notebook itself stays warm.
+
+**No token swap.** Unlike Studio, Tasks, Roadmap, Analytics, Notes
+keeps `--color-bg`, `--color-paper`, `--color-ink` exactly as they
+are. The semantic-token shift (paper → pure white, ink → `#111111`)
+is a suite-spec rule for the four products whose surface IS the suite
+register; Notes's notebook is intentionally outside that register.
+
+**Suite rollout complete.** Five products, five wordmarks, five
+motions, one indigo. Each one paused for spot-check. The full design
+system is live in `globals.css` files across the suite, downloadable
+from `signalstudio.ie/brand`, and applied wordmark-by-wordmark.
+
+## 2026-05-13 · Suite review · the demo finally tells the truth
+
+### Two contract violations, one static page eating a React route.
+
+`PRODUCT.md` is the lock. The marketing demo wasn't reading it.
+
+§4 says no views. The demo morphed mid-loop from Stream to a
+Tags view. §7 says no taxonomy. Every note rendered #tag chips.
+§11 says deliberate two-step extraction — Draft action → review
+the wording → Send. The demo did a long-press → "Promote to
+Tasks" menu → one-tap promote, which is the auto-detect ergonomic
+PRODUCT.md explicitly refuses.
+
+All four offending components deleted: `view-toggle.tsx`,
+`tags-view.tsx`, `promote-menu.tsx`, `tasks-edge.tsx`. The demo
+is now capture × 3 → search → reset. Cleaner, smaller, and
+matches what the product actually does.
+
+The extract-to-Tasks beat used to be the closing punch. It'll
+return — but designed against the shipped Notebook UX (Draft
+action → review → send), not carried over from a scaffold that
+mismatched the contract from day one. Calling that out so it
+doesn't get rebuilt the old way.
+
+### `CaptureEntry.tags` retired.
+
+The optional `tags?: string[]` field on the demo's data type was
+the surface the violation rested on. Removed from the type, and
+all `tags: [...]` entries in `domains.ts` deleted. If a future
+cycle wants to reintroduce tags somewhere, it has to do so
+deliberately — the type system stops you from doing it by accident
+now.
+
+### The `startup` audience pack, retired.
+
+"Investor question: what's the moat? Need a sharper answer."
+"SOC 2 auditor confirmed for April 1." "Tom referral — introduce
+to fintech founder Y this week." That was a pack we shipped on
+the demo. PRODUCT.md §2 lists the audience archetypes Notes
+serves: planners, contractors, teachers, small-biz owners,
+freelance designers. Tech-bro register isn't on the list.
+
+Replaced with `freelance` — a designer keeping the brief, the
+brand decision, and the thing the client said in passing. Three
+captures: a homepage hero deadline, a print-export package, a
+Q1 invoice that's late. Voice register matches the rest of the
+suite.
+
+### The wedding-planning page existed twice.
+
+`public/wedding-planning/index.html` was a 366-line static file
+with its own 430-line `public/styles.css`. `src/app/wedding-
+planning/page.tsx` was a 328-line React server component. In
+Next, files in `public/` win — the React route was dead, and the
+two stylesheets were already drifting. Deleted both static files;
+the proxy public-route entries were already correct.
+
+### Hygiene.
+
+Duplicate `package-lock.json` deleted (pnpm-only).
+
+The Plan 4.2 memory entry that claimed Sentry PII scrubbing
+covered the suite was amended — Notes has no Sentry init.
+When it gets one, it'll mirror the Tasks pattern shipped today.
+
+## 2026-05-12 (latest +2)
+
+### Avatar dropdown gained the siblings — second jump path landed.
+
+The Clerk UserButton in the suitebar now lists "Open Tasks", "Open
+Roadmap", "Open Analytics" above the Manage account / Sign out rows.
+Each opens in a new tab. Notes doesn't list itself.
+
+Same gesture as Tasks/Roadmap/Analytics this turn — second route to
+the same destinations the launcher popover already covers, sized
+for the discovery profile of users who reach for "settings" rather
+than the breadcrumb. The wrapper preserves the existing h-7 avatar
+size that matches Notes's smaller suitebar register.
+
+Implementation: thin client wrapper `src/components/user-button-
+with-suite.tsx` around Clerk's `<UserButton.MenuItems>` +
+`<UserButton.Link>` API.
+
+## 2026-05-12 (latest +1)
+
+### The breadcrumb learned to open — suite launcher landed.
+
+Yesterday's `signal studio. /` breadcrumb prefix was a hard anchor
+to the umbrella — click it, leave. Today it's a click-to-open
+popover listing all four products (tasks, roadmap, notes,
+analytics) with their one-word taglines. Notes shows de-emphasised
+with a "HERE" tag; the other three open in a new tab. Footer row
+goes to signalstudio.ie.
+
+The launcher landed on three Notes surfaces simultaneously: the
+homepage suitebar, the `/app` notebook chrome, and the
+`/wedding-planning` worked example. The notebook's warm cream +
+mustard aesthetic stays on this side of the popover; the popover
+itself uses the cleaner cream paper background so it reads as
+suite chrome rather than notebook chrome. Inter font is
+inherited because Notes is locked to Inter (per
+`feedback_notes_aesthetic` — the green/mustard/Inter system stays).
+
+Also new this turn: `src/lib/product-urls.ts` was created (Notes
+was the only product without it — the four URLs were hard-coded in
+the homepage breadcrumb). Now the suite-launcher and any future
+cross-product surface have one place to read from. Env-var
+overrides in place (`NEXT_PUBLIC_*_URL`) so deploys can point at
+preview URLs without code edits.
+
 ## 2026-05-12 (latest)
 
 ### Suite chrome consolidated — one bar, breadcrumb prefix.
