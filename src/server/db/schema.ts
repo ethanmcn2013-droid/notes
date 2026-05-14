@@ -46,3 +46,30 @@ export const notes = sqliteTable(
 
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+
+/**
+ * Per-user preferences. v1 holds only the email-to-capture slug
+ * (N-1, 2026-05-14). Row is lazy-created the first time the user
+ * asks for their capture address — never on signup.
+ */
+export const userPreferences = sqliteTable(
+  "user_preferences",
+  {
+    userId: text("user_id").primaryKey(),
+    captureSlug: text("capture_slug").notNull().unique(),
+    createdAt: integer("created_at", { mode: "number" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updated_at", { mode: "number" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (table) => ({
+    captureSlugIdx: index("user_preferences_capture_slug_idx").on(
+      table.captureSlug,
+    ),
+  })
+);
+
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type NewUserPreferences = typeof userPreferences.$inferInsert;

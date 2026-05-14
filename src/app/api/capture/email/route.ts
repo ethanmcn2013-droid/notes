@@ -1,0 +1,121 @@
+import "server-only";
+import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { timingSafeEqual } from "node:crypto";
+import { db } from "@/server/db/client";
+import { notes, userPreferences } from "@/server/db/schema";
+
+/**
+ * Inbound email → note (N-1, 2026-05-14).
+ *
+ * Generic provider-shape webhook: accepts a normalized JSON body
+ * with { to, from, subject, text }. The `to` address is parsed for
+ * the slug — `capture-<slug>@notes.signalstudio.ie` — which maps
+ * back to a Clerk userId via user_preferences.
+ *
+ * Operator setup (NOT yet done at time of commit):
+ *   1. Configure an inbound email provider (Resend Inbound or
+ *      Mailgun routes) to POST normalized JSON to this endpoint.
+ *   2. Set DNS: MX for capture.notes.signalstudio.ie → provider.
+ *   3. Set env vars on Vercel:
+ *        - NOTES_CAPTURE_INBOUND_SECRET (shared bearer; the
+ *          provider sends this in Authorization)
+ *        - NEXT_PUBLIC_NOTES_CAPTURE_DOMAIN (informational; used by
+ *          the UI to render the user-facing address)
+ *
+ * Until those land, the endpoint returns 401 on every call. That's
+ * the right shape — no inbound mail means no inbound mail.
+ *
+ * Privacy guardrail: the From address is recorded only inside the
+ * note body's first line ("from: ..."). It is never extracted into
+ * a separate column; raw note bodies stay private to the user. No
+ * collaborative surface ever sees this content.
+ */
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+type InboundPayload = {
+  to?: string | null;
+  from?: string | null;
+  subject?: string | null;
+  text?: string | null;
+};
+
+function authOk(req: Request): boolean {
+  const expected = process.env.NOTES_CAPTURE_INBOUND_SECRET;
+  if (!expected) return false;
+  const presented = (req.headers.get("authorization") ?? "").replace(
+    /^Bearer\s+/i,
+    "",
+  );
+  const a = Buffer.from(presented);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+
+function parseSlug(to: string | null | undefined): string | null {
+  if (!to) return null;
+  // Tolerate angle-bracketed forms ("Name <capture-abcd@...>"),
+  // case variations, and surrounding whitespace.
+  const m = to.match(/capture-([a-z0-9]{4,16})@/i);
+  return m ? m[1].toLowerCase() : null;
+}
+
+function buildBody(subject: string | null, text: string | null): string {
+  const s = (subject ?? "").trim();
+  const t = (text ?? "").trim();
+  if (s && t) return `${s}\n\n${t}`;
+  return s || t;
+}
+
+export async function POST(req: Request) {
+  if (!authOk(req)) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  let payload: InboundPayload;
+  try {
+    payload = (await req.json()) as InboundPayload;
+  } catch {
+    return NextResponse.json({ ok: false, error: "invalid-json" }, { status: 400 });
+  }
+
+  const slug = parseSlug(payload.to);
+  if (!slug) {
+    return NextResponse.json(
+      { ok: false, error: "no-slug-in-to", to: payload.to ?? null },
+      { status: 400 },
+    );
+  }
+
+  const found = await db
+    .select({ userId: userPreferences.userId })
+    .from(userPreferences)
+    .where(eq(userPreferences.captureSlug, slug))
+    .limit(1);
+
+  const userId = found[0]?.userId;
+  if (!userId) {
+    // Slug doesn't map to anyone — silently 202 so spam doesn't
+    // signal which slugs exist.
+    return NextResponse.json({ ok: true, accepted: false }, { status: 202 });
+  }
+
+  const body = buildBody(payload.subject ?? null, payload.text ?? null);
+  if (!body) {
+    return NextResponse.json({ ok: false, error: "empty-body" }, { status: 400 });
+  }
+
+  const id = `n_${crypto.randomUUID().replace(/-/g, "")}`;
+  const now = Date.now();
+  await db.insert(notes).values({
+    id,
+    userId,
+    body,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return NextResponse.json({ ok: true, accepted: true, id });
+}
