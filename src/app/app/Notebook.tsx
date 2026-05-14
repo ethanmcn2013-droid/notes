@@ -14,6 +14,7 @@ import {
   clearNoteExtract,
   createNote,
   deleteNote,
+  searchNotes,
   sendExtractToTasks,
   setNoteExtract,
   type ExtractSendResult,
@@ -124,11 +125,39 @@ export function Notebook({ initialNotes }: NotebookProps) {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
+  // Server-side FTS5 search (N-2, 2026-05-14). Debounced 180ms so
+  // each keystroke doesn't fire a round-trip. Empty query bypasses
+  // the server and renders the full stream. Stale-result guarding via
+  // a sequence counter — fast typing where an earlier query resolves
+  // after a later one would otherwise stomp the visible state.
+  const [searchResults, setSearchResults] = useState<NoteRead[] | null>(null);
+  const searchSeq = useRef(0);
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setSearchResults(null);
+      return;
+    }
+    const mySeq = ++searchSeq.current;
+    const handle = setTimeout(() => {
+      void searchNotes(q).then((rows) => {
+        if (mySeq === searchSeq.current) setSearchResults(rows);
+      });
+    }, 180);
+    return () => clearTimeout(handle);
+  }, [query]);
+
   const filteredNotes = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return notes;
-    return notes.filter((n) => n.body.toLowerCase().includes(q));
-  }, [notes, query]);
+    if (!query.trim()) return notes;
+    // While the first round-trip is still in flight, fall back to the
+    // client-side filter on the already-loaded stream so the UI feels
+    // responsive. FTS5 ranking takes over the moment results arrive.
+    if (searchResults === null) {
+      const q = query.trim().toLowerCase();
+      return notes.filter((n) => n.body.toLowerCase().includes(q));
+    }
+    return searchResults;
+  }, [notes, query, searchResults]);
 
   const lastSavedTs = notes[0]?.createdAt ?? null;
   const draftIsEmpty = draft.trim().length === 0;

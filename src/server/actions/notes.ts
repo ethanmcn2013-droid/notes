@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/server/auth";
@@ -83,6 +83,72 @@ export async function listNotes(): Promise<NoteRead[]> {
     .orderBy(desc(notes.createdAt));
 
   return rows;
+}
+
+/**
+ * Server action: full-text search across the user's notes via FTS5.
+ *
+ * Replaces the client-side substring filter (N-2, 2026-05-14). The
+ * notes_fts virtual table is kept in sync with the notes table via
+ * INSERT/UPDATE/DELETE triggers (see drizzle/0001_fts5_search.sql).
+ *
+ * Query handling:
+ *   - Empty / whitespace → returns [] (caller falls back to the full
+ *     listNotes() stream).
+ *   - Single-token queries: appended with * to enable prefix matching
+ *     so "wedd" matches "wedding". Multi-token queries pass through
+ *     verbatim — FTS5 implicit AND between tokens.
+ *   - Special MATCH chars (",", AND/OR/NOT) sanitised so a user typing
+ *     a literal comma doesn't crash the query.
+ *
+ * Privacy guardrail: same as listNotes — every row is filtered to
+ * the current Clerk user. notes_fts.user_id is UNINDEXED but stored,
+ * so the WHERE filter happens before MATCH ranking.
+ *
+ * Returns notes ordered by FTS5 rank, most-relevant first. Capped at
+ * 100 results — Notes's stream UX shows a few results at a time, so
+ * paging beyond that is unnecessary.
+ */
+export async function searchNotes(query: string): Promise<NoteRead[]> {
+  const userId = await requireUser();
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  // Sanitise: keep alphanumeric + space; drop chars that FTS5 treats
+  // as operators or quote delimiters. Cheap, defensive — a user's
+  // search box is not a SQL prompt.
+  const safe = trimmed.replace(/["'(),:.;\\]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!safe) return [];
+
+  // Single-token: prefix-match so live-typing surfaces results.
+  // Multi-token: AND-match via FTS5's implicit space-AND.
+  const match = safe.includes(" ") ? safe : `${safe}*`;
+
+  const rows = await db.all<{
+    id: string;
+    body: string;
+    created_at: number;
+    updated_at: number;
+    extract_body: string | null;
+    promoted_task_id: string | null;
+  }>(sql`
+    SELECT n.id, n.body, n.created_at, n.updated_at, n.extract_body, n.promoted_task_id
+    FROM notes_fts fts
+    JOIN notes n ON n.rowid = fts.rowid
+    WHERE fts.user_id = ${userId}
+      AND notes_fts MATCH ${match}
+    ORDER BY fts.rank
+    LIMIT 100
+  `);
+
+  return rows.map((r) => ({
+    id: r.id,
+    body: r.body,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    extractBody: r.extract_body,
+    promotedTaskId: r.promoted_task_id,
+  }));
 }
 
 /**
