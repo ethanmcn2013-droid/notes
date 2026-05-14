@@ -1,4 +1,7 @@
-# Signal Notes · Changelog
+# Signal Notes · the dispatch
+
+Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
+original shape; the new shape starts at the next cycle.
 
 ## 2026-05-14 · FTS5 search · email-to-capture · entitlement awareness
 
