@@ -612,7 +612,9 @@ button, input, textarea { font: inherit; }
    below 640px while keeping the tight desktop register. Mirrors the
    spirit of studio S·26 / tasks T·47, adapted to Notes's own scale. */
 @media (max-width: 640px) {
-  .product-h1 { line-height: 1.02; }
+  /* !important guards against any inline line-height on .product-h1
+     callsites overriding this mobile loosening. */
+  .product-h1 { line-height: 1.02 !important; }
 }
 .product-promise {
   max-width: 28ch;
