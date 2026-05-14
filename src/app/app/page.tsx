@@ -1,5 +1,7 @@
 import { listNotes } from "@/server/actions/notes";
+import { getCaptureEmail } from "@/server/actions/capture-email";
 import { Notebook } from "./Notebook";
+import { CaptureEmailRow } from "./CaptureEmailRow";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,18 @@ export const metadata = {
 // stream to the client Notebook. Subsequent edits flow through server
 // actions; the client applies optimistic updates and reconciles.
 export default async function NotebookPage() {
-  const initialNotes = await listNotes();
-  return <Notebook initialNotes={initialNotes} />;
+  const [initialNotes, captureEmail] = await Promise.all([
+    listNotes(),
+    getCaptureEmail(),
+  ]);
+  const captureState =
+    captureEmail.ok
+      ? ({ tier: "pro", address: captureEmail.address } as const)
+      : ({ tier: "free" } as const);
+  return (
+    <>
+      <Notebook initialNotes={initialNotes} />
+      <CaptureEmailRow state={captureState} />
+    </>
+  );
 }

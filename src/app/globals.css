@@ -706,3 +706,54 @@ button, input, textarea { font: inherit; }
   border-color: rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* ── Capture-by-email footer (N-1b · 2026-05-14) ──
+   Quiet row beneath the stream. Workspace+ shows the address; free
+   shows an upgrade nudge. Same paper background as the notebook so
+   it reads as part of the surface, not a CTA. */
+.capture-email {
+  align-items: center;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  display: flex;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  gap: 8px;
+  margin: 32px auto 16px;
+  max-width: 720px;
+  padding: 8px 24px;
+}
+.capture-email a {
+  color: color-mix(in srgb, var(--color-ink) 75%, transparent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-ink) 25%, transparent);
+  text-underline-offset: 2px;
+}
+.capture-email a:hover {
+  color: var(--color-ink);
+}
+.capture-email__address {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--color-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 8px;
+  padding: 0;
+}
+.capture-email__address code {
+  font: inherit;
+  letter-spacing: 0.01em;
+}
+.capture-email__address:hover code {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+  text-underline-offset: 2px;
+}
+.capture-email__hint {
+  color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
