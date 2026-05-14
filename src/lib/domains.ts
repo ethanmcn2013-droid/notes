@@ -1,9 +1,19 @@
 /**
  * Notes audience packs — same axis as Roadmap and Analytics.
  * Drives the AudienceToggle and reseeds the cinematic capture demo.
+ *
+ * PRODUCT.md §2.1 archetypes: planner, contractor, teacher, small-biz
+ * owner, freelance designer. The "startup" pack was retired 2026-05-13
+ * (tech-bro register — investor moat, SOC 2 auditor, fintech founder Y
+ * — was the exact voice PRODUCT.md §2 says Notes is not for). Replaced
+ * with "freelance" for a freelance designer's day-to-day capture.
+ *
+ * Tags removed from the type 2026-05-13 — Notes has no taxonomy per
+ * §7. The previous version rendered #tag chips in the demo stream and
+ * a Tags view that contradicted the lock.
  */
 
-export type DomainId = "wedding" | "construction" | "launch" | "startup";
+export type DomainId = "wedding" | "construction" | "launch" | "freelance";
 
 export type CaptureEntry = {
   /** The note body the user types. */
@@ -12,8 +22,6 @@ export type CaptureEntry = {
   stamp: string;
   /** Placeholder shown before this capture begins. */
   placeholder: string;
-  /** Tags that should appear as chips when the note commits. */
-  tags?: string[];
 };
 
 export type DomainPack = {
@@ -34,7 +42,7 @@ export const DOMAIN_ORDER: DomainId[] = [
   "wedding",
   "construction",
   "launch",
-  "startup",
+  "freelance",
 ];
 
 export const DOMAINS: Record<DomainId, DomainPack> = {
@@ -49,13 +57,11 @@ export const DOMAINS: Record<DomainId, DomainPack> = {
         text: "Lamb's Hill viewing — bring contract Friday.",
         stamp: "2:14pm",
         placeholder: "What just came up?",
-        tags: ["venue"],
       },
       {
         text: "Florist callback — ask about peonies for the centrepieces.",
         stamp: "2:18pm",
         placeholder: "What's worth remembering?",
-        tags: ["vendor"],
       },
       {
         text: "Mum's birthday vase — get from charity shop before Saturday.",
@@ -76,13 +82,11 @@ export const DOMAINS: Record<DomainId, DomainPack> = {
         text: "Owner approved kitchen layout — get drawings countersigned.",
         stamp: "10:42am",
         placeholder: "What just came up?",
-        tags: ["owner", "kitchen"],
       },
       {
         text: "Window supplier called — 4 more weeks. Need to update timeline.",
         stamp: "11:18am",
         placeholder: "What's worth remembering?",
-        tags: ["vendor", "delay"],
       },
       {
         text: "Insurance renewal — 12 March. Quote sitting in inbox.",
@@ -103,50 +107,45 @@ export const DOMAINS: Record<DomainId, DomainPack> = {
         text: "Sarah: PDF exports must ship before launch — non-negotiable.",
         stamp: "9:14am",
         placeholder: "What just came up?",
-        tags: ["feedback", "launch"],
       },
       {
         text: "Dan's idea: filter by tag inside search results page.",
         stamp: "10:02am",
         placeholder: "What's worth remembering?",
-        tags: ["idea"],
       },
       {
         text: "Customer call — priorities are speed and price, not features.",
         stamp: "11:31am",
         placeholder: "Three seconds. Type it now.",
-        tags: ["customer"],
       },
     ],
     searchQuery: "sarah",
     searchHitIndex: 0,
   },
-  startup: {
-    id: "startup",
-    label: "Startup plan",
-    description: "a founder keeping the half-formed thoughts between meetings",
-    notebookEyebrow: "Founder log · today",
+  freelance: {
+    id: "freelance",
+    label: "Freelance studio",
+    description:
+      "a designer keeping the brief, the brand decision, and the thing the client said in passing",
+    notebookEyebrow: "Studio notebook · today",
     captures: [
       {
-        text: "Investor question: what's the moat? Need a sharper answer.",
-        stamp: "9:42am",
+        text: "Maeve wants the homepage hero copy by Friday — three options, not one.",
+        stamp: "9:32am",
         placeholder: "What just came up?",
-        tags: ["investor"],
       },
       {
-        text: "SOC 2 auditor confirmed for April 1 — calendar block.",
-        stamp: "10:18am",
+        text: "Print-quality export — InDesign job package goes out Monday at the latest.",
+        stamp: "10:14am",
         placeholder: "What's worth remembering?",
-        tags: ["compliance"],
       },
       {
-        text: "Tom referral — introduce to fintech founder Y this week.",
-        stamp: "11:04am",
+        text: "Send the Q1 invoice — last one was 11 days late.",
+        stamp: "11:08am",
         placeholder: "Three seconds. Type it now.",
-        tags: ["intro"],
       },
     ],
-    searchQuery: "auditor",
-    searchHitIndex: 1,
+    searchQuery: "invoice",
+    searchHitIndex: 2,
   },
 };

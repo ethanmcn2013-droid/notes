@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SuiteLauncher } from "@/components/suite-launcher";
 
 export const metadata: Metadata = {
   title: "Wedding planning — a venue meeting note — Signal Notes",
@@ -102,12 +103,7 @@ export default function WeddingPlanningNotePage() {
           fontFamily: "var(--font-geist, ui-sans-serif)",
         }}
       >
-        <a
-          href="https://signalstudio.ie"
-          style={{ color: "var(--color-ink-faint, #9b9b94)", textDecoration: "none", fontSize: 12 }}
-        >
-          signal studio<span style={{ color: "var(--accent, #4f46e5)" }}>.</span>
-        </a>
+        <SuiteLauncher current="notes" />
         <span aria-hidden style={{ color: "var(--color-ink-faint, #9b9b94)", fontSize: 12 }}>/</span>
         <a
           href="/"
