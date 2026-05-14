@@ -3,6 +3,45 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·3 · tightens · post-audit integrity pass
+
+**Six load-bearing fixes after a full six-dimension audit — the
+M·05 settle gesture is no longer silently broken on the product
+surface, the banned framing is off the homepage, the suite seam
+matches.** Audit ran across docs, copy, app, UI, UX, and code;
+~35 findings logged, six shipped in this cycle.
+
+The wordmark `.dot` in `globals.css` was referencing a keyframe
+called `notes-caret` that doesn't exist — falling through to no
+animation. The seam between Notes (warm-notebook, Inter) and the
+suite (paper-white, Geist) is supposed to be carried by the
+indigo dot and its M·05 settle breath; that gesture has been off
+the in-product wordmark for an unknown number of cycles. Restored
+to match the marketing-nav wordmark — 3.2s breath, scale
+0.92→1.05, cubic-bezier(.16, 1, .3, 1).
+
+`--color-signal` was `#4b57c9` (a darker, more violet indigo);
+the rest of the suite uses `#4f46e5`. The note-dot, extract-input
+border, and draft-button hover all pull from this token. Visible
+drift side-by-side with the wordmark dot. Locked to `#4f46e5`.
+
+Homepage anti-feature grid had `"Not a second brain."` as a
+refutation label — the banned framing planted the association
+even in negation. Reframed to `"Not a filing system."`. Suitebar
+`min-height` raised from 42px to 44px (mobile pass spec).
+`suite-launcher.tsx` was referencing `var(--color-border)` which
+doesn't exist in the token system — popover divider was rendering
+transparent. Swapped to `--color-line`. PRODUCT.md §9 wordmark
+gesture and §10 implementation map updated (FTS5, extract edge,
+and email-capture-code-path all marked shipped, not deferred).
+
+Held back to a separate cycle: CSP promotion from Report-Only to
+enforced, FTS5 sanitizer hardening, server-side body-length cap
+on `createNote`, inbound webhook replay protection. Each one
+needs its own deliberation. Also held back: demo restoration of
+the extraction beat (Plan 10 work), wedding-planning page
+re-token sweep.
+
 ## 2026-05-14 · N·2 · ships · atlas drift-trigger wires into notes commits
 
 **Notes commits now flag the umbrella's atlas when a referenced
