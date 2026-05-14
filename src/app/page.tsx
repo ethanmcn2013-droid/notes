@@ -27,7 +27,7 @@ export default function HomePage() {
               copy: "No links between notes. No backlinks. No graph view.",
             },
             {
-              label: "Not a second brain.",
+              label: "Not a filing system.",
               copy: "It's a stream and a search field. Nothing to set up.",
             },
             {

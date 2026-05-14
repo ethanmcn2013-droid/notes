@@ -86,14 +86,14 @@ export function SuiteLauncher({ current }: { current: ProductSlug }) {
             width: 280,
             overflow: "hidden",
             borderRadius: 12,
-            border: "1px solid var(--color-border)",
+            border: "1px solid var(--color-line)",
             background: "var(--color-paper, #fffdf7)",
             boxShadow: "0 24px 60px -24px rgba(60,50,30,0.18)",
           }}
         >
           <div
             style={{
-              borderBottom: "1px solid var(--color-border)",
+              borderBottom: "1px solid var(--color-line)",
               padding: "10px 14px",
             }}
           >

@@ -160,7 +160,7 @@ A capture product is brand-coherent only if capture is genuinely fast. Below the
 - One screen. No nav header. No sidebar (search rail is collapsible and starts collapsed).
 - Capture field is the largest element by visual weight on first paint.
 - The stream is typography only. No card chrome, no shadows, no rounded panels per-item.
-- The notebook wordmark gesture (per BRAND.md): `notes·` with the *underline-writes-itself* on first paint. Once. Not on subsequent renders.
+- The notebook wordmark gesture (per BRAND.md + suite design-system v1): `notes·` with the M·05 *settle* — a slow 3.2s breath, scale 0.92→1.05 with a faint opacity drift on the indigo dot. Runs continuously, the slowest motion in the system. (The prior `underline-writes-itself` gesture was retired with design-system v1.)
 
 **Locked voice in the product itself:**
 - The empty capture field shows a quiet private-writing line with a blinking caret. It uses the locked seven-line set from Cycle 9.4b and disappears the moment the user begins typing.
@@ -179,9 +179,9 @@ Turso-backed persistence, and the locked notebook surface live at `/app`.
 | Project scaffold | Next 16, Turso, Drizzle, Clerk | Shipped |
 | Capture field + stream | `src/app/app/Notebook.tsx` | Shipped |
 | Private empty state | `src/app/app/PrivateNotesEmptyState.tsx` | Shipped |
-| Search | Client-side filter now; Turso FTS5 later | Cycle 9.4 |
-| Approved action extraction | Future Tasks API endpoint for selected extracts only | Cycle 9.4b |
-| Email capture | Resend inbound or Mailgun routing → API endpoint | Plan 9.x |
+| Search | Turso FTS5 via debounced server action with client-side fallback during first round-trip | Shipped (N-2) |
+| Approved action extraction | Cross-repo POST to tasks.signalstudio.ie/api/notes-extract, bearer-authed, idempotent on (userId, noteId) | Shipped (Cycle 9.4b) |
+| Email capture | Resend Inbound webhook → `/api/capture/email` → slug-routed user_preferences | Code shipped (N-1); operator-blocked on `NOTES_CAPTURE_INBOUND_SECRET` + DNS |
 | Marketing site | `src/app/page.tsx` | Shipped |
 
 **Important:** raw note reads live behind `requireUser()` and stay scoped
