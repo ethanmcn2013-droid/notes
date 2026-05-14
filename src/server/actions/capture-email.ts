@@ -19,21 +19,28 @@ function makeSlug(): string {
 
 export type CaptureEmailResult =
   | { ok: true; address: string; slug: string }
-  | { ok: false; reason: "free-tier-not-enabled" };
+  | { ok: false; reason: "free-tier-not-enabled" }
+  | { ok: false; reason: "inbound-not-configured" };
 
 /**
- * Resolve the signed-in user's capture-email address. Tier-gated on
- * workspace+. Free users get a friendly refusal so the UI can render
- * an upgrade nudge instead of a real address.
+ * Resolve the signed-in user's capture-email address. Two gates:
  *
- * Row is lazy-created on first call — never seeded at signup, which
- * means the cost (a single INSERT) only lands on users who actually
- * want this feature.
+ *   1. Tier: must be workspace+ (notesProEnabled).
+ *   2. Inbound mail provider must be wired (NOTES_CAPTURE_INBOUND_SECRET
+ *      env must be set). Until DNS/Resend is configured, we hide the
+ *      address rather than show one that silently drops mail.
+ *
+ * Row is lazy-created on first ok call — never seeded at signup, so
+ * the cost (a single INSERT) only lands on users who actually want
+ * this feature AND can use it.
  */
 export async function getCaptureEmail(): Promise<CaptureEmailResult> {
   const userId = await requireUser();
   if (!(await notesProEnabled(userId))) {
     return { ok: false, reason: "free-tier-not-enabled" };
+  }
+  if (!process.env.NOTES_CAPTURE_INBOUND_SECRET) {
+    return { ok: false, reason: "inbound-not-configured" };
   }
 
   const existing = await db
