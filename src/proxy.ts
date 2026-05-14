@@ -24,6 +24,10 @@ const isPublicRoute = createRouteMatcher([
   "/robots.txt",
   "/opengraph-image",
   "/opengraph-image/(.*)",
+  // Inbound webhooks bring their own bearer auth and have no Clerk
+  // session. They must bypass clerkMiddleware or Resend's POST gets
+  // 307-redirected to /sign-in and the mail loop silently fails.
+  "/api/capture/email",
 ]);
 
 const clerkConfigured = Boolean(
