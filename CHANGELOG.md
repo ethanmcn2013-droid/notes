@@ -1,5 +1,40 @@
 # Signal Notes · Changelog
 
+## 2026-05-14 · FTS5 search · email-to-capture · entitlement awareness
+
+Three things landed at once.
+
+**FTS5 search** replaces the client-side substring filter. A
+`notes_fts` virtual table mirrors `notes(id, user_id, body)` via
+three INSERT/UPDATE/DELETE triggers; the search action runs prefix-
+matching for single-token queries and FTS5's implicit AND for
+multi-token. 180ms debounce + stale-result guard via a seq counter
+so fast typing never lets an earlier query stomp a later one. The
+client still falls back to substring filter during the first
+round-trip so the box feels instant. Budget per PRODUCT.md §9:
+200ms p99; FTS5 on Turso sits well below.
+
+**Email-to-capture** ships the data path. `user_preferences` schema
++ migration applied to prod Turso. `getCaptureEmail()` lazy-allocates
+a per-user `capture-XXXXXXXX@notes.signalstudio.ie` address on first
+call; `regenerateCaptureSlug()` rotates if leaked. `POST
+/api/capture/email` accepts a normalised provider payload
+(`{to, from, subject, text}`), parses the slug, maps to a user,
+writes a note. Bearer-auth via `NOTES_CAPTURE_INBOUND_SECRET` with
+constant-time compare. Until Resend Inbound + DNS is configured the
+endpoint 401s — that's the right shape.
+
+**CaptureEmailRow** is the visible surface beneath the stream.
+Workspace+ users see their address with click-to-copy; free users
+see a quiet upgrade nudge; and crucially, if the inbound provider
+isn't yet wired (`NOTES_CAPTURE_INBOUND_SECRET` unset), the row
+hides entirely. We refuse to show an address that silently drops
+mail.
+
+Plus a forward-compat helper at `src/server/entitlements.ts`
+(`notesProEnabled`) — the central gate point for future Pro features
+so we don't sprinkle `resolveEntitlement` calls across actions.
+
 ## 2026-05-13 · Suite design-system v1 · The dot learns to settle (notebook stays warm)
 
 Fifth and final product across the suite design-system line.
