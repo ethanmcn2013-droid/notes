@@ -3,6 +3,42 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-14 · N·1 · tightens · the notebook reads on a phone
+
+**Notes gets the same mobile correctness the umbrella, Tasks,
+Roadmap, and Analytics just shipped. Horizontal scroll guard, mobile
+leading for `.product-h1`, Clerk sign-up tap targets at 48px,
+viewport-fit for notch hardware. The green-and-mustard notebook
+aesthetic stays exactly as it is — only sizing changes.**
+
+The home hero "Your private layer. Capture the messy parts." had a
+descender clipping into the next row at mobile sizes — `.product-h1`
+uses `line-height: 0.92` for tight desktop register, which collapses
+once `clamp()` shrinks the font to ~41px on a phone. A `@media
+(max-width: 640px)` block lifts it to 1.02. Tight enough to keep the
+intentional Notes typography register, loose enough to breathe.
+
+`html { overflow-x: clip }` + `body { overflow-x: clip }` is added
+as a belt-and-braces guard. No content overflows today, but the
+guard prevents any future widget from scrolling the body
+horizontally.
+
+Clerk got the mobile correctness treatment without touching the
+palette. `formFieldInput` gains `!min-h-[48px] !text-[16px]` (the
+16px prevents iOS Safari's auto-zoom on focus); `formButtonPrimary`
+keeps its `bg-[#161815]` ink-on-paper but gains `!min-h-[48px]`;
+`socialButtonsBlockButton` also `!min-h-[48px]`. The notebook's
+warmth is unchanged — buttons and inputs just hit the WCAG 2.5.5
+tap-target floor now.
+
+Viewport export gains `viewportFit: "cover"` so notch hardware can
+honour `env(safe-area-inset-*)`. Per `feedback_notes_aesthetic`, the
+green/mustard/Inter aesthetic is intentional and locked — this
+cycle does not touch it.
+
+Typecheck clean.
+
+
 ## 2026-05-14 · FTS5 search · email-to-capture · entitlement awareness
 
 Three things landed at once.

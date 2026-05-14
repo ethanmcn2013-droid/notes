@@ -26,7 +26,7 @@
 
 * { box-sizing: border-box; }
 
-html { min-height: 100%; background: var(--color-bg); }
+html { min-height: 100%; background: var(--color-bg); overflow-x: clip; }
 
 body {
   min-height: 100vh;
@@ -36,6 +36,10 @@ body {
   letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Belt-and-braces guard against horizontal scroll on mobile.
+     Mirrors studio S·26 and tasks T·47 — same intent, Notes's own
+     stylesheet shape. */
+  overflow-x: clip;
 }
 
 a { color: inherit; }
@@ -602,6 +606,13 @@ button, input, textarea { font: inherit; }
   letter-spacing: -0.02em;
   line-height: 0.92;
   color: var(--color-ink);
+}
+/* Mobile leading correction — 0.92 lets descenders clip into the next
+   line's cap-height once clamp() shrinks to ~41px on phones. Loosen
+   below 640px while keeping the tight desktop register. Mirrors the
+   spirit of studio S·26 / tasks T·47, adapted to Notes's own scale. */
+@media (max-width: 640px) {
+  .product-h1 { line-height: 1.02; }
 }
 .product-promise {
   max-width: 28ch;

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
@@ -16,6 +16,12 @@ const geist = Geist({
   variable: "--font-geist",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "Signal Notes — capture clarity",
@@ -45,8 +51,15 @@ export default function RootLayout({
           borderRadius: "0.6rem",
         },
         elements: {
+          // Mobile correctness — 48px min-height + 16px input font (no iOS
+          // auto-zoom). Notes's green/mustard palette preserved per
+          // feedback_notes_aesthetic; only sizing changes.
+          formFieldInput:
+            "!min-h-[48px] !text-[16px]",
           formButtonPrimary:
-            "bg-[#161815] hover:bg-[#335f54] text-[#fffefa] rounded-full",
+            "bg-[#161815] hover:bg-[#335f54] text-[#fffefa] rounded-full !min-h-[48px] !text-[15px]",
+          socialButtonsBlockButton:
+            "!min-h-[48px] !text-[15px]",
           card: "shadow-[0_22px_70px_rgba(41,48,37,0.12)]",
         },
       }}
