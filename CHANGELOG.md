@@ -3,6 +3,23 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-14 · N·2 · ships · atlas drift-trigger wires into notes commits
+
+**Notes commits now flag the umbrella's atlas when a referenced
+file changes.** A pre-commit hook in `.githooks/` runs a node
+script against the staged file list, resolves any atlas references
+that point at this repo, and writes drift into the studio repo's
+canonical sidecar. The hook never blocks — drift is a signal, not
+a gate. Activation is one `git config core.hooksPath .githooks`.
+
+This is the second sign-off criterion in the spec: editing
+`src/server/actions/notes.ts` flags both
+`log-cycle-cross-repo-writer` and `turso-databases-and-reads`.
+Verified end-to-end. Auto-stage is gated on
+`REPO_ROOT === STUDIO_ROOT`, so commits here leave studio's sidecar
+uncommitted for the studio operator. Full spec lives at
+`~/Projects/personal/studio/docs/ATLAS_DRIFT_TRIGGER.md`.
+
 ## 2026-05-14 · N·1 · tightens · the notebook reads on a phone
 
 **Notes gets the same mobile correctness the umbrella, Tasks,
