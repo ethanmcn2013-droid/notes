@@ -43,7 +43,9 @@ export async function createNote(body: string): Promise<NoteRead> {
     updatedAt: now,
   });
 
-  revalidatePath("/app");
+  // No revalidate: the client owns the optimistic merge and reconciles
+  // against this return value. Revalidating thrashes the route cache
+  // for every keystroke that ships.
 
   return {
     id,
@@ -114,15 +116,20 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
 
-  // Sanitise: keep alphanumeric + space; drop chars that FTS5 treats
-  // as operators or quote delimiters. Cheap, defensive — a user's
-  // search box is not a SQL prompt.
-  const safe = trimmed.replace(/["'(),:.;\\]+/g, " ").replace(/\s+/g, " ").trim();
-  if (!safe) return [];
+  // Sanitise: drop quote delimiters, parentheses, punctuation,
+  // FTS5 operator chars (* ^), and standalone boolean keywords that
+  // would otherwise alter MATCH semantics in surprising ways. The
+  // search box is not a query-DSL prompt — keep it intent-only.
+  const stripped = trimmed
+    .replace(/["'(),:.;\\*^]+/g, " ")
+    .replace(/\b(AND|OR|NOT|NEAR)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!stripped) return [];
 
   // Single-token: prefix-match so live-typing surfaces results.
   // Multi-token: AND-match via FTS5's implicit space-AND.
-  const match = safe.includes(" ") ? safe : `${safe}*`;
+  const match = stripped.includes(" ") ? stripped : `${stripped}*`;
 
   const rows = await db.all<{
     id: string;
@@ -206,7 +213,6 @@ export async function setNoteExtract(
     throw new Error("Note not found");
   }
 
-  revalidatePath("/app");
   return row;
 }
 
@@ -238,7 +244,6 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
     throw new Error("Note not found");
   }
 
-  revalidatePath("/app");
   return row;
 }
 
@@ -267,9 +272,20 @@ export async function sendExtractToTasks(
   noteId: string
 ): Promise<{ note: NoteRead; result: ExtractSendResult }> {
   const userId = await requireUser();
-  const tasksUrl = (
-    process.env.TASKS_API_URL ?? "https://tasks.signalstudio.ie"
-  ).replace(/\/+$/, "");
+  const tasksUrlRaw =
+    process.env.TASKS_API_URL ??
+    (process.env.VERCEL_ENV === "production"
+      ? "https://tasks.signalstudio.ie"
+      : null);
+  if (!tasksUrlRaw) {
+    // Refuse the silent prod default outside production — a
+    // misconfigured preview env would otherwise write into prod
+    // Tasks. Local dev / preview must set TASKS_API_URL explicitly.
+    throw new Error(
+      "Cross-repo send is not configured (TASKS_API_URL missing)"
+    );
+  }
+  const tasksUrl = tasksUrlRaw.replace(/\/+$/, "");
   const secret = process.env.NOTES_TO_TASKS_SECRET;
   if (!secret) {
     throw new Error(

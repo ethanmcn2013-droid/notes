@@ -41,6 +41,38 @@ type InboundPayload = {
   text?: string | null;
 };
 
+const MAX_BODY_BYTES = 256 * 1024;
+const THROTTLE_WINDOW_MS = 60_000;
+const THROTTLE_MAX_PER_WINDOW = 30;
+
+const throttleCounters = new Map<string, { count: number; resetAt: number }>();
+
+function throttleKey(req: Request, slug: string | null): string {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  return `${ip}:${slug ?? "_"}`;
+}
+
+function rateLimit(req: Request, slug: string | null): boolean {
+  const key = throttleKey(req, slug);
+  const now = Date.now();
+  const entry = throttleCounters.get(key);
+  if (!entry || entry.resetAt <= now) {
+    throttleCounters.set(key, { count: 1, resetAt: now + THROTTLE_WINDOW_MS });
+    if (throttleCounters.size > 1024) {
+      for (const [k, v] of throttleCounters) {
+        if (v.resetAt <= now) throttleCounters.delete(k);
+      }
+    }
+    return true;
+  }
+  if (entry.count >= THROTTLE_MAX_PER_WINDOW) return false;
+  entry.count += 1;
+  return true;
+}
+
 function authOk(req: Request): boolean {
   const expected = process.env.NOTES_CAPTURE_INBOUND_SECRET;
   if (!expected) return false;
@@ -58,20 +90,39 @@ function parseSlug(to: string | null | undefined): string | null {
   if (!to) return null;
   // Tolerate angle-bracketed forms ("Name <capture-abcd@...>"),
   // case variations, and surrounding whitespace.
-  const m = to.match(/capture-([a-z0-9]{4,16})@/i);
+  const m = to.match(/capture-([a-f0-9]{8,16})@/i);
   return m ? m[1].toLowerCase() : null;
 }
 
-function buildBody(subject: string | null, text: string | null): string {
+function buildBody(
+  from: string | null,
+  subject: string | null,
+  text: string | null,
+): string {
+  // Per the file-header privacy guardrail: when present, the From
+  // address is recorded inline as the body's first line. Stays out
+  // of any structured column; never leaves the user's notebook.
+  const f = (from ?? "").trim();
   const s = (subject ?? "").trim();
   const t = (text ?? "").trim();
-  if (s && t) return `${s}\n\n${t}`;
-  return s || t;
+  const parts: string[] = [];
+  if (f) parts.push(`from: ${f}`);
+  if (s) parts.push(s);
+  if (t) parts.push(t);
+  return parts.join("\n\n");
 }
 
 export async function POST(req: Request) {
   if (!authOk(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  const declaredLength = Number(req.headers.get("content-length") ?? "0");
+  if (declaredLength > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      { ok: false, error: "payload-too-large" },
+      { status: 413 },
+    );
   }
 
   let payload: InboundPayload;
@@ -82,6 +133,12 @@ export async function POST(req: Request) {
   }
 
   const slug = parseSlug(payload.to);
+  if (!rateLimit(req, slug)) {
+    return NextResponse.json(
+      { ok: false, error: "rate-limited" },
+      { status: 429 },
+    );
+  }
   if (!slug) {
     return NextResponse.json(
       { ok: false, error: "no-slug-in-to", to: payload.to ?? null },
@@ -102,7 +159,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, accepted: false }, { status: 202 });
   }
 
-  const body = buildBody(payload.subject ?? null, payload.text ?? null);
+  const body = buildBody(
+    payload.from ?? null,
+    payload.subject ?? null,
+    payload.text ?? null,
+  );
   if (!body) {
     return NextResponse.json({ ok: false, error: "empty-body" }, { status: 400 });
   }

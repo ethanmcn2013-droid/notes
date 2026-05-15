@@ -22,7 +22,35 @@ import {
 } from "@/server/actions/notes";
 
 function makeOptimisticId() {
-  return `opt_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  return `opt_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
+}
+
+function normalizeForSearch(s: string) {
+  // Mirror the FTS5 tokenizer's remove_diacritics=2 so the client-side
+  // substring fallback (used while the first FTS round-trip is in
+  // flight) doesn't diverge from the eventual server result. NFD
+  // splits combining marks off the base character; the strip range
+  // catches the entire Combining Diacritical Marks block.
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+function friendlyError(err: unknown, fallback: string): string {
+  if (!(err instanceof Error)) return fallback;
+  if (err.name === "UnauthorizedError" || /not authenticated/i.test(err.message)) {
+    return "Your session expired — sign in again.";
+  }
+  return err.message || fallback;
+}
+
+function RelativeTime({ ts }: { ts: number }) {
+  // Self-contained tick so the whole notebook doesn't re-render once
+  // a minute just to refresh a timestamp. Only the timestamp updates.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return <>{relativeTime(ts, now)}</>;
 }
 
 function firstLine(body: string) {
@@ -75,12 +103,15 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const extractInputRef = useRef<HTMLInputElement | null>(null);
-  const tickRef = useRef(0);
-  const [, forceTick] = useState(0);
   // Pending fresh-marker timers keyed by note id; cleared on unmount.
   const freshTimersRef = useRef<Map<string, number>>(new Map());
-  // Undo-dismiss timer — cleared before each new undo or on unmount.
-  const undoTimerRef = useRef<number | null>(null);
+  // Pending-delete timers per note. Each entry owns its own 4s
+  // commit window so a fast second delete no longer force-commits
+  // the first; both can independently undo until their own timer
+  // fires. The visible toast still only tracks the latest.
+  const pendingDeletesRef = useRef<Map<string, { note: NoteRead; timer: number }>>(
+    new Map(),
+  );
 
   // Refocus capture when the tab returns to foreground (PRODUCT.md §5 budget)
   useEffect(() => {
@@ -93,21 +124,12 @@ export function Notebook({ initialNotes }: NotebookProps) {
     return () => document.removeEventListener("visibilitychange", refocus);
   }, []);
 
-  // Tick relative timestamps once a minute
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      tickRef.current += 1;
-      forceTick(tickRef.current);
-    }, 60_000);
-    return () => window.clearInterval(id);
-  }, []);
-
   // Cancel all pending timers on unmount to avoid calling setState on an
   // unmounted component.
   useEffect(() => {
     return () => {
       freshTimersRef.current.forEach((id) => window.clearTimeout(id));
-      if (undoTimerRef.current !== null) window.clearTimeout(undoTimerRef.current);
+      pendingDeletesRef.current.forEach(({ timer }) => window.clearTimeout(timer));
       if (extractFocusTimerRef.current !== null) window.clearTimeout(extractFocusTimerRef.current);
     };
   }, []);
@@ -152,9 +174,12 @@ export function Notebook({ initialNotes }: NotebookProps) {
     // While the first round-trip is still in flight, fall back to the
     // client-side filter on the already-loaded stream so the UI feels
     // responsive. FTS5 ranking takes over the moment results arrive.
+    // Normalize both sides to match the server's remove_diacritics=2
+    // tokenizer so accented input doesn't flicker between fallback
+    // and server result.
     if (searchResults === null) {
-      const q = query.trim().toLowerCase();
-      return notes.filter((n) => n.body.toLowerCase().includes(q));
+      const q = normalizeForSearch(query.trim());
+      return notes.filter((n) => normalizeForSearch(n.body).includes(q));
     }
     return searchResults;
   }, [notes, query, searchResults]);
@@ -220,13 +245,10 @@ export function Notebook({ initialNotes }: NotebookProps) {
         });
       } catch (err) {
         setNotes((prev) => prev.filter((n) => n.id !== tempId));
-        setError(err instanceof Error ? err.message : "Could not save");
+        setError(friendlyError(err, "Could not save"));
       }
     });
   }, [draft]);
-
-  // Ref holding the note pending deletion — used for undo re-insert.
-  const pendingDeleteRef = useRef<{ note: NoteRead; timer: number } | null>(null);
 
   const commitDelete = useCallback((noteToDelete: NoteRead) => {
     startTransition(async () => {
@@ -239,22 +261,32 @@ export function Notebook({ initialNotes }: NotebookProps) {
           const next = [...prev, noteToDelete].sort((a, b) => b.createdAt - a.createdAt);
           return next;
         });
-        setError(err instanceof Error ? err.message : "Could not delete");
+        setError(friendlyError(err, "Could not delete"));
       }
     });
   }, []);
 
   const undoDelete = useCallback(() => {
-    if (!pendingDeleteRef.current) return;
-    window.clearTimeout(pendingDeleteRef.current.timer);
-    const restored = pendingDeleteRef.current.note;
-    pendingDeleteRef.current = null;
-    startTransition(() => {
-      setUndoTarget(null);
-      setNotes((prev) => {
-        const next = [...prev, restored].sort((a, b) => b.createdAt - a.createdAt);
-        return next;
+    // Restore the note currently shown in the toast (the latest
+    // delete). Older deletes already in their own undo window keep
+    // ticking — they commit when their timers fire.
+    setUndoTarget((current) => {
+      if (!current) return null;
+      const entry = pendingDeletesRef.current.get(current.id);
+      if (entry) {
+        window.clearTimeout(entry.timer);
+        pendingDeletesRef.current.delete(current.id);
+      }
+      const restored = current;
+      startTransition(() => {
+        setNotes((prev) => {
+          const next = [...prev, restored].sort(
+            (a, b) => b.createdAt - a.createdAt,
+          );
+          return next;
+        });
       });
+      return null;
     });
   }, []);
 
@@ -263,14 +295,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
       const noteToDelete = notes.find((n) => n.id === id);
       if (!noteToDelete) return;
 
-      // Cancel any prior pending delete before starting a new one.
-      if (pendingDeleteRef.current) {
-        window.clearTimeout(pendingDeleteRef.current.timer);
-        // The prior one still needs to actually delete — fire it now.
-        commitDelete(pendingDeleteRef.current.note);
-        pendingDeleteRef.current = null;
-      }
-
       startTransition(() => {
         setNotes((prev) => prev.filter((n) => n.id !== id));
         setOpenId((current) => (current === id ? null : current));
@@ -278,12 +302,19 @@ export function Notebook({ initialNotes }: NotebookProps) {
       });
 
       const timer = window.setTimeout(() => {
-        pendingDeleteRef.current = null;
-        setUndoTarget(null);
+        pendingDeletesRef.current.delete(noteToDelete.id);
+        // Only clear the visible toast if it still points at this
+        // note — a later delete may have already replaced it.
+        setUndoTarget((current) =>
+          current && current.id === noteToDelete.id ? null : current,
+        );
         commitDelete(noteToDelete);
       }, 4_000);
 
-      pendingDeleteRef.current = { note: noteToDelete, timer };
+      pendingDeletesRef.current.set(noteToDelete.id, {
+        note: noteToDelete,
+        timer,
+      });
     },
     [notes, commitDelete]
   );
@@ -335,9 +366,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
           setNotes((prev) => prev.map((n) => (n.id === noteId ? saved : n)));
         } catch (err) {
           setNotes(previousNotes);
-          setExtractError(
-            err instanceof Error ? err.message : "Could not draft action"
-          );
+          setExtractError(friendlyError(err, "Could not draft action"));
         }
       });
     },
@@ -359,9 +388,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
           setNotes((prev) => prev.map((n) => (n.id === noteId ? saved : n)));
         } catch (err) {
           setNotes(previousNotes);
-          setExtractError(
-            err instanceof Error ? err.message : "Could not clear action"
-          );
+          setExtractError(friendlyError(err, "Could not clear action"));
         }
       });
     },
@@ -399,9 +426,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
             return next;
           });
         } catch (err) {
-          setExtractError(
-            err instanceof Error ? err.message : "Could not send to Tasks"
-          );
+          setExtractError(friendlyError(err, "Could not send to Tasks"));
         } finally {
           setSendingExtractFor(null);
         }
@@ -483,11 +508,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
             <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
           </p>
           {error && (
-            <p
-              role="alert"
-              className="capture-hint"
-              style={{ color: "#b04848", marginTop: 8 }}
-            >
+            <p role="alert" className="capture-hint capture-hint-error">
               {error}
             </p>
           )}
@@ -538,7 +559,9 @@ export function Notebook({ initialNotes }: NotebookProps) {
                         className="note-dot"
                       />
                     )}
-                    <span>{relativeTime(note.createdAt)}</span>
+                    <span>
+                      <RelativeTime ts={note.createdAt} />
+                    </span>
                   </span>
                 </button>
               </li>
@@ -549,7 +572,9 @@ export function Notebook({ initialNotes }: NotebookProps) {
         {openNote && (
           <article className="open-note" aria-label="Open note">
             <div className="open-note-head">
-              <span>Captured {relativeTime(openNote.createdAt)}</span>
+              <span>
+                Captured <RelativeTime ts={openNote.createdAt} />
+              </span>
               <div className="open-note-head-controls">
                 <button
                   type="button"
@@ -717,7 +742,13 @@ export function Notebook({ initialNotes }: NotebookProps) {
           <div>
             <dt>Last saved</dt>
             <dd>
-              {lastSavedTs ? <em>{relativeTime(lastSavedTs)}</em> : "—"}
+              {lastSavedTs ? (
+                <em>
+                  <RelativeTime ts={lastSavedTs} />
+                </em>
+              ) : (
+                "—"
+              )}
             </dd>
           </div>
           <div>

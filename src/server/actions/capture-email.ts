@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db/client";
@@ -10,11 +11,11 @@ const CAPTURE_DOMAIN =
   process.env.NEXT_PUBLIC_NOTES_CAPTURE_DOMAIN ?? "notes.signalstudio.ie";
 
 function makeSlug(): string {
-  // 8 chars, base-36, ~41 bits of entropy. Plenty for routing; we
-  // don't need this to be unguessable to an attacker — the bearer
-  // secret on the webhook is the actual auth.
-  return Math.random().toString(36).slice(2, 6) +
-    Math.random().toString(36).slice(2, 6);
+  // 6 bytes → 12 hex chars, 48 bits. Generated from node:crypto so
+  // the slug is unguessable; the bearer secret on the webhook is the
+  // actual auth, but unguessable slugs add defence-in-depth and
+  // remove the comment-vs-implementation drift Math.random caused.
+  return randomBytes(6).toString("hex");
 }
 
 export type CaptureEmailResult =
@@ -51,8 +52,8 @@ export async function getCaptureEmail(): Promise<CaptureEmailResult> {
 
   let slug = existing[0]?.captureSlug;
   if (!slug) {
-    // Unique-collision is statistically impossible at 8 chars but
-    // the DB constraint protects us anyway. One retry covers it.
+    // Unique-collision is statistically impossible at 48 bits but
+    // the DB constraint protects us anyway. Three retries cover it.
     for (let attempt = 0; attempt < 3 && !slug; attempt++) {
       const candidate = makeSlug();
       try {
@@ -88,15 +89,26 @@ export async function regenerateCaptureSlug(): Promise<CaptureEmailResult> {
     return { ok: false, reason: "free-tier-not-enabled" };
   }
 
-  const next = makeSlug();
   const now = Date.now();
-  await db
-    .insert(userPreferences)
-    .values({ userId, captureSlug: next })
-    .onConflictDoUpdate({
-      target: userPreferences.userId,
-      set: { captureSlug: next, updatedAt: now },
-    });
+  let next: string | null = null;
+  for (let attempt = 0; attempt < 3 && !next; attempt++) {
+    const candidate = makeSlug();
+    try {
+      await db
+        .insert(userPreferences)
+        .values({ userId, captureSlug: candidate })
+        .onConflictDoUpdate({
+          target: userPreferences.userId,
+          set: { captureSlug: candidate, updatedAt: now },
+        });
+      next = candidate;
+    } catch {
+      // captureSlug unique constraint may collide — retry.
+    }
+  }
+  if (!next) {
+    throw new Error("Failed to rotate capture slug after 3 attempts");
+  }
 
   return {
     ok: true,
