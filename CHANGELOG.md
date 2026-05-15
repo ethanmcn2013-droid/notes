@@ -3,6 +3,37 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·7 · ships · A teacher's Friday note, and the examples become a set
+
+**Two of the four demo archetypes now had deep worked examples;
+two did not. A teacher toggling the demo to "Teaching week" and
+wanting to see what that actually looks like still hit a
+three-line placeholder. There is now a teacher's note at the same
+depth as the wedding and the builder — and the examples wire
+themselves together.**
+
+`/teaching-week` is a teacher's note written in the empty
+classroom after the last bell on a Friday: who needs a call
+(Daniel's reading went backwards, Amara's been quiet), what she
+decided (move the assessment, reports five a night), what is
+still open (the SEN paperwork that cannot slip a third Friday,
+the trip form). Her register, not a project manager's — the
+emotional-intelligence beats are the point, because that is how a
+teacher actually writes this down.
+
+The three examples now share one source of truth. Adding a fourth
+no longer means editing every existing page's reciprocal link by
+hand; each page declares which one it is and the rest wire
+themselves. The hand-rolled single links from N·6 are gone.
+
+The N·6 Clerk-trap lesson was applied, not relearned: the new
+public route went into the proxy in the same change, and the live
+URL returned 200 on the first deploy.
+
+This closes three of the four. The freelance archetype is still
+on a three-line demo pack — named here, not buried, and the next
+move.
+
 ## 2026-05-15 · N·6 · ships · A builder's site note joins the worked examples
 
 **Until now the only deep proof of what a Notes note actually looks
