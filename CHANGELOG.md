@@ -3,6 +3,55 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·4 · hardens · the held-back security cycle
+
+**The four things N·3 explicitly deferred are now shipped — the
+inbound mail endpoint has a body cap and a throttle, the CSP is
+enforced not observed, and the capture slug is unguessable.** A
+second code review ran the full six dimensions; four MAJORs and
+six smaller findings closed in one pass. Build and typecheck
+clean, net +244/−98.
+
+`/api/capture/email` was a validated-bearer endpoint with no
+brakes — once Resend Inbound is wired and the secret is shared
+with a third party, a replayed request could `INSERT` notes
+without limit. It now rejects payloads over 256KB on
+`content-length` before parsing and throttles to 30 inserts per
+minute per IP+slug. In-memory, so it's per-instance — real
+fan-out protection still wants Upstash, but the v1 shape is
+covered.
+
+The Content-Security-Policy flipped from `Report-Only` to
+enforced. Clerk's frontend API, challenge frames, and accounts
+endpoints were added to `script-`, `connect-`, and `frame-src`
+so the auth UI keeps working under the stricter header. The
+capture slug moved off `Math.random().toString(36)` — whose
+comment claimed ~41 bits it didn't reliably deliver — to
+`crypto.randomBytes(6)` hex: 48 honest bits, and the rotate path
+now retries on a unique-collision the same way create always did.
+
+Smaller seams: the client-side search fallback now strips
+diacritics the same way the FTS5 `remove_diacritics=2` tokenizer
+does, so accented queries stop flickering between the local
+guess and the server result. The FTS5 sanitizer drops `*`, `^`,
+and standalone boolean keywords. `requireUser` throws a tagged
+`UnauthorizedError` that the client renders as "Your session
+expired — sign in again" instead of a raw string. Pending
+deletes moved from one shared ref to a per-note map, so a fast
+second delete no longer force-commits the first mid-undo.
+`revalidatePath` is off the create/extract paths the client
+already reconciles. `TASKS_API_URL` no longer silently defaults
+to prod outside `VERCEL_ENV=production`. Optimistic ids use
+`crypto.randomUUID`; the error color is a token; relative
+timestamps tick in isolation instead of re-rendering the
+notebook every minute.
+
+Held back to an operator decision: pushing N·4 to prod and
+watching the first navigation for any unforeseen Clerk-subdomain
+CSP violation. Rollback is one header line if it surfaces. Also
+owed by the operator: `TASKS_API_URL` set on the Vercel preview
+env, or the extract-to-Tasks edge hard-fails there by design.
+
 ## 2026-05-15 · N·3 · tightens · post-audit integrity pass
 
 **Six load-bearing fixes after a full six-dimension audit — the
