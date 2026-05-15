@@ -21,6 +21,10 @@ import {
   type NoteRead,
 } from "@/server/actions/notes";
 
+// Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts — kept in
+// sync by hand because a "use server" module can't export a const.
+const MAX_NOTE_BODY_CHARS = 10_000;
+
 function makeOptimisticId() {
   return `opt_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
 }
@@ -501,6 +505,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onCaptureKeyDown}
+            maxLength={MAX_NOTE_BODY_CHARS}
             spellCheck
           />
           <PrivateNotesEmptyState visible={draftIsEmpty} />

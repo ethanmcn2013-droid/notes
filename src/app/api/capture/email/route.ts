@@ -42,6 +42,11 @@ type InboundPayload = {
 };
 
 const MAX_BODY_BYTES = 256 * 1024;
+// Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts. Inbound
+// mail inserts directly (not via createNote), so it enforces the
+// same per-note ceiling — truncated, not rejected, since the sender
+// never sees an error response.
+const MAX_NOTE_BODY_CHARS = 10_000;
 const THROTTLE_WINDOW_MS = 60_000;
 const THROTTLE_MAX_PER_WINDOW = 30;
 
@@ -109,7 +114,10 @@ function buildBody(
   if (f) parts.push(`from: ${f}`);
   if (s) parts.push(s);
   if (t) parts.push(t);
-  return parts.join("\n\n");
+  const joined = parts.join("\n\n");
+  if (joined.length <= MAX_NOTE_BODY_CHARS) return joined;
+  const marker = "\n\n[truncated]";
+  return joined.slice(0, MAX_NOTE_BODY_CHARS - marker.length) + marker;
 }
 
 export async function POST(req: Request) {

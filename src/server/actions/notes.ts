@@ -25,11 +25,22 @@ export type NoteRead = Pick<
  * workspace, roadmap, task, and analytics surfaces must use future
  * creator-approved extract endpoints, not this raw note action.
  */
+// Module-local — a "use server" file may only *export* async
+// functions, so the client mirrors this ceiling via its own
+// constant rather than importing this one.
+const MAX_NOTE_BODY_CHARS = 10_000;
+
 export async function createNote(body: string): Promise<NoteRead> {
   const userId = await requireUser();
   const trimmed = body.trim();
   if (!trimmed) {
     throw new Error("Note body is empty");
+  }
+  if (trimmed.length > MAX_NOTE_BODY_CHARS) {
+    // A note is a thought, not a document. The textarea enforces the
+    // same ceiling client-side; this is the trust-boundary backstop
+    // for direct action calls and oversized pastes.
+    throw new Error("Note is longer than 10,000 characters");
   }
 
   const now = Date.now();

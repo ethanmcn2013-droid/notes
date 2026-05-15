@@ -46,11 +46,24 @@ to prod outside `VERCEL_ENV=production`. Optimistic ids use
 timestamps tick in isolation instead of re-rendering the
 notebook every minute.
 
+Follow-on in the same cycle: the `createNote` server action and
+the capture textarea now share a 10,000-character ceiling — a
+note is a thought, not a document. The trust-boundary check
+lives in the action (the textarea `maxLength` is the courtesy
+copy); the inbound-email path enforces the same ceiling by
+truncating with a `[truncated]` marker rather than rejecting,
+since the sender never sees an error response. The constant is
+mirrored by hand on both sides because a `"use server"` module
+may only export async functions.
+
 Held back to an operator decision: pushing N·4 to prod and
 watching the first navigation for any unforeseen Clerk-subdomain
 CSP violation. Rollback is one header line if it surfaces. Also
 owed by the operator: `TASKS_API_URL` set on the Vercel preview
 env, or the extract-to-Tasks edge hard-fails there by design.
+Still owed in code: the HMAC-signed-webhook migration for
+inbound-mail replay protection (gated behind operator Resend
+setup, so not yet urgent).
 
 ## 2026-05-15 · N·3 · tightens · post-audit integrity pass
 
