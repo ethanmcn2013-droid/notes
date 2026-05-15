@@ -2,20 +2,28 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
-// Clerk endpoints — frontend API + auth helpers. Without these in
-// connect-src + frame-src + worker-src the auth UI breaks under
-// enforce-mode CSP.
-const clerkConnect = "https://*.clerk.accounts.dev https://clerk.signalstudio.ie https://clerk.notes.signalstudio.ie https://*.clerk.com";
-const clerkFrame = "https://*.clerk.accounts.dev https://challenges.cloudflare.com";
+// Clerk CSP allowlist (Clerk's documented requirements + a
+// robustness move). Clerk's prod Frontend API is a CNAME under our
+// own domain — the exact label is set in the Clerk dashboard and is
+// NOT visible to this build (no publishable key in the repo). Rather
+// than guess `clerk.signalstudio.ie`, allow `https://*.signalstudio.ie`:
+// per CSP3 a leading `*` matches any subdomain depth, so whatever
+// label Clerk's prod instance uses (clerk., accounts., or a nested
+// one) is covered without a deploy-time guess. Dev instances live on
+// *.clerk.accounts.dev; Clerk infra/telemetry on *.clerk.com +
+// clerk-telemetry.com; bot-protection (Turnstile) on Cloudflare.
+const clerkHosts =
+  "https://*.signalstudio.ie https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com";
+const turnstile = "https://challenges.cloudflare.com";
 
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com ${clerkConnect} https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com ${clerkHosts} ${turnstile}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob: https:`,
   `font-src 'self' data:`,
-  `connect-src 'self' https://va.vercel-scripts.com ${clerkConnect}`,
-  `frame-src 'self' ${clerkFrame}`,
+  `connect-src 'self' https://va.vercel-scripts.com ${clerkHosts}`,
+  `frame-src 'self' ${turnstile}`,
   `worker-src 'self' blob:`,
   `frame-ancestors 'none'`,
   `base-uri 'self'`,

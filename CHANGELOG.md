@@ -56,14 +56,23 @@ since the sender never sees an error response. The constant is
 mirrored by hand on both sides because a `"use server"` module
 may only export async functions.
 
-Held back to an operator decision: pushing N·4 to prod and
-watching the first navigation for any unforeseen Clerk-subdomain
-CSP violation. Rollback is one header line if it surfaces. Also
-owed by the operator: `TASKS_API_URL` set on the Vercel preview
-env, or the extract-to-Tasks edge hard-fails there by design.
-Still owed in code: the HMAC-signed-webhook migration for
-inbound-mail replay protection (gated behind operator Resend
-setup, so not yet urgent).
+CSP de-risked before the prod push: the publishable key isn't in
+the repo, so the exact Clerk prod Frontend API CNAME can't be
+read at build time. Rather than guess `clerk.signalstudio.ie`,
+the allowlist now uses `https://*.signalstudio.ie` — per CSP3 a
+leading `*` matches any subdomain depth, so whatever label the
+Clerk dashboard sets is covered without a deploy-time guess.
+Aligned to Clerk's documented set while here: added
+`clerk-telemetry.com` to connect-src and kept Turnstile on
+script/frame-src; `img.clerk.com` was already covered by the
+existing `https:` img-src. The "unforeseen Clerk subdomain"
+risk is now closed by construction rather than by watching.
+
+Held back to an operator decision: `TASKS_API_URL` set on the
+Vercel preview env, or the extract-to-Tasks edge hard-fails
+there by design. Still owed in code: the HMAC-signed-webhook
+migration for inbound-mail replay protection (gated behind
+operator Resend setup, so not yet urgent).
 
 ## 2026-05-15 · N·3 · tightens · post-audit integrity pass
 
