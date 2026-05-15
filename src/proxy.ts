@@ -28,6 +28,8 @@ const isPublicRoute = createRouteMatcher([
   "/building-project/(.*)",
   "/teaching-week",
   "/teaching-week/(.*)",
+  "/freelance-studio",
+  "/freelance-studio/(.*)",
   "/sitemap.xml",
   "/robots.txt",
   "/opengraph-image",

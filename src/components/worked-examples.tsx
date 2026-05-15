@@ -24,6 +24,11 @@ export const WORKED_EXAMPLES = [
     href: "/teaching-week",
     label: "a teacher’s week note",
   },
+  {
+    slug: "freelance-studio",
+    href: "/freelance-studio",
+    label: "a freelancer’s evening note",
+  },
 ] as const;
 
 export type WorkedExampleSlug = (typeof WORKED_EXAMPLES)[number]["slug"];
