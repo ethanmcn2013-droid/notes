@@ -3,6 +3,37 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·5 · reads · Notes stops talking like a tech tool
+
+**The first line every visitor read was "Your private layer." — and
+"layer" is a word a wedding planner, a tradesperson, or a teacher
+would never say. The homepage now opens in their language, and the
+demo no longer drops them into a software team's standup.**
+
+The hero H1 was "Your private layer. Capture the thought. Decide
+later." It is now "Not everything is ready for the room. Write it
+here first." — the same sentence the empty notebook already says
+to you when you open it, so the marketing page and the product
+finally speak with one voice. The sub-line carries the two
+promises the old line buried: write it down in three seconds,
+decide later what becomes work.
+
+The demo audience toggle had a pack called "Product launch" whose
+notes read "PDF exports must ship before launch" and "filter by
+tag inside search results page." That is the exact register the
+"startup" pack was retired for back in May — a software team
+talking to itself, shown to people who are explicitly not that.
+It is gone. In its place: a teacher's week. Two parent calls
+before Friday. The photocopier jammed again. Cover needed
+Thursday for a dentist appointment. All four demo packs now show
+a real person from the audience the product is for — a planner, a
+contractor, a teacher, a freelance designer.
+
+The word "layer" is also gone from the page metadata and the
+brand handbook's record of the canonical Notes headline. One
+copy cycle, no new surface, the mission read back in plain
+English.
+
 ## 2026-05-15 · N·4 · hardens · the held-back security cycle
 
 **The four things N·3 explicitly deferred are now shipped — the

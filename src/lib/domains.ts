@@ -2,18 +2,26 @@
  * Notes audience packs — same axis as Roadmap and Analytics.
  * Drives the AudienceToggle and reseeds the cinematic capture demo.
  *
- * PRODUCT.md §2.1 archetypes: planner, contractor, teacher, small-biz
- * owner, freelance designer. The "startup" pack was retired 2026-05-13
+ * PRODUCT.md §2 archetypes: wedding planner, contractor, teacher,
+ * freelance designer. The "startup" pack was retired 2026-05-13
  * (tech-bro register — investor moat, SOC 2 auditor, fintech founder Y
  * — was the exact voice PRODUCT.md §2 says Notes is not for). Replaced
  * with "freelance" for a freelance designer's day-to-day capture.
+ *
+ * The "launch" pack was retired 2026-05-15 (N·5) for the same reason
+ * the "startup" pack was: "Product launch / Decisions log / PDF exports
+ * must ship before launch / filter by tag inside search results" is the
+ * software-team register PRODUCT.md §2 says Notes is not for, just
+ * relabelled. Replaced with "teacher" — a named PRODUCT.md §2 archetype
+ * ("the teacher who realises mid-class that two students need parent
+ * calls"). All four packs now map cleanly to §2 archetypes.
  *
  * Tags removed from the type 2026-05-13 — Notes has no taxonomy per
  * §7. The previous version rendered #tag chips in the demo stream and
  * a Tags view that contradicted the lock.
  */
 
-export type DomainId = "wedding" | "construction" | "launch" | "freelance";
+export type DomainId = "wedding" | "construction" | "teacher" | "freelance";
 
 export type CaptureEntry = {
   /** The note body the user types. */
@@ -41,7 +49,7 @@ export type DomainPack = {
 export const DOMAIN_ORDER: DomainId[] = [
   "wedding",
   "construction",
-  "launch",
+  "teacher",
   "freelance",
 ];
 
@@ -97,29 +105,30 @@ export const DOMAINS: Record<DomainId, DomainPack> = {
     searchQuery: "owner",
     searchHitIndex: 0,
   },
-  launch: {
-    id: "launch",
-    label: "Product launch",
-    description: "a team keeping decisions and feedback before the next sync",
-    notebookEyebrow: "Decisions log · today",
+  teacher: {
+    id: "teacher",
+    label: "Teaching week",
+    description:
+      "a teacher keeping what a class throws up before it slips away",
+    notebookEyebrow: "Class notebook · today",
     captures: [
       {
-        text: "Sarah: PDF exports must ship before launch — non-negotiable.",
-        stamp: "9:14am",
+        text: "Two parent calls before Friday — Daniel's reading, and Amara's gone quiet this week.",
+        stamp: "8:50am",
         placeholder: "What just came up?",
       },
       {
-        text: "Dan's idea: filter by tag inside search results page.",
-        stamp: "10:02am",
+        text: "Photocopier jammed again — book the library room for Tuesday's assessment instead.",
+        stamp: "11:20am",
         placeholder: "What's worth remembering?",
       },
       {
-        text: "Customer call — priorities are speed and price, not features.",
-        stamp: "11:31am",
+        text: "Cover needed Thursday afternoon — dentist at 2. Tell the office first thing.",
+        stamp: "1:05pm",
         placeholder: "Three seconds. Type it now.",
       },
     ],
-    searchQuery: "sarah",
+    searchQuery: "parent",
     searchHitIndex: 0,
   },
   freelance: {

@@ -48,11 +48,11 @@ export function Hero() {
           marginBottom: 0,
         }}
       >
-        Your private layer.
+        Not everything is
         <br />
-        Capture the thought.
+        ready for the room.
         <br />
-        Decide later.
+        Write it here first.
       </h1>
 
       <p
@@ -64,8 +64,8 @@ export function Hero() {
           color: "var(--color-ink-soft)",
         }}
       >
-        A notebook for the half-formed thought, the thing not ready for the
-        room, and the decision you need to understand before it becomes work.
+        The half-formed thought. The thing said in passing. Write it down in
+        three seconds. Decide later what becomes work.
       </p>
 
       <div

@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Signal Notes — capture clarity",
   description:
-    "A private capture layer for thoughts before they become work. Signal Notes is the context layer of Signal Studio.",
+    "A private place for thoughts before they become work. Write it down in three seconds. Decide later what becomes work.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://notes.signalstudio.ie"
   ),
