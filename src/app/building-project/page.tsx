@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SuiteLauncher } from "@/components/suite-launcher";
+import { OtherWorkedExamples } from "@/components/worked-examples";
 
 export const metadata: Metadata = {
   title: "A building job — a site note — Signal Notes",
@@ -295,27 +296,7 @@ export default function BuildingProjectNotePage() {
           </ul>
         </section>
 
-        <section
-          aria-label="Another example"
-          style={{
-            marginTop: 48,
-            paddingTop: 28,
-            borderTop: "1px solid var(--color-line, #e7e4d8)",
-          }}
-        >
-          <Link
-            href="/wedding-planning"
-            style={{
-              color: "var(--color-ink-soft, #4a4a44)",
-              textDecoration: "underline",
-              textDecorationStyle: "dotted",
-              textUnderlineOffset: 4,
-              fontSize: 14,
-            }}
-          >
-            Another example: a wedding planner&rsquo;s venue note &rarr;
-          </Link>
-        </section>
+        <OtherWorkedExamples current="building-project" />
 
         <footer
           style={{

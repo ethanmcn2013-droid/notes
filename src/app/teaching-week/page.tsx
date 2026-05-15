@@ -4,36 +4,35 @@ import { SuiteLauncher } from "@/components/suite-launcher";
 import { OtherWorkedExamples } from "@/components/worked-examples";
 
 export const metadata: Metadata = {
-  title: "Wedding planning — a venue meeting note — Signal Notes",
+  title: "A teacher's week — a Friday note — Signal Notes",
   description:
-    "A worked example. What a single Sunday-evening note looks like after a venue meeting — plain sentences, decisions, questions, the things that need a reply by Tuesday.",
+    "A worked example. What a teacher writes in the empty classroom after the last bell — who needs a call, what was decided, what is still open before Monday.",
 };
 
 const NOTE = {
-  capturedLabel: "Captured Sunday 7 May · 8:42pm",
-  title: "Harbour House visit — second walkthrough",
+  capturedLabel: "Captured Friday 9 May · 4:25pm",
+  title: "Year 8 — end of a long week",
   body: [
-    "Sat down with Aoife & Conor after the second walkthrough at Harbour House. The room is right. The light at 5pm is right. The pricing is not yet right.",
+    "Sat in the empty classroom for ten minutes before I forget half of this. The week wasn't bad. It's the loose ends that lose me.",
     "",
-    "What was said:",
-    "• Aoife loves the long room over the marquee option. Conor is on the fence — wants the marquee for the dance.",
-    "• Niamh confirmed they can hold the date until 31 May. After that it goes back on the public calendar.",
-    "• Deposit is €4,200, not €3,800. The website is wrong. She asked us to flag this to whoever asks.",
-    "• Couple's parents want a Friday rehearsal dinner on site. Niamh said yes in principle but the kitchen needs to be cleared by 6pm Saturday.",
+    "Who needs a call:",
+    "• Daniel's reading has gone backwards, not flat — backwards. His parents need a real conversation, not a line on a report. Ring before Tuesday.",
+    "• Amara's been quiet all week and ate lunch alone twice. Probably nothing. I'd rather be wrong having checked. Quiet word with her form tutor first.",
+    "• Jack's dad emailed Monday about the trip payment. Still haven't replied. That one's on me — do it tonight.",
     "",
-    "What was decided:",
-    "• We hold the date until 28 May. Two days of buffer.",
-    "• Long room as the working assumption. Marquee stays on the table only if weather forecast is wrong by the week before.",
-    "• I send a single follow-up email by Tuesday with the deposit number, the date hold, and the rehearsal dinner ask.",
+    "What I decided:",
+    "• Move Tuesday's assessment to the library. The projector in 2B is dead and IT's “the order's in” means three weeks. Don't fight it, just move it.",
+    "• Swap Thursday's lesson order so the cover teacher gets the easy one. I'm out for the dentist at 2 — told the office, the plan goes on the desk, not in my head.",
+    "• Reports: five a night from Monday. Twenty-eight left. Leaving them to the deadline weekend is how last term went wrong.",
     "",
-    "What still needs an answer:",
-    "• Dietary list — Niamh asked four days ago. No reply has gone back. Aoife said she'd handle it by Wednesday.",
-    "• Photographer access — Harbour House restricts drone and a few of the corners. Need the list emailed across before we sign with Conleth.",
-    "• Final guest count — sitting at 84 invited, 71 confirmed, 9 unanswered. Conor's brother (the +1 question) still open.",
+    "What's still open:",
+    "• Parents' evening slots — the sign-up sheet is a mess, three families double-booked. The office needs to know before it goes out Monday.",
+    "• The SEN paperwork for two pupils was due last Friday. It is now this Friday. It cannot become next Friday.",
+    "• Trip risk assessment — the venue still hasn't sent the form. No form, no trip. Chase Monday first thing or pull the date.",
     "",
-    "Reading this back: the venue is decided in everything but the deposit. The deposit is decided in everything but the timing. The timing is decided in everything but the Friday dinner ask. Tuesday's email closes three things at once.",
+    "Reading it back: the teaching is fine. It's the dozen small promises to other people that pile up — the calls, the forms, the office. Five reports a night, the three calls by Tuesday, and the week stops following me home.",
   ].join("\n"),
-  meta: "Captured in 11 minutes. Promoted to Tasks the next morning as three items: send the venue email, follow up on dietary list, lock photographer.",
+  meta: "Captured in 10 minutes after the last bell. Three became tasks over the weekend: the parent calls, the SEN paperwork deadline, and chase the trip form Monday.",
 };
 
 const PAGE_BG = "var(--bg, #fafaf7)";
@@ -88,7 +87,7 @@ function TransitionalRibbon() {
   );
 }
 
-export default function WeddingPlanningNotePage() {
+export default function TeachingWeekNotePage() {
   return (
     <div style={{ background: PAGE_BG, minHeight: "100vh" }}>
       <header
@@ -133,7 +132,7 @@ export default function WeddingPlanningNotePage() {
             maxWidth: "20ch",
           }}
         >
-          What a venue meeting note looks like.
+          What a teacher&rsquo;s week note looks like.
         </h1>
         <p
           style={{
@@ -144,9 +143,9 @@ export default function WeddingPlanningNotePage() {
             marginBottom: 40,
           }}
         >
-          A planner sat through a venue walkthrough on a Sunday evening. This is the note
-          she captured before she got in the car. Plain sentences. What was said, what was
-          decided, what still needs an answer.
+          A teacher sat in the empty classroom after the last bell on Friday.
+          This is what she wrote before the week followed her home. Who needs
+          a call, what she decided, and what is still open before Monday.
         </p>
 
         <TransitionalRibbon />
@@ -239,9 +238,10 @@ export default function WeddingPlanningNotePage() {
               marginBottom: 24,
             }}
           >
-            One note becomes three items. The wedding workspace in Tasks holds the items.
-            The shared roadmap is what the couple sees. The morning briefing surfaces
-            what still needs an answer. Four layers, one job.
+            One Friday note becomes three tasks. The term&rsquo;s workspace in
+            Tasks holds them. The shared roadmap is what the year team sees.
+            The Monday briefing surfaces what is still open before the week
+            starts. Four layers, one job.
           </p>
           <ul
             style={{
@@ -255,7 +255,7 @@ export default function WeddingPlanningNotePage() {
           >
             <li>
               <Link
-                href="https://tasks.signalstudio.ie/templates/wedding-planning-workspace"
+                href="https://tasks.signalstudio.ie/templates/teaching-term-workspace"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -263,12 +263,12 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The wedding workspace in Tasks &rarr;
+                The term workspace in Tasks &rarr;
               </Link>
             </li>
             <li>
               <Link
-                href="https://roadmap.signalstudio.ie/wedding-planning/update"
+                href="https://roadmap.signalstudio.ie/teaching-term/update"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -276,12 +276,12 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The roadmap the couple sees &rarr;
+                The roadmap the year team sees &rarr;
               </Link>
             </li>
             <li>
               <Link
-                href="https://analytics.signalstudio.ie/wedding-planning"
+                href="https://analytics.signalstudio.ie/teaching-term"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -289,13 +289,13 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Sunday morning briefing &rarr;
+                Monday morning briefing &rarr;
               </Link>
             </li>
           </ul>
         </section>
 
-        <OtherWorkedExamples current="wedding-planning" />
+        <OtherWorkedExamples current="teaching-week" />
 
         <footer
           style={{
