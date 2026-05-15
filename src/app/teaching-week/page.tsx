@@ -255,7 +255,7 @@ export default function TeachingWeekNotePage() {
           >
             <li>
               <Link
-                href="https://tasks.signalstudio.ie/templates/teaching-term-workspace"
+                href="https://tasks.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -268,7 +268,7 @@ export default function TeachingWeekNotePage() {
             </li>
             <li>
               <Link
-                href="https://roadmap.signalstudio.ie/teaching-term/update"
+                href="https://roadmap.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -281,7 +281,7 @@ export default function TeachingWeekNotePage() {
             </li>
             <li>
               <Link
-                href="https://analytics.signalstudio.ie/teaching-term"
+                href="https://analytics.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",

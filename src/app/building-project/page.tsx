@@ -256,7 +256,7 @@ export default function BuildingProjectNotePage() {
           >
             <li>
               <Link
-                href="https://tasks.signalstudio.ie/templates/building-project-workspace"
+                href="https://tasks.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -269,7 +269,7 @@ export default function BuildingProjectNotePage() {
             </li>
             <li>
               <Link
-                href="https://roadmap.signalstudio.ie/building-project/update"
+                href="https://roadmap.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -282,7 +282,7 @@ export default function BuildingProjectNotePage() {
             </li>
             <li>
               <Link
-                href="https://analytics.signalstudio.ie/building-project"
+                href="https://analytics.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",

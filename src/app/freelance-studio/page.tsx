@@ -254,7 +254,7 @@ export default function FreelanceStudioNotePage() {
           >
             <li>
               <Link
-                href="https://tasks.signalstudio.ie/templates/freelance-studio-workspace"
+                href="https://tasks.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -267,7 +267,7 @@ export default function FreelanceStudioNotePage() {
             </li>
             <li>
               <Link
-                href="https://roadmap.signalstudio.ie/freelance-studio/update"
+                href="https://roadmap.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -280,7 +280,7 @@ export default function FreelanceStudioNotePage() {
             </li>
             <li>
               <Link
-                href="https://analytics.signalstudio.ie/freelance-studio"
+                href="https://analytics.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
