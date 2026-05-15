@@ -134,45 +134,52 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
     const isCurrent = () =>
       aliveRef.current && myLoopKey === loopKeyRef.current;
 
-    async function runLoop() {
+    // The capture story is told ONCE — boot → three captures typed and
+    // committed. A landing visitor sees the product's whole point happen.
+    // It does not replay: replaying meant collapsing the stream back to
+    // empty every ~12s, which both reflowed the page and left the card
+    // hollow for most of the loop. Big motion once, then rest — the
+    // Emil-Kowalski / Linear principle.
+    async function runCaptureStory(): Promise<boolean> {
       setState(buildInitialState(domain));
       await wait(900);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
 
-      // Capture 1
       setScene("capture-1-type");
       await wait(420);
       await typeCapture(pack.captures[0].text);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       await wait(340);
       setScene("capture-1-commit");
       commit(0);
       await wait(900);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
 
-      // Capture 2
       setScene("capture-2-type");
       await wait(520);
       await typeCapture(pack.captures[1].text);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       await wait(340);
       setScene("capture-2-commit");
       commit(1);
       await wait(900);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
 
-      // Capture 3
       setScene("capture-3-type");
       await wait(420);
       await typeCapture(pack.captures[2].text);
-      if (!isCurrent()) return;
+      if (!isCurrent()) return false;
       await wait(320);
       setScene("capture-3-commit");
       commit(2);
       await wait(1100);
-      if (!isCurrent()) return;
+      return isCurrent();
+    }
 
-      // Search beat — character-by-character match highlighting
+    // After the story, the stream stays populated and the card stays
+    // the same height forever. Only this calm search-highlight beat
+    // repeats — never clearing the notes, never resetting to empty.
+    async function runSearchBeat() {
       setScene("search-focus");
       setField("search");
       await wait(540);
@@ -188,16 +195,17 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
       setSearchHit(null);
       setState((s) => ({ ...s, searchText: "" }));
       setField("capture");
-      await wait(600);
-
-      setScene("reset");
-      await wait(900);
+      // A long, quiet rest. The card sits populated and still between
+      // replays — no churn, nothing demanding attention.
+      await wait(4200);
     }
 
     let cancelled = false;
     (async function loop() {
+      const built = await runCaptureStory();
+      if (!built) return;
       while (!cancelled && isCurrent()) {
-        await runLoop();
+        await runSearchBeat();
       }
     })();
 
