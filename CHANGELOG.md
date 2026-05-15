@@ -3,6 +3,39 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·11 · tightens · The homepage stops twitching every twelve seconds
+
+**Applying the motion bar instead of hiding behind "restraint"
+found a real defect: the demo card looped empty → three notes →
+collapse every ~12s, and every cycle it shoved the anti-feature
+section and footer up and down the page. The page now holds
+still.**
+
+Two parts. The card now reserves the height of its fullest state,
+so the loop animates inside a stable frame and never moves the
+document — verified at the pixel level across loop phases on the
+deployed page: the blocks below the card sit at an identical
+position whether the demo is empty or full. And the capture story
+— boot, three notes typed and committed — now plays once on
+landing, then the stream stays populated and only a calm search
+highlight repeats with a long quiet rest. The product's whole
+point still happens for a first viewer; it just stops re-staging
+itself forever. Big motion once, then stillness.
+
+That fix surfaced a deeper one, taken the same day (N·11b): the
+demo was a JS-built timeline, so a crawler or no-JS visitor saw an
+empty card — content hidden behind motion, which the brand bar
+forbids. The auto-typing capture story is now removed entirely.
+The notebook server-renders populated for the chosen audience —
+verified in the raw HTML, no JavaScript: the three dated notes,
+the capture field, the search row, all there. The calm search
+highlight is the only motion now, layered on top as progressive
+enhancement; reduced-motion and no-JS keep the full notebook. A
+subtraction that served the mission: Notes does not need an
+animation performing capture at the visitor. ~60 lines lighter,
+zero layout shift, crawler-safe, and verified on desktop and
+mobile at 390px.
+
 ## 2026-05-15 · N·10 · tightens · The worked-example links stop leading nowhere
 
 **A self-audit caught a real demo-vs-reality defect I had shipped:
