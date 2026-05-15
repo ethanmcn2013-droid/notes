@@ -5,8 +5,12 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
  * and the exported function must be named `proxy` (or default export).
  *
  * Public surface: the marketing homepage + sign-in / sign-up + the
- * preserved wedding-planning demo page. Everything under /app
- * requires a real Clerk session.
+ * worked-example pages (/wedding-planning, /building-project).
+ * Everything under /app requires a real Clerk session.
+ *
+ * NOTE: every new public marketing/example route MUST be added here.
+ * Build + typecheck pass regardless; the gate only shows as a 307 to
+ * /sign-in on the live URL. Verify new public pages against prod.
  *
  * Graceful dev bypass: when Clerk env keys are unset the handler
  * returns early so the app runs locally before keys are provisioned.
@@ -20,6 +24,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/wedding-planning",
   "/wedding-planning/(.*)",
+  "/building-project",
+  "/building-project/(.*)",
   "/sitemap.xml",
   "/robots.txt",
   "/opengraph-image",
