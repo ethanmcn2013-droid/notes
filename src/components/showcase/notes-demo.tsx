@@ -15,11 +15,9 @@ import { Caret } from "./caret";
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-const TYPE_INTERVAL_MS = 36;
-const TYPE_JITTER_MS = 24;
 const SEARCH_TYPE_MS = 76;
 
-function buildReducedNotes(domain: DomainId): Note[] {
+function buildNotes(domain: DomainId): Note[] {
   return DOMAINS[domain].captures.map((entry, i) => ({
     id: `note-${i}`,
     body: entry.text,
@@ -27,10 +25,15 @@ function buildReducedNotes(domain: DomainId): Note[] {
   }));
 }
 
+// The notebook starts populated. This is the base, server-rendered
+// state every visitor — including a crawler or a no-JS browser —
+// sees: a real notebook with real notes for the chosen audience.
+// The motion (the calm search-highlight beat) is layered on top as
+// progressive enhancement, never a precondition for seeing content.
 function buildInitialState(domain: DomainId): DemoState {
   return {
-    notes: [],
-    scene: "boot",
+    notes: buildNotes(domain),
+    scene: "search-focus",
     field: "capture",
     captureText: "",
     searchText: "",
@@ -45,15 +48,23 @@ type Props = {
 };
 
 /**
- * Marketing demo for Notes. Capture × 3 → search.
+ * Marketing demo for Notes: a populated notebook for the chosen
+ * audience, with a calm repeating search-highlight beat.
  *
- * The previous version of this demo morphed to a Tags view and ran a
- * long-press → "Promote to Tasks" menu beat. Both directly contradicted
- * PRODUCT.md (§4 no views, §7 no taxonomy, §11 deliberate two-step
- * extraction). Removed 2026-05-13 — the extract-to-Tasks beat will
- * return in a follow-up cycle using the shipped Draft-action → Send
- * pattern, designed deliberately rather than carried over from a
- * mismatched scaffold.
+ * N·11b (2026-05-15): the auto-typing capture story was removed. It
+ * re-staged itself every ~12s (collapsing the stream to empty and
+ * reflowing the page) and, being JS-timeline-built, left crawlers
+ * and no-JS visitors looking at an empty card — content hidden
+ * behind motion, which the brand bar forbids. The notebook now
+ * server-renders populated (real information first); the search
+ * beat is progressive enhancement on top. Simpler, crawler-safe,
+ * zero layout shift, and more on-brand: Notes does not need an
+ * animation performing capture at the visitor.
+ *
+ * (Earlier note, kept: a prior version morphed to a Tags view +
+ * long-press "Promote to Tasks" menu — contradicted PRODUCT.md §4
+ * no views / §7 no taxonomy / §11 deliberate extraction. Removed
+ * 2026-05-13.)
  */
 export function NotesDemo({ domain = "wedding" }: Props = {}) {
   const reducedMotion = useReducedMotion();
@@ -85,15 +96,6 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
     setState((s) => ({ ...s, field }));
   }, []);
 
-  const typeCapture = useCallback(async (text: string) => {
-    for (let i = 1; i <= text.length; i++) {
-      if (!aliveRef.current) return;
-      setState((s) => ({ ...s, captureText: text.slice(0, i) }));
-      const jitter = Math.random() * TYPE_JITTER_MS;
-      await wait(TYPE_INTERVAL_MS + jitter);
-    }
-  }, []);
-
   const typeSearch = useCallback(async (text: string) => {
     for (let i = 1; i <= text.length; i++) {
       if (!aliveRef.current) return;
@@ -102,31 +104,16 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
     }
   }, []);
 
-  const commit = useCallback(
-    (index: number) => {
-      const entry = pack.captures[index];
-      if (!entry) return;
-      const newNote: Note = {
-        id: `note-${index}`,
-        body: entry.text,
-        stamp: entry.stamp,
-        fresh: true,
-      };
-      setState((s) => ({
-        ...s,
-        notes: [newNote, ...s.notes.map((n) => ({ ...n, fresh: false }))],
-        captureText: "",
-        placeholderIndex: (index + 1) % pack.captures.length,
-      }));
-    },
-    [pack],
-  );
-
   const setSearchHit = useCallback((id: string | null) => {
     setState((s) => ({ ...s, searchHit: id }));
   }, []);
 
-  /** Main timeline. */
+  // Progressive enhancement only. The notebook is already populated
+  // and on screen (server-rendered base state) before this runs and
+  // whether or not it ever runs — no-JS, crawler, and reduced-motion
+  // visitors keep the full content. This adds one thing: a calm
+  // search-highlight that shows search finding a note, then rests a
+  // long quiet while. No typing-at-you, no collapse, no reflow.
   useEffect(() => {
     if (reducedMotion) return;
     aliveRef.current = true;
@@ -134,52 +121,10 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
     const isCurrent = () =>
       aliveRef.current && myLoopKey === loopKeyRef.current;
 
-    // The capture story is told ONCE — boot → three captures typed and
-    // committed. A landing visitor sees the product's whole point happen.
-    // It does not replay: replaying meant collapsing the stream back to
-    // empty every ~12s, which both reflowed the page and left the card
-    // hollow for most of the loop. Big motion once, then rest — the
-    // Emil-Kowalski / Linear principle.
-    async function runCaptureStory(): Promise<boolean> {
-      setState(buildInitialState(domain));
-      await wait(900);
-      if (!isCurrent()) return false;
-
-      setScene("capture-1-type");
-      await wait(420);
-      await typeCapture(pack.captures[0].text);
-      if (!isCurrent()) return false;
-      await wait(340);
-      setScene("capture-1-commit");
-      commit(0);
-      await wait(900);
-      if (!isCurrent()) return false;
-
-      setScene("capture-2-type");
-      await wait(520);
-      await typeCapture(pack.captures[1].text);
-      if (!isCurrent()) return false;
-      await wait(340);
-      setScene("capture-2-commit");
-      commit(1);
-      await wait(900);
-      if (!isCurrent()) return false;
-
-      setScene("capture-3-type");
-      await wait(420);
-      await typeCapture(pack.captures[2].text);
-      if (!isCurrent()) return false;
-      await wait(320);
-      setScene("capture-3-commit");
-      commit(2);
-      await wait(1100);
-      return isCurrent();
-    }
-
-    // After the story, the stream stays populated and the card stays
-    // the same height forever. Only this calm search-highlight beat
-    // repeats — never clearing the notes, never resetting to empty.
     async function runSearchBeat() {
+      // Open on stillness — the notebook just sits there, populated.
+      await wait(3200);
+      if (!isCurrent()) return;
       setScene("search-focus");
       setField("search");
       await wait(540);
@@ -195,15 +140,12 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
       setSearchHit(null);
       setState((s) => ({ ...s, searchText: "" }));
       setField("capture");
-      // A long, quiet rest. The card sits populated and still between
-      // replays — no churn, nothing demanding attention.
-      await wait(4200);
+      // A long, quiet rest before it happens again.
+      await wait(4600);
     }
 
     let cancelled = false;
     (async function loop() {
-      const built = await runCaptureStory();
-      if (!built) return;
       while (!cancelled && isCurrent()) {
         await runSearchBeat();
       }
@@ -218,9 +160,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
     pack,
     setScene,
     setField,
-    typeCapture,
     typeSearch,
-    commit,
     setSearchHit,
   ]);
 
@@ -228,7 +168,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
     pack.captures[state.placeholderIndex]?.placeholder ?? "What just came up?";
 
   const renderNotes = useMemo<Note[]>(
-    () => (reducedMotion ? buildReducedNotes(domain) : state.notes),
+    () => (reducedMotion ? buildNotes(domain) : state.notes),
     [reducedMotion, domain, state.notes],
   );
 
