@@ -3,6 +3,38 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·10 · tightens · The worked-example links stop leading nowhere
+
+**A self-audit caught a real demo-vs-reality defect I had shipped:
+the wedding note's cross-product links resolve, but the builder,
+teacher, and freelancer notes pointed at per-job routes that
+return 404. A page that promises "here is where this fits" and
+then 404s is exactly the gap the brand refuses.**
+
+The wedding example links to a real, built four-layer loop —
+those stay. The three newer examples were mirroring that pattern
+with routes that were never built. Their "Where this fits" links
+now point at the real product surfaces — Signal Tasks, Roadmap,
+and Analytics — every one verified to return 200 from the live
+page after deploy. The explanation in each example's own words is
+unchanged; only the dead destinations moved.
+
+The lesson is the cheap one: build verification catches none of
+this. Only following the link on the deployed page does.
+
+## 2026-05-15 · N·9 · tightens · The homepage shows you your own example
+
+**The hero's "see an example" button only ever opened the wedding
+note. A builder or a teacher on the homepage had no equal door to
+the example that was actually theirs.**
+
+The homepage already has an audience toggle — wedding, building,
+teaching, freelance — driving the live demo. The example button
+now follows it. Pick "Teaching week" and the button becomes "See
+a teaching example" and opens the teacher's note. No new menu, no
+extra surface; the control that was already there became the
+door to all four.
+
 ## 2026-05-15 · N·8 · ships · The worked examples now cover everyone Notes is for
 
 **The demo lets a visitor toggle between a wedding planner, a
