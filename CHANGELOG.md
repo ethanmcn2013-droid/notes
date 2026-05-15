@@ -30,9 +30,19 @@ a real person from the audience the product is for — a planner, a
 contractor, a teacher, a freelance designer.
 
 The word "layer" is also gone from the page metadata and the
-brand handbook's record of the canonical Notes headline. One
-copy cycle, no new surface, the mission read back in plain
-English.
+brand handbook's record of the canonical Notes headline.
+
+Same-cycle follow-on: the homepage footer was a single mono
+line that dead-ended a first-time visitor — the only way to the
+rest of the suite was a faint launcher dropdown most non-tech
+visitors never click. It now carries a restrained suite seam in
+Notes's own warm register: Tasks, Roadmap, and Analytics as
+plain links with one-line plain-English notes (Run / Show / Read
+the work), the "A Signal Studio product." anchor line, the
+contact address, and the locked suite tagline. Server-rendered
+plain anchors — no JavaScript, crawler-safe, no card chrome
+(PRODUCT.md §9 visual budget held). The growth loop now has a
+visible door instead of a hidden one.
 
 ## 2026-05-15 · N·4 · hardens · the held-back security cycle
 

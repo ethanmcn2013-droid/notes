@@ -1,6 +1,18 @@
 import Link from "next/link";
 import { Hero } from "@/components/showcase/hero";
 import { SuiteLauncher } from "@/components/suite-launcher";
+import {
+  ANALYTICS_URL,
+  ROADMAP_URL,
+  STUDIO_URL,
+  TASKS_URL,
+} from "@/lib/product-urls";
+
+const SIBLINGS = [
+  { name: "Signal Tasks", note: "Run the work", url: TASKS_URL },
+  { name: "Signal Roadmap", note: "Show the work", url: ROADMAP_URL },
+  { name: "Signal Analytics", note: "Read the work", url: ANALYTICS_URL },
+];
 
 export default function HomePage() {
   return (
@@ -53,29 +65,74 @@ export default function HomePage() {
         </section>
 
         <footer
-          className="mt-32 border-t pt-8 text-[12px] font-mono tracking-wide"
-          style={{
-            borderColor: "var(--color-line)",
-            color: "var(--color-ink-faint)",
-          }}
+          className="mt-32 border-t pt-10"
+          style={{ borderColor: "var(--color-line)" }}
         >
-          Signal Notes · part of{" "}
-          <a
-            href="https://signalstudio.ie"
-            className="underline decoration-dotted"
-            style={{ color: "var(--color-ink-soft)" }}
+          <p
+            className="font-mono text-[11px] uppercase"
+            style={{
+              letterSpacing: "0.14em",
+              color: "var(--color-ink-faint)",
+            }}
           >
-            Signal Studio
-          </a>
-          . Contact{" "}
-          <a
-            href="mailto:hello@signalstudio.ie"
-            className="underline decoration-dotted"
-            style={{ color: "var(--color-ink-soft)" }}
+            The rest of Signal Studio
+          </p>
+          <ul className="mt-5 grid gap-x-10 gap-y-4 sm:grid-cols-3">
+            {SIBLINGS.map((s) => (
+              <li key={s.name}>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group block"
+                >
+                  <span
+                    className="text-[14px] font-semibold underline decoration-dotted underline-offset-4"
+                    style={{ color: "var(--color-ink)" }}
+                  >
+                    {s.name}
+                  </span>
+                  <span
+                    className="mt-1 block text-[12.5px]"
+                    style={{ color: "var(--color-ink-soft)" }}
+                  >
+                    {s.note}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <div
+            className="mt-10 flex flex-col gap-2 border-t pt-6 font-mono text-[12px] tracking-wide sm:flex-row sm:items-center sm:justify-between"
+            style={{
+              borderColor: "var(--color-line)",
+              color: "var(--color-ink-faint)",
+            }}
           >
-            hello@signalstudio.ie
-          </a>
-          .
+            <span>
+              A{" "}
+              <a
+                href={STUDIO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-dotted"
+                style={{ color: "var(--color-ink-soft)" }}
+              >
+                Signal Studio
+              </a>{" "}
+              product. Contact{" "}
+              <a
+                href="mailto:hello@signalstudio.ie"
+                className="underline decoration-dotted"
+                style={{ color: "var(--color-ink-soft)" }}
+              >
+                hello@signalstudio.ie
+              </a>
+              .
+            </span>
+            <span>Clarity, not configuration.</span>
+          </div>
         </footer>
       </main>
     </>
