@@ -3,6 +3,36 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·8 · ships · The worked examples now cover everyone Notes is for
+
+**The demo lets a visitor toggle between a wedding planner, a
+contractor, a teacher, and a freelancer. Until now only three of
+those four could click through to a real, deep example of what
+that actually looks like. All four can now.**
+
+`/freelance-studio` is the last one: a designer carrying three
+client jobs, writing down the status they kept holding in their
+head. The client who asked for three hero options in passing and
+not in the email. The invoice eleven days unpaid. The scope creep
+that should be priced, not absorbed. The Q1 invoice they will not
+send themselves — "losing my own money politely." That is the
+real freelance failure mode, in a freelancer's own voice, and it
+is now proof, not a three-line placeholder.
+
+Four archetypes, four worked examples, one depth, one shape, all
+wired to each other through one source of truth. The asymmetry
+N·5 named out loud and refused to rush is closed — across four
+cycles, not crammed into one.
+
+What is honestly still not world-class, named not buried: the
+homepage hero's "See a worked example" still points only at the
+wedding note; the other three are reached by the demo toggle's
+context, the cross-links, and search, not by an equal door on
+the homepage. That is a homepage information-architecture
+decision, not a content gap, and it is the next move — a
+ux-director call worth making deliberately rather than bolting a
+four-way menu onto the hero under time pressure.
+
 ## 2026-05-15 · N·7 · ships · A teacher's Friday note, and the examples become a set
 
 **Two of the four demo archetypes now had deep worked examples;
