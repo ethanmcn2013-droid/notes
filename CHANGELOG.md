@@ -3,6 +3,40 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-15 · N·6 · ships · A builder's site note joins the worked examples
+
+**Until now the only deep proof of what a Notes note actually looks
+like was a wedding planner's venue note. A builder, a contractor, a
+freelancer landing on the site saw a wedding. There is now a second
+worked example at the same depth — a contractor's tailgate site
+note — so the proof matches more than one kind of work.**
+
+N·5 named this gap out loud and refused to rush it onto the tail of
+a copy cycle: `/wedding-planning` was ~330 lines of crafted, dated,
+in-voice content; the other archetypes had three-line demo packs.
+`/building-project` closes it. A contractor walks the Maple Road
+extension at week six and writes what he found, what he decided,
+and the three things still waiting on other people — the windows,
+the electrician, the client's tile choice. Real dates, real money,
+the builder's own register, no software vocabulary. Same chrome,
+same ribbon, same article styling, same "Where this fits" suite
+seam as the wedding note, so the two read as one product. A
+reciprocal "Another example" link now wires them together.
+
+A latent bug surfaced while building it: the wedding note's
+headline carried an unitless `maxWidth: 18`, which React renders
+as 18 pixels — the headline was being clamped to roughly one
+character per line on the live page. Corrected to a character
+measure. The kind of thing only a real look at the live URL
+catches; build and typecheck were always green.
+
+Same-cycle: the new page first shipped behind the Clerk gate —
+307 to sign-in — because new public marketing routes are not
+public by default in the proxy. Caught on the live URL, added to
+the public matcher, redeployed, verified 200. A warning comment
+now sits in the proxy so the next new public page doesn't repeat
+it.
+
 ## 2026-05-15 · N·5 · reads · Notes stops talking like a tech tool
 
 **The first line every visitor read was "Your private layer." — and
