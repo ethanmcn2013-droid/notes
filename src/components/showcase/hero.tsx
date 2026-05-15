@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { AudienceToggle } from "./audience-toggle";
 import { NotesDemo } from "./notes-demo";
 import { type DomainId } from "@/lib/domains";
+import { WORKED_EXAMPLE_BY_DOMAIN } from "@/components/worked-examples";
 
 /**
  * Notes homepage hero — modelled on Tasks's hero pattern.
@@ -88,14 +89,14 @@ export function Hero() {
           Open the notebook
         </Link>
         <Link
-          href="/wedding-planning"
+          href={WORKED_EXAMPLE_BY_DOMAIN[domain].href}
           className="inline-flex min-h-11 items-center rounded-full border px-5 text-[14px] font-medium transition-colors"
           style={{
             borderColor: "var(--color-line-strong)",
             color: "var(--color-ink-soft)",
           }}
         >
-          See a worked example
+          {WORKED_EXAMPLE_BY_DOMAIN[domain].label}
         </Link>
       </div>
 

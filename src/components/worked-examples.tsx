@@ -33,6 +33,22 @@ export const WORKED_EXAMPLES = [
 
 export type WorkedExampleSlug = (typeof WORKED_EXAMPLES)[number]["slug"];
 
+/**
+ * Maps a demo-audience domain (src/lib/domains.ts DomainId) to its
+ * worked-example route, so the homepage hero CTA takes a visitor to
+ * the example for the audience they picked in the toggle — their own
+ * use case, not a default. Keep in sync with DomainId.
+ */
+export const WORKED_EXAMPLE_BY_DOMAIN: Record<
+  "wedding" | "construction" | "teacher" | "freelance",
+  { href: string; label: string }
+> = {
+  wedding: { href: "/wedding-planning", label: "See a wedding example" },
+  construction: { href: "/building-project", label: "See a building example" },
+  teacher: { href: "/teaching-week", label: "See a teaching example" },
+  freelance: { href: "/freelance-studio", label: "See a freelance example" },
+};
+
 export function OtherWorkedExamples({
   current,
 }: {
