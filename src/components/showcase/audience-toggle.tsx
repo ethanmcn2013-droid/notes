@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, LayoutGroup } from "motion/react";
+import { motion, LayoutGroup, useReducedMotion } from "motion/react";
 import { DOMAINS, DOMAIN_ORDER, type DomainId } from "@/lib/domains";
 
 type Props = {
@@ -9,12 +9,22 @@ type Props = {
 };
 
 /**
- * Audience picker for the Notes cinematic capture demo.
- * Mirrors Roadmap + Analytics's pattern with Notes's warm-stone palette —
- * pill tabs with a sliding active marker via motion's layoutId.
+ * Audience picker for the Notes capture demo.
+ *
+ * N·13 (2026-05-16): the prior pill was a gradient-bevel-glow chip
+ * (linear-gradient + inset white highlight + coloured drop-shadow).
+ * That is the YC-SaaS aesthetic the suite refuses (DESIGN.md §10:
+ * "glow blooms", "drop-shadows over hairlines as default elevation").
+ * It read as a control lifted from a different app — the exact "this
+ * doesn't belong" complaint. Re-skinned to the product's own flat
+ * language: hairline container, no shadow, a solid ink active pill
+ * (same quiet high-contrast register as the hero CTA, so the page now
+ * ties together). The sliding marker stays — a shared-element move is
+ * honest motion — but it respects reduced-motion.
  */
 export function AudienceToggle({ domain, onChange }: Props) {
   const active = DOMAINS[domain];
+  const reducedMotion = useReducedMotion();
 
   return (
     <div className="flex flex-col items-start gap-3">
@@ -44,7 +54,6 @@ export function AudienceToggle({ domain, onChange }: Props) {
           style={{
             borderColor: "var(--color-line)",
             background: "var(--color-paper)",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
           }}
         >
           {DOMAIN_ORDER.map((id) => {
@@ -58,24 +67,21 @@ export function AudienceToggle({ domain, onChange }: Props) {
                 onClick={() => onChange(id)}
                 className="relative inline-flex items-center rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors"
                 style={{
-                  color: isActive ? "white" : "var(--color-ink-soft)",
+                  color: isActive
+                    ? "var(--color-paper)"
+                    : "var(--color-ink-soft)",
                 }}
               >
                 {isActive ? (
                   <motion.span
                     layoutId="notes-audience-pill"
                     className="absolute inset-0 rounded-full"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, var(--color-accent) 0%, color-mix(in srgb, var(--color-accent) 70%, black) 100%)",
-                      boxShadow:
-                        "0 6px 16px -6px color-mix(in srgb, var(--color-accent) 60%, transparent), inset 0 1px 0 rgba(255,255,255,0.18)",
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 360,
-                      damping: 30,
-                    }}
+                    style={{ background: "var(--color-ink)" }}
+                    transition={
+                      reducedMotion
+                        ? { duration: 0 }
+                        : { type: "spring", stiffness: 360, damping: 30 }
+                    }
                   />
                 ) : null}
                 <span className="relative z-10">{pack.label}</span>

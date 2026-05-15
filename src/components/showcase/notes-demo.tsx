@@ -6,16 +6,25 @@ import { PrivateNotesEmptyState } from "@/app/app/PrivateNotesEmptyState";
 import { DOMAINS, type DomainId } from "@/lib/domains";
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-const SEARCH_TYPE_MS = 76;
 
 type DemoNote = { id: string; body: string; stamp: string };
 
+/**
+ * Stream order matches the real product: newest first (PRODUCT.md §4,
+ * "Recent notes, newest first"). domains.ts authors captures
+ * chronologically, so the newest capture is the last entry — reverse
+ * for display. searchHitIndex still indexes captures[]; we resolve it
+ * to a stable id so display order is free to differ.
+ */
 function buildNotes(domain: DomainId): DemoNote[] {
-  return DOMAINS[domain].captures.map((entry, i) => ({
-    id: `note-${i}`,
-    body: entry.text,
-    stamp: entry.stamp,
-  }));
+  return DOMAINS[domain].captures
+    .map((entry, i) => ({
+      id: `note-${i}`,
+      body: entry.text,
+      stamp: entry.stamp,
+    }))
+    .slice()
+    .reverse();
 }
 
 type Props = {
@@ -25,34 +34,41 @@ type Props = {
 /**
  * Marketing demo for Notes.
  *
- * N·12 (2026-05-16): this used to render a foreign UI — a grey
- * rounded card, a small rounded capture pill, gapped rounded note
- * cards, and a bottom search pill. None of it matched the actual
- * product at /app, which is a sharp-cornered warm-paper notebook
- * sheet (.notebook), a giant capture field (.capture, ~56px type),
- * and a ruled stream of full-bleed rows (.note-row). Every other
- * Signal product demo mirrors its product; this one had drifted into
- * its own visual language and read as a different app. Rebuilt to
- * render the *real* notebook chrome, reusing the exact globals.css
- * classes the app ships — including the app's own
- * PrivateNotesEmptyState for the capture placeholder — so the
- * marketing page shows precisely what you get.
+ * N·13 (2026-05-16): the demo now performs the product's core act —
+ * capture — instead of sitting there populated and still. The prior
+ * file (N·12) correctly fixed the chrome: it reuses the exact
+ * `.notebook` classes the app ships, so it is the real surface, not a
+ * lookalike. What it lacked was the act. Every other Signal demo
+ * performs (Tasks runs a cinematic; Roadmap advances a dot). This one
+ * showed a search-dim loop and never once showed a thought being
+ * caught — the one thing Notes is. The product's signature gesture is
+ * M·05 *settle* (the slowest motion in the suite by design); it was
+ * absent from the product's own demo.
  *
- * Carried forward (the hard-won properties the prior file fought
- * for): the notebook server-renders populated. Crawlers, no-JS, and
- * reduced-motion visitors see the full stream, search empty, count at
- * rest — exactly the app at rest. The calm search beat is progressive
- * enhancement layered on top and dims non-matches rather than
- * collapsing the list, so the box never reflows the document (the
- * "stop twitching the page" bar from N·11). The app itself filters on
- * search; an ambient autoplay loop that collapsed/expanded the stream
- * every ~11s is the exact jank N·11 removed, so the beat depicts
- * search as dim-others + highlight-match + an honest "1 of 3" count.
+ * It now plays, slowly and quietly: the notebook sits at rest, a
+ * thought arrives whole into the capture field (settled, never
+ * typed-at-you — "never simulate typing", BRAND/PRODUCT), it commits,
+ * and the matching row in the stream replays the product's real
+ * `note-row-arrive` gesture. Then one calm search beat. Then a long
+ * rest. This is Notes's register: the quietest demo in the suite and
+ * the most considered. That contrast is the moat, not a violation of
+ * it — a busy collaborator-cursor cinematic (Tasks's shape) would
+ * betray "not everything needs to be shared".
  *
- * (Earlier note, kept: a still-earlier version morphed to a Tags view
- * + long-press "Promote to Tasks" menu — contradicted PRODUCT.md §4
- * no views / §7 no taxonomy / §11 deliberate extraction. Removed
- * 2026-05-13.)
+ * Hard-won properties carried forward (do not regress):
+ *  · SSR / no-JS / reduced-motion render the FULL stream at rest,
+ *    search empty, count at rest, placeholder static — exactly the app
+ *    at rest. The loop is progressive enhancement layered on top.
+ *  · The stage is fixed: the stream's DOM length NEVER changes. The
+ *    "arrival" is the product's own `.is-fresh` replay on an existing
+ *    row, not a DOM insert. Nothing below the notebook ever reflows.
+ *    This is the "stop twitching the page" bar (N·11) — the autoplay
+ *    loop that collapsed/expanded the stream every ~11s was the exact
+ *    jank N·11 removed. Causality reads from capture-field → top row;
+ *    no row is added or removed to depict it.
+ *  · No views, no taxonomy, no auto-promote (PRODUCT.md §4/§7/§11) —
+ *    earlier versions that morphed to a Tags view / long-press
+ *    "Promote to Tasks" were removed 2026-05-13. Don't bring them back.
  */
 export function NotesDemo({ domain = "wedding" }: Props = {}) {
   const reducedMotion = useReducedMotion();
@@ -60,62 +76,115 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
   const notes = useMemo(() => buildNotes(domain), [domain]);
   const hitId = `note-${pack.searchHitIndex}`;
 
+  // Capture-beat state. Empty captureText + captureShown=false is the
+  // resting state where PrivateNotesEmptyState owns the field.
+  const [captureText, setCaptureText] = useState("");
+  const [captureShown, setCaptureShown] = useState(false);
+  const [freshId, setFreshId] = useState<string | null>(null);
+  const [freshKey, setFreshKey] = useState(0);
+
+  // Search-beat state.
   const [searchText, setSearchText] = useState("");
   const [searchActive, setSearchActive] = useState(false);
-  const aliveRef = useRef(true);
+
   const loopKeyRef = useRef(0);
 
-  // Reset the beat whenever the audience changes.
+  // Reset the whole performance whenever the audience changes.
   useEffect(() => {
+    setCaptureText("");
+    setCaptureShown(false);
+    setFreshId(null);
     setSearchText("");
     setSearchActive(false);
     loopKeyRef.current += 1;
   }, [domain]);
 
-  // Progressive enhancement only. The notebook is already populated
-  // and on screen (the markup below renders the full stream regardless
-  // of this effect). This adds one thing: a calm pass where search
-  // fills, finds a note, rests, and clears. No typing-at-you, no
-  // collapse, no reflow.
   useEffect(() => {
     if (reducedMotion) return;
-    aliveRef.current = true;
+
     const myLoopKey = loopKeyRef.current;
-    const isCurrent = () =>
-      aliveRef.current && myLoopKey === loopKeyRef.current;
-
     let cancelled = false;
+    // The full performance plays only when the tab is visible — never
+    // animate to an empty room (perf + restraint).
+    const live = () =>
+      !cancelled &&
+      myLoopKey === loopKeyRef.current &&
+      typeof document !== "undefined" &&
+      !document.hidden;
 
-    async function runSearchBeat() {
-      // Open on stillness — the notebook just sits there, populated.
-      await wait(3400);
-      if (!isCurrent()) return;
-      setSearchActive(true);
-      await wait(520);
-      const q = pack.searchQuery;
-      for (let i = 1; i <= q.length; i++) {
-        if (!isCurrent()) return;
-        setSearchText(q.slice(0, i));
-        await wait(SEARCH_TYPE_MS);
-      }
-      // Rest on the result — one note lit, the rest dimmed.
-      await wait(3000);
-      if (!isCurrent()) return;
-      setSearchText("");
-      setSearchActive(false);
-      // A long, quiet rest before it happens again.
-      await wait(4600);
+    // captures[] is chronological; play oldest → newest so the newest
+    // lands at the top of the (newest-first) stream and the eye
+    // completes the causality from field → top row.
+    const captures = pack.captures;
+
+    async function captureBeat(i: number) {
+      const cap = captures[i];
+      // The thought arrives whole. Placeholder yields (handled by
+      // captureShown gating PrivateNotesEmptyState), text settles in:
+      // opacity + translateY only, ~340ms ease-out. Not typed.
+      setCaptureText(cap.text);
+      setCaptureShown(true);
+      await wait(340);
+      if (!live()) return;
+      // Read it.
+      await wait(1200);
+      if (!live()) return;
+      // Commit: the field releases the thought (180ms fade/rise out)
+      // and, in the same instant, the matching row in the stream
+      // replays the product's real arrival gesture.
+      setCaptureShown(false);
+      const arrivedId = `note-${i}`;
+      setFreshId(arrivedId);
+      setFreshKey((k) => k + 1);
+      await wait(200);
+      if (!live()) return;
+      setCaptureText("");
+      // note-row-arrive is 450ms; let it finish, then settle.
+      await wait(620);
+      if (!live()) return;
+      setFreshId(null);
+      await wait(1600);
     }
 
-    (async function loop() {
-      while (!cancelled && isCurrent()) {
-        await runSearchBeat();
+    async function searchBeat() {
+      setSearchActive(true);
+      await wait(420);
+      if (!live()) return;
+      // The query settles in whole — consistent with capture, and
+      // honours "never simulate typing".
+      setSearchText(pack.searchQuery);
+      await wait(2800);
+      if (!live()) return;
+      setSearchText("");
+      setSearchActive(false);
+      await wait(420);
+    }
+
+    (async function run() {
+      while (live()) {
+        // Open on stillness — the notebook just sits there, populated,
+        // placeholder breathing.
+        await wait(3400);
+        if (!live()) {
+          // If we paused (tab hidden) wait a touch and re-check rather
+          // than spinning.
+          await wait(1200);
+          continue;
+        }
+        for (let i = 0; i < captures.length; i++) {
+          await captureBeat(i);
+          if (!live()) break;
+        }
+        if (!live()) continue;
+        await searchBeat();
+        if (!live()) continue;
+        // A long, quiet rest before the whole thing happens again.
+        await wait(4200);
       }
     })();
 
     return () => {
       cancelled = true;
-      aliveRef.current = false;
     };
   }, [reducedMotion, domain, pack]);
 
@@ -124,12 +193,14 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
   const matchCount = searching
     ? notes.filter((n) => n.body.toLowerCase().includes(query)).length
     : notes.length;
+  const placeholderVisible = !captureShown && captureText.length === 0;
 
   return (
     <div className="notebook-demo">
       {/* The real product surface — same .notebook chrome the app
           renders at /app. minHeight override: the app sets a tall
-          full-screen min-height; the hero artifact sizes to content. */}
+          full-screen min-height; the hero artifact sizes to content
+          but reserves the resting height so the stage never reflows. */}
       <section
         className="notebook"
         aria-label="Signal Notes — a look at the notebook"
@@ -162,19 +233,20 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
         <div className="capture">
           <div className="sr-only">Capture a private note</div>
           {/* Read-only replica of the app's capture textarea — the
-              signature giant type. Non-interactive: the demo shows the
-              field, the live product is one click away via the hero
-              CTA. The app's own empty-state component drives the
-              rotating placeholder, so this is pixel-identical. */}
+              signature giant type. The thought settles into it whole
+              (opacity + translateY), then releases on commit. Non-
+              interactive: the live product is one click away via the
+              hero CTA. */}
           <textarea
             rows={3}
             placeholder=""
-            value=""
+            value={captureText}
             readOnly
             tabIndex={-1}
             aria-hidden
+            data-shown={captureShown ? "true" : "false"}
           />
-          <PrivateNotesEmptyState visible />
+          <PrivateNotesEmptyState visible={placeholderVisible} />
           <p className="capture-hint">
             <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line ·{" "}
             <kbd>Esc</kbd> clears
@@ -194,10 +266,15 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           {notes.map((note) => {
             const isHit = note.id === hitId;
             const dimmed = searching && !isHit;
+            const isFresh = note.id === freshId;
             return (
               <li key={note.id}>
                 <div
-                  className="note-row"
+                  // Remounting on freshKey replays the product's real
+                  // note-row-arrive CSS animation without a DOM
+                  // insert — the stream length never changes.
+                  key={isFresh ? `${note.id}-${freshKey}` : note.id}
+                  className={`note-row${isFresh ? " is-fresh" : ""}`}
                   style={{
                     cursor: "default",
                     opacity: dimmed ? 0.42 : 1,
@@ -233,13 +310,31 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
         }
         /* The hero artifact wants a calmer capture height than the
            full-bleed in-product field; keep the signature scale, trim
-           the dead space. */
+           the dead space. The settle is opacity + translateY only —
+           hardware-accelerated, ≤350ms, ease-out. */
+        .notebook-demo .capture {
+          position: relative;
+        }
         .notebook-demo .capture textarea {
           min-height: 96px;
           pointer-events: none;
+          opacity: 0;
+          transform: translateY(8px);
+          transition:
+            opacity 340ms cubic-bezier(.22,.61,.36,1),
+            transform 340ms cubic-bezier(.22,.61,.36,1);
+        }
+        .notebook-demo .capture textarea[data-shown="true"] {
+          opacity: 1;
+          transform: translateY(0);
         }
         .notebook-demo .note-row:hover {
           background: transparent;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .notebook-demo .capture textarea {
+            transition: none;
+          }
         }
       `}</style>
     </div>

@@ -114,16 +114,16 @@ export function Hero() {
         }}
       >
         <span
+          className="note-hero-pip"
           style={{
             width: 6,
             height: 6,
             borderRadius: "50%",
             background: "var(--color-accent)",
-            animation: "noteHeroPulse 2.2s ease-in-out infinite",
             display: "inline-block",
           }}
         />
-        Demo is live · choose an audience to reseed
+        A real notebook · choose whose week
       </p>
 
       <div style={{ marginTop: 56 }}>
@@ -145,9 +145,14 @@ export function Hero() {
       </div>
 
       <style>{`
-        @keyframes noteHeroPulse {
-          0%, 100% { opacity: 0.65; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.18); }
+        /* The pip breathes on the product's own M·05 settle rhythm
+           (notes-settle, defined globally for the wordmark dot) — not
+           an invented pulse. Same gesture, same cubic, same 3.2s. */
+        .note-hero-pip {
+          animation: notes-settle 3.2s cubic-bezier(.16, 1, .3, 1) infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .note-hero-pip { animation: none; opacity: 1; transform: none; }
         }
       `}</style>
     </section>

@@ -3,6 +3,39 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-16 · N·13 · ships · The demo performs the act it describes
+
+**N·12 made the demo the real surface. It still didn't do
+anything — a populated sheet and a search-dim loop, while the hero
+above it said "write it down in three seconds" and the artifact
+never showed the three seconds. Every other Signal demo performs;
+this one sat still. It now plays the product's core act, capture,
+in the product's own register: the quietest demo in the suite and
+the most considered.**
+
+The notebook rests, a thought arrives whole into the giant capture
+field (settled — opacity and translateY, never typed-at-you), it
+commits, and the matching row in the stream replays the product's
+real `note-row-arrive` gesture. Then one calm search beat, then a
+long rest. The stage is fixed: the stream's DOM length never
+changes — the arrival is the shipped `.is-fresh` replay on an
+existing row, not an insert — so nothing below the notebook ever
+reflows. The N·11 "stop twitching the page" bar holds, and SSR /
+no-JS / reduced-motion still render the full stream at rest, search
+empty, count at rest, exactly the app at rest.
+
+Two off-ecosystem tells went with it. The audience toggle was a
+gradient-bevel-glow pill — the YC-SaaS aesthetic the suite refuses
+(DESIGN.md §10) — re-skinned to the product's flat hairline
+language with a solid-ink active marker, the same quiet register as
+the hero CTA, so the page reads as one thing. The hero "live" pip
+ran an invented pulse; it now breathes on the product's own M·05
+*settle* rhythm — the actual brand gesture, not a stand-in. Copy
+"choose an audience to reseed" → "choose whose week"; "reseed" was
+product-team register. Typecheck and production build clean; `/`
+prerenders static. Read this as: the demo no longer just looks like
+Notes — it behaves like it.
+
 ## 2026-05-16 · N·12 · corrects · The demo stops being a different app
 
 **Every other Signal product shows you the product. The Notes
