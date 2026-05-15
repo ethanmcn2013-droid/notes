@@ -3,6 +3,38 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-16 · N·12 · corrects · The demo stops being a different app
+
+**Every other Signal product shows you the product. The Notes
+homepage showed you something else — a grey rounded card, a small
+rounded capture pill, gapped note cards, a search pill at the
+bottom. The actual notebook at /app is a sharp-cornered warm-paper
+sheet with a giant capture field and a ruled stream. The demo had
+quietly drifted into its own UI and read as a foreign app. Fixed
+by deleting the invented chrome and rendering the real one.**
+
+The marketing demo now renders the exact `globals.css` classes the
+product ships — `.notebook`, `.notebook-top`, `.wordmark`,
+`.capture`, `.stream-head`, `.note-row` — and reuses the app's own
+`PrivateNotesEmptyState`, so the capture placeholder is
+pixel-identical to first-run. Same warm paper, same sharp corners,
+same signature giant type, same ruled rows with timestamps. The
+four foreign card components (`capture-field`, `note-stream`,
+`note-pip`, `caret`) and their `types` module are gone — five
+files lighter, nothing dead left behind. The calm search beat is
+carried forward intact: it dims non-matches and lights the hit
+inside the real chrome, never collapsing the list, so the
+no-layout-shift and content-first properties N·11 fought for still
+hold. Verified in raw SSR HTML and a reduced-motion render.
+
+Same pass closed a real defect: `/app` returned a 500 to anyone
+without a session. The page called `requireUser()`, which throws
+`UnauthorizedError`, with nothing catching it or redirecting — and
+the proxy middleware bypasses entirely in keyless mode. It now
+checks the Clerk session first and redirects to `/sign-in`. Fail
+open to the sign-in screen, never to a stack trace — verified:
+`/app` now answers 307 → `/sign-in` instead of 500.
+
 ## 2026-05-15 · N·11 · tightens · The homepage stops twitching every twelve seconds
 
 **Applying the motion bar instead of hiding behind "restraint"
