@@ -3,36 +3,36 @@ import Link from "next/link";
 import { SuiteLauncher } from "@/components/suite-launcher";
 
 export const metadata: Metadata = {
-  title: "Wedding planning — a venue meeting note — Signal Notes",
+  title: "A building job — a site note — Signal Notes",
   description:
-    "A worked example. What a single Sunday-evening note looks like after a venue meeting — plain sentences, decisions, questions, the things that need a reply by Tuesday.",
+    "A worked example. What a contractor writes on the tailgate before the crew leaves — what was found, what was decided, what is still waiting on someone else.",
 };
 
 const NOTE = {
-  capturedLabel: "Captured Sunday 7 May · 8:42pm",
-  title: "Harbour House visit — second walkthrough",
+  capturedLabel: "Captured Thursday 8 May · 5:10pm",
+  title: "Site walk — Maple Road extension, week 6",
   body: [
-    "Sat down with Aoife & Conor after the second walkthrough at Harbour House. The room is right. The light at 5pm is right. The pricing is not yet right.",
+    "Walked the Maple Road job with Tom before the crew left. Roof's on, first fix nearly done. We're two days behind, not a week — recoverable if the windows land Tuesday.",
     "",
-    "What was said:",
-    "• Aoife loves the long room over the marquee option. Conor is on the fence — wants the marquee for the dance.",
-    "• Niamh confirmed they can hold the date until 31 May. After that it goes back on the public calendar.",
-    "• Deposit is €4,200, not €3,800. The website is wrong. She asked us to flag this to whoever asks.",
-    "• Couple's parents want a Friday rehearsal dinner on site. Niamh said yes in principle but the kitchen needs to be cleared by 6pm Saturday.",
+    "What I found:",
+    "• Steel's in clean. Building control signed off the beam this morning — keep the cert with the file, the bank will ask for it.",
+    "• Kitchen floor level is out 18mm front to back. The left bay needs a re-pour. Half a day, not a disaster, but it pushes the tiling.",
+    "• Client asked again about moving the side door 300mm. Third time. That changes the lintel and the drainage run. Not a free change.",
+    "• Skip is full. Booked the swap for Monday 7am — yard closes early for the bank holiday.",
     "",
-    "What was decided:",
-    "• We hold the date until 28 May. Two days of buffer.",
-    "• Long room as the working assumption. Marquee stays on the table only if weather forecast is wrong by the week before.",
-    "• I send a single follow-up email by Tuesday with the deposit number, the date hold, and the rehearsal dinner ask.",
+    "What I decided:",
+    "• Windows chased. Supplier confirmed Tuesday morning delivery. If they slip again we lose the dry-in before Thursday's rain. I want that in writing.",
+    "• Re-pour the left bay Friday so it cures over the weekend. Tiler still starts Wednesday.",
+    "• The side-door change goes in writing with a price before anyone lifts a tool. No verbal yeses on this one.",
     "",
     "What still needs an answer:",
-    "• Dietary list — Niamh asked four days ago. No reply has gone back. Aoife said she'd handle it by Wednesday.",
-    "• Photographer access — Harbour House restricts drone and a few of the corners. Need the list emailed across before we sign with Conleth.",
-    "• Final guest count — sitting at 84 invited, 71 confirmed, 9 unanswered. Conor's brother (the +1 question) still open.",
+    "• Electrician's first-fix date. He said “next week” — I need a day. Can't close the walls without it.",
+    "• Client's tile choice. Showroom visit was a fortnight ago and still nothing. Wednesday's tiling won't wait.",
+    "• Final payment stage. We hit the agreed point at dry-in. The invoice goes the day the windows are in, not a week after like the last job.",
     "",
-    "Reading this back: the venue is decided in everything but the deposit. The deposit is decided in everything but the timing. The timing is decided in everything but the Friday dinner ask. Tuesday's email closes three things at once.",
+    "Reading it back: the build is fine. The risks aren't the build — they're the three things waiting on other people. The windows, the sparks, the tile choice. Tuesday tells me whether Thursday holds.",
   ].join("\n"),
-  meta: "Captured in 11 minutes. Promoted to Tasks the next morning as three items: send the venue email, follow up on dietary list, lock photographer.",
+  meta: "Captured in 9 minutes on the tailgate. Three of these became tasks the next morning: chase the window delivery in writing, price the side-door change, invoice at dry-in.",
 };
 
 const PAGE_BG = "var(--bg, #fafaf7)";
@@ -87,7 +87,7 @@ function TransitionalRibbon() {
   );
 }
 
-export default function WeddingPlanningNotePage() {
+export default function BuildingProjectNotePage() {
   return (
     <div style={{ background: PAGE_BG, minHeight: "100vh" }}>
       <header
@@ -132,7 +132,7 @@ export default function WeddingPlanningNotePage() {
             maxWidth: "20ch",
           }}
         >
-          What a venue meeting note looks like.
+          What a site note looks like.
         </h1>
         <p
           style={{
@@ -143,9 +143,9 @@ export default function WeddingPlanningNotePage() {
             marginBottom: 40,
           }}
         >
-          A planner sat through a venue walkthrough on a Sunday evening. This is the note
-          she captured before she got in the car. Plain sentences. What was said, what was
-          decided, what still needs an answer.
+          A contractor walked the job at the end of the day. This is what he
+          wrote on the tailgate before the crew left. What he found, what he
+          decided, and the three things still waiting on someone else.
         </p>
 
         <TransitionalRibbon />
@@ -238,9 +238,10 @@ export default function WeddingPlanningNotePage() {
               marginBottom: 24,
             }}
           >
-            One note becomes three items. The wedding workspace in Tasks holds the items.
-            The shared roadmap is what the couple sees. The morning briefing surfaces
-            what still needs an answer. Four layers, one job.
+            One site note becomes three tasks. The job&rsquo;s workspace in
+            Tasks holds them. The shared roadmap is what the client sees
+            without ringing you. The morning briefing surfaces what is still
+            waiting on someone else. Four layers, one job.
           </p>
           <ul
             style={{
@@ -254,7 +255,7 @@ export default function WeddingPlanningNotePage() {
           >
             <li>
               <Link
-                href="https://tasks.signalstudio.ie/templates/wedding-planning-workspace"
+                href="https://tasks.signalstudio.ie/templates/building-project-workspace"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -262,12 +263,12 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The wedding workspace in Tasks &rarr;
+                The job workspace in Tasks &rarr;
               </Link>
             </li>
             <li>
               <Link
-                href="https://roadmap.signalstudio.ie/wedding-planning/update"
+                href="https://roadmap.signalstudio.ie/building-project/update"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -275,12 +276,12 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The roadmap the couple sees &rarr;
+                The roadmap the client sees &rarr;
               </Link>
             </li>
             <li>
               <Link
-                href="https://analytics.signalstudio.ie/wedding-planning"
+                href="https://analytics.signalstudio.ie/building-project"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -288,7 +289,7 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Sunday morning briefing &rarr;
+                Monday morning briefing &rarr;
               </Link>
             </li>
           </ul>
@@ -303,7 +304,7 @@ export default function WeddingPlanningNotePage() {
           }}
         >
           <Link
-            href="/building-project"
+            href="/wedding-planning"
             style={{
               color: "var(--color-ink-soft, #4a4a44)",
               textDecoration: "underline",
@@ -312,7 +313,7 @@ export default function WeddingPlanningNotePage() {
               fontSize: 14,
             }}
           >
-            Another example: a builder&rsquo;s site note &rarr;
+            Another example: a wedding planner&rsquo;s venue note &rarr;
           </Link>
         </section>
 
