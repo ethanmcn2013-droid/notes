@@ -236,6 +236,14 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           position: "relative",
           width: "100%",
           maxWidth: 560,
+          // Reserve the height of the fullest loop state (3 notes +
+          // search row) so the demo animates *inside* a stable frame.
+          // Without this the card grows boot→3-notes→collapses every
+          // ~12s loop and reflows the anti-feature section + footer
+          // below it — cumulative layout shift, fails the "motion is
+          // physical / no jank" bar. The box no longer moves the
+          // document; only its own contents animate.
+          minHeight: 472,
           background: "var(--color-bg)",
           border: "1px solid var(--color-line)",
           borderRadius: 18,
