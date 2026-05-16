@@ -145,11 +145,11 @@ export function Hero() {
       </div>
 
       <style>{`
-        /* The pip breathes on the product's own M·05 settle rhythm
-           (notes-settle, defined globally for the wordmark dot) — not
-           an invented pulse. Same gesture, same cubic, same 3.2s. */
+        /* The pip blinks on the product's own caret rhythm
+           (notes-dot-caret, defined globally for the wordmark dot) — not
+           an invented pulse. Same gesture, same timing. */
         .note-hero-pip {
-          animation: notes-settle 3.2s cubic-bezier(.16, 1, .3, 1) infinite;
+          animation: notes-dot-caret 1.1s steps(1, end) infinite;
         }
         @media (prefers-reduced-motion: reduce) {
           .note-hero-pip { animation: none; opacity: 1; transform: none; }
