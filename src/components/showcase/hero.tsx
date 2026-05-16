@@ -126,11 +126,14 @@ export function Hero() {
         A real notebook · choose whose week
       </p>
 
-      <div style={{ marginTop: 56 }}>
+      {/* The toggle controls the demo below it — group the two as one
+          unit and open a clear break from the hero CTA cluster so the
+          toggle stops reading as a second row of CTA buttons. */}
+      <div style={{ marginTop: 88 }}>
         <AudienceToggle domain={domain} onChange={setDomain} />
       </div>
 
-      <div style={{ marginTop: 32, marginBottom: 24 }}>
+      <div style={{ marginTop: 16, marginBottom: 24 }}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={domain}
