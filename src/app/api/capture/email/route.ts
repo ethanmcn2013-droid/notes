@@ -20,8 +20,9 @@ import { notes, userPreferences } from "@/server/db/schema";
  *   3. Set env vars on Vercel:
  *        - NOTES_CAPTURE_INBOUND_SECRET (shared bearer; the
  *          provider sends this in Authorization)
- *        - NEXT_PUBLIC_NOTES_CAPTURE_DOMAIN (informational; used by
- *          the UI to render the user-facing address)
+ *        - NOTES_CAPTURE_DOMAIN (informational; used by the server
+ *          action to render the user-facing address; server-only,
+ *          not NEXT_PUBLIC so it stays out of client bundles)
  *
  * Until those land, the endpoint returns 401 on every call. That's
  * the right shape — no inbound mail means no inbound mail.
@@ -125,6 +126,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
+  // Guard against oversized bodies. The Content-Length check covers
+  // well-behaved callers; the arrayBuffer cap covers chunked or
+  // maliciously forged requests that omit / lie about Content-Length.
   const declaredLength = Number(req.headers.get("content-length") ?? "0");
   if (declaredLength > MAX_BODY_BYTES) {
     return NextResponse.json(
@@ -133,9 +137,22 @@ export async function POST(req: Request) {
     );
   }
 
+  let rawBytes: ArrayBuffer;
+  try {
+    rawBytes = await req.arrayBuffer();
+  } catch {
+    return NextResponse.json({ ok: false, error: "invalid-body" }, { status: 400 });
+  }
+  if (rawBytes.byteLength > MAX_BODY_BYTES) {
+    return NextResponse.json(
+      { ok: false, error: "payload-too-large" },
+      { status: 413 },
+    );
+  }
+
   let payload: InboundPayload;
   try {
-    payload = (await req.json()) as InboundPayload;
+    payload = JSON.parse(new TextDecoder().decode(rawBytes)) as InboundPayload;
   } catch {
     return NextResponse.json({ ok: false, error: "invalid-json" }, { status: 400 });
   }

@@ -7,8 +7,15 @@ import { db } from "@/server/db/client";
 import { userPreferences } from "@/server/db/schema";
 import { notesProEnabled } from "@/server/entitlements";
 
+// Server-only config — not NEXT_PUBLIC because this value is only ever
+// used inside server actions and never needs to appear in client bundles.
+// Rename env var to NOTES_CAPTURE_DOMAIN on Vercel (see operator note in
+// src/app/api/capture/email/route.ts). The NEXT_PUBLIC_ variant still
+// works at runtime but exposes the value to the browser unnecessarily.
 const CAPTURE_DOMAIN =
-  process.env.NEXT_PUBLIC_NOTES_CAPTURE_DOMAIN ?? "notes.signalstudio.ie";
+  process.env.NOTES_CAPTURE_DOMAIN ??
+  process.env.NEXT_PUBLIC_NOTES_CAPTURE_DOMAIN ??
+  "notes.signalstudio.ie";
 
 function makeSlug(): string {
   // 6 bytes → 12 hex chars, 48 bits. Generated from node:crypto so
