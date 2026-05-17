@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 type CaptureState =
-  | { tier: "pro"; address: string }
+  | { tier: "entitled"; address: string }
   | { tier: "free" };
 
 const PRICING_URL = "https://signalstudio.ie/pricing";
@@ -55,7 +55,7 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
   }
 
   return (
-    <p className="capture-email capture-email--pro">
+    <p className="capture-email capture-email--entitled">
       <span aria-hidden>✉</span>
       <span>Email a note: </span>
       {showFallback ? (

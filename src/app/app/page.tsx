@@ -33,13 +33,13 @@ export default async function NotebookPage() {
     getCaptureEmail(),
   ]);
   // Three rendering branches:
-  //   - tier=pro: workspace+ user, inbound is wired → show address.
+  //   - tier=entitled: workspace+ user, inbound is wired → show address.
   //   - tier=free: free-tier user → show upgrade nudge.
-  //   - tier=hidden: pro user, inbound NOT wired yet → hide entirely
+  //   - null: workspace+ user, inbound NOT wired yet → hide entirely
   //     (don't show a fake-looking address that drops mail).
   let captureState: React.ComponentProps<typeof CaptureEmailRow>["state"] | null;
   if (captureEmail.ok) {
-    captureState = { tier: "pro", address: captureEmail.address };
+    captureState = { tier: "entitled", address: captureEmail.address };
   } else if (captureEmail.reason === "free-tier-not-enabled") {
     captureState = { tier: "free" };
   } else {
