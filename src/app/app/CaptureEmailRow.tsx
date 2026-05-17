@@ -28,7 +28,7 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
     return (
       <p className="capture-email capture-email--free">
         <span aria-hidden>✉</span>
-        <span>Capture by email — <a href={PRICING_URL} target="_blank" rel="noopener noreferrer">Workspace tier</a>.</span>
+        <span>Send notes by email. Available on the <a href={PRICING_URL} target="_blank" rel="noopener noreferrer">Workspace plan</a>.</span>
       </p>
     );
   }

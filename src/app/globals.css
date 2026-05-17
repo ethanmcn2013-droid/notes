@@ -877,11 +877,12 @@ button, input, textarea { font: inherit; }
    Quiet row beneath the stream. Workspace+ shows the address; free
    shows an upgrade nudge. Same paper background as the notebook so
    it reads as part of the surface, not a CTA. */
+/* R9: dropped font-family mono — copy is human-facing, not a code label.
+   Uses body sans (Inter) to match the notebook surface register. */
 .capture-email {
   align-items: center;
   color: color-mix(in srgb, var(--color-ink) 55%, transparent);
   display: flex;
-  font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 12px;
   gap: 8px;
   margin: 32px auto 16px;
