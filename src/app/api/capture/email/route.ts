@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/server/db/client";
 import { notes, userPreferences } from "@/server/db/schema";
+import { notesProEnabled } from "@/server/entitlements";
 
 /**
  * Inbound email → note (N-1, 2026-05-14).
@@ -181,6 +182,20 @@ export async function POST(req: Request) {
   if (!userId) {
     // Slug doesn't map to anyone — silently 202 so spam doesn't
     // signal which slugs exist.
+    return NextResponse.json({ ok: true, accepted: false }, { status: 202 });
+  }
+
+  // Delivery-time tier recheck. The slug was issued while the user
+  // held workspace+, but entitlements expire — a workspace→free
+  // downgrade must stop capture-by-email, not keep a paid feature
+  // live until the slug is manually rotated. notesProEnabled
+  // fail-closes to `free` on a Turso error (suite doctrine: an
+  // outage tightens gates, never loosens them), which can drop a
+  // legitimate message during a blip; accepted because serving a
+  // paid feature to a downgraded user violates the honesty the
+  // pricing surface promises ("drops to Free"). Same silent 202 as
+  // the unknown-slug path so tier state never leaks to a sender.
+  if (!(await notesProEnabled(userId))) {
     return NextResponse.json({ ok: true, accepted: false }, { status: 202 });
   }
 

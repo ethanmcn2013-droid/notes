@@ -12,11 +12,11 @@ import type { EntitlementTier } from "@/lib/entitlements-shared/schema";
  * lands (email-to-capture in N-1, FTS5 in N-2, >500-note caps later)
  * the gate calls go here and inherit canonical tier semantics.
  *
- * No call sites today. Adding the helper now means the file path
- * already exists, the import already typechecks, and the gating
- * choice is centralised. New gates flow through requireTier() or
- * a feature predicate exported below — never via inline
- * resolveEntitlement calls scattered across server actions.
+ * Call sites: capture-by-email allocation + slug rotation
+ * (server/actions/capture-email.ts) and inbound delivery
+ * (app/api/capture/email/route.ts). New gates flow through
+ * requireTier() or a feature predicate exported below — never via
+ * inline resolveEntitlement calls scattered across server actions.
  */
 export async function getNotesTier(
   userClerkId: string,
