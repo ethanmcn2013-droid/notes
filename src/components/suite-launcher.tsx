@@ -44,6 +44,39 @@ function prefetchProduct(url: string) {
 }
 
 /**
+ * Phase 3 dot-morph: the brand transition between products. The indigo
+ * dot blooms over a paper field, then we navigate same-tab — the suite
+ * feels like one surface re-skinning, not four apps. Pure DOM so it is
+ * style-system agnostic. Reduced-motion + modifier clicks skip this at
+ * the call site (normal same-tab nav). ~380ms, then location.href.
+ */
+function suiteJump(url: string) {
+  if (typeof document === "undefined") {
+    window.location.href = url;
+    return;
+  }
+  const overlay = document.createElement("div");
+  overlay.setAttribute("aria-hidden", "true");
+  overlay.style.cssText =
+    "position:fixed;inset:0;z-index:2147483647;background:#ffffff;opacity:0;" +
+    "transition:opacity 260ms cubic-bezier(.32,0,.67,1);display:flex;" +
+    "align-items:center;justify-content:center;pointer-events:none";
+  const dot = document.createElement("div");
+  dot.style.cssText =
+    `width:9px;height:9px;border-radius:50%;background:${INDIGO};` +
+    "transform:scale(1);transition:transform 360ms cubic-bezier(.32,0,.67,1)";
+  overlay.appendChild(dot);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => {
+    overlay.style.opacity = "1";
+    dot.style.transform = "scale(28)";
+  });
+  window.setTimeout(() => {
+    window.location.href = url;
+  }, 380);
+}
+
+/**
  * Suite launcher. Replaces the static `signal studio.` breadcrumb anchor
  * with a click-to-open popover listing all four products. Notes uses
  * Inter (per the locked Notes aesthetic) so this component inherits the
@@ -168,7 +201,21 @@ export function SuiteLauncher({ current }: { current: ProductSlug }) {
                     }
                     aria-current={isCurrent ? "true" : undefined}
                     role="menuitem"
-                    onClick={() => setOpen(false)}
+                    onClick={(e) => {
+                      setOpen(false);
+                      if (isCurrent) return;
+                      if (
+                        e.metaKey ||
+                        e.ctrlKey ||
+                        e.shiftKey ||
+                        e.altKey ||
+                        window.matchMedia("(prefers-reduced-motion: reduce)")
+                          .matches
+                      )
+                        return;
+                      e.preventDefault();
+                      suiteJump(p.url);
+                    }}
                     style={{
                       display: "flex",
                       alignItems: "center",
