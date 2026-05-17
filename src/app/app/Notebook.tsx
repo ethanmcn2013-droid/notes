@@ -523,7 +523,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
             ref={captureRef}
             autoFocus
             rows={3}
-            placeholder="What just came up?"
+            placeholder=""
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onCaptureKeyDown}

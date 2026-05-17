@@ -149,8 +149,13 @@ button, input, textarea { font: inherit; }
   line-height: 0.95;
 }
 .notes-mark .dot {
-  width: 0.16em;
-  height: 0.16em;
+  /* Hard px ceiling so the dot can never balloon during font-swap
+     or unhydrated windows where em resolves to a large fallback.
+     R3-mount fix — mirrors the suite's loading boundary contract. */
+  width: min(0.16em, 10px);
+  height: min(0.16em, 10px);
+  max-width: 10px;
+  max-height: 10px;
   border-radius: 50%;
   background: #4f46e5; /* indigo — suite-locked */
   display: inline-block;
@@ -265,8 +270,12 @@ button, input, textarea { font: inherit; }
   line-height: 0.95;
 }
 .wordmark .dot {
-  width: 0.16em;
-  height: 0.16em;
+  /* Same hard ceiling as .notes-mark .dot — prevents balloon during
+     font-swap before Geist resolves. R3-mount fix. */
+  width: min(0.16em, 10px);
+  height: min(0.16em, 10px);
+  max-width: 10px;
+  max-height: 10px;
   border-radius: 50%;
   background: #4f46e5;
   display: inline-block;
@@ -335,6 +344,12 @@ button, input, textarea { font: inherit; }
   letter-spacing: 0;
   caret-color: var(--color-accent);
   font-family: inherit;
+}
+/* Defensive: PrivateNotesEmptyState is sole owner of the placeholder
+   visual. If a native placeholder ever slips through (e.g. during a
+   refactor), hide it so the two strings never paint stacked. R1 fix. */
+.capture textarea::placeholder {
+  color: transparent;
 }
 /* Restore keyboard focus ring suppressed by outline:0 above (WCAG 2.4.7) */
 .capture textarea:focus-visible {
