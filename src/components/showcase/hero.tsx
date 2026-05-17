@@ -82,8 +82,10 @@ export function Hero() {
           href="/app"
           className="inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-medium transition-opacity hover:opacity-90"
           style={{
-            background: "var(--color-ink)",
-            color: "var(--color-paper)",
+            /* R14: suite indigo #4f46e5 per DESIGN.md §6 — black was
+               an undocumented deviation from the locked CTA spec. */
+            background: "var(--color-signal)",
+            color: "#ffffff",
           }}
         >
           Open the notebook
