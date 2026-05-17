@@ -106,12 +106,10 @@ export default function BuildingProjectNotePage() {
       >
         <SuiteLauncher current="notes" />
         <span aria-hidden style={{ color: "var(--color-ink-faint, #9b9b94)", fontSize: 12 }}>/</span>
-        <a
-          href="/"
-          style={{ color: "var(--color-ink, #14151a)", textDecoration: "none", fontWeight: 600 }}
-        >
-          notes<span style={{ color: "var(--accent-2, #d4a534)" }}>.</span>
-        </a>
+        <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
+          <span className="word">notes</span>
+          <span className="dot" aria-hidden />
+        </Link>
       </header>
 
       <main

@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { Hero } from "@/components/showcase/hero";
 import { SuiteLauncher } from "@/components/suite-launcher";
+import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 import {
   ANALYTICS_URL,
   ROADMAP_URL,
@@ -14,7 +16,10 @@ const SIBLINGS = [
   { name: "Signal Analytics", note: "Read the work", url: ANALYTICS_URL },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { userId } = await auth();
+  const isSignedIn = Boolean(userId);
+
   return (
     <>
       <header className="suitebar" aria-label="Signal Notes notebook chrome">
@@ -26,13 +31,30 @@ export default function HomePage() {
             <span className="dot" aria-hidden />
           </Link>
         </div>
+        {isSignedIn ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Link
+              href="/app"
+              className="text-[13px] font-medium"
+              style={{
+                color: "var(--color-ink-soft)",
+                textDecoration: "underline",
+                textDecorationStyle: "dotted",
+                textUnderlineOffset: 3,
+              }}
+            >
+              Open the notebook
+            </Link>
+            <UserButtonWithSuite current="notes" />
+          </div>
+        ) : null}
       </header>
 
       <main className="mx-auto max-w-[860px] px-7 pt-24 pb-32 sm:pt-28">
         <Hero />
 
         {/* ── Anti-feature register (BRAND.md §6) ─────────────────────────── */}
-        <section className="mt-28 grid gap-5 sm:grid-cols-3">
+        <section className="reveal mt-28 grid gap-5 sm:grid-cols-3">
           {[
             {
               label: "Not a wiki.",
@@ -65,7 +87,7 @@ export default function HomePage() {
         </section>
 
         <footer
-          className="mt-32 border-t pt-10"
+          className="reveal mt-32 border-t pt-10"
           style={{ borderColor: "var(--color-line)" }}
         >
           <p

@@ -107,6 +107,10 @@ export function Notebook({ initialNotes }: NotebookProps) {
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const extractInputRef = useRef<HTMLInputElement | null>(null);
+  const undoBtnRef = useRef<HTMLButtonElement | null>(null);
+  // Track the element focused before the undo toast appeared so we can
+  // restore focus when the toast dismisses (keyboard a11y).
+  const undoReturnFocusRef = useRef<HTMLElement | null>(null);
   // Pending fresh-marker timers keyed by note id; cleared on unmount.
   const freshTimersRef = useRef<Map<string, number>>(new Map());
   // Pending-delete timers per note. Each entry owns its own 4s
@@ -137,6 +141,24 @@ export function Notebook({ initialNotes }: NotebookProps) {
       if (extractFocusTimerRef.current !== null) window.clearTimeout(extractFocusTimerRef.current);
     };
   }, []);
+
+  // When the undo toast appears: record where focus was, then move it
+  // to the Undo button so keyboard users can act within the 6s window.
+  // When the toast disappears: return focus to the recorded element.
+  useEffect(() => {
+    if (undoTarget) {
+      undoReturnFocusRef.current = document.activeElement as HTMLElement | null;
+      // One paint delay — the button must be in the DOM first.
+      window.setTimeout(() => undoBtnRef.current?.focus(), 0);
+    } else {
+      if (undoReturnFocusRef.current?.isConnected) {
+        undoReturnFocusRef.current.focus();
+      } else {
+        captureRef.current?.focus();
+      }
+      undoReturnFocusRef.current = null;
+    }
+  }, [undoTarget]);
 
   // ⌘K / Ctrl+K focuses search inline. Universal pattern — no jargon.
   useEffect(() => {
@@ -313,7 +335,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
           current && current.id === noteToDelete.id ? null : current,
         );
         commitDelete(noteToDelete);
-      }, 4_000);
+      }, 6_000);
 
       pendingDeletesRef.current.set(noteToDelete.id, {
         note: noteToDelete,
@@ -501,7 +523,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
             ref={captureRef}
             autoFocus
             rows={3}
-            placeholder=""
+            placeholder="What just came up?"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onCaptureKeyDown}
@@ -521,11 +543,13 @@ export function Notebook({ initialNotes }: NotebookProps) {
 
         <div className="stream-head">
           <span>Stream</span>
-          <span>
-            {query.trim()
-              ? `${filteredNotes.length} of ${notes.length}`
-              : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
-          </span>
+          {(notes.length > 0 || query.trim()) && (
+            <span>
+              {query.trim()
+                ? `${filteredNotes.length} of ${notes.length}`
+                : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
+            </span>
+          )}
         </div>
 
         {notes.length === 0 && (
@@ -550,6 +574,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
                   className={`note-row${freshIds.has(note.id) ? " is-fresh" : ""}`}
                   onClick={() => setOpenId(isOpen ? null : note.id)}
                   aria-expanded={isOpen}
+                  aria-controls={`note-panel-${note.id}`}
                 >
                   <span>
                     <span className="note-title">{firstLine(note.body)}</span>
@@ -575,7 +600,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
         </ol>
 
         {openNote && (
-          <article className="open-note" aria-label="Open note">
+          <article className="open-note" aria-label="Open note" id={`note-panel-${openNote.id}`}>
             <div className="open-note-head">
               <span>
                 Captured <RelativeTime ts={openNote.createdAt} />
@@ -595,9 +620,20 @@ export function Notebook({ initialNotes }: NotebookProps) {
                       type="button"
                       className="btn-draft-action"
                       onClick={() => startEditingExtract(openNote)}
+                      aria-describedby={notes.length <= 1 ? "draft-action-hint" : undefined}
                     >
                       Draft action
                     </button>
+                  )}
+                {!openNote.extractBody &&
+                  editingExtractFor !== openNote.id &&
+                  notes.length <= 1 && (
+                    <span
+                      id="draft-action-hint"
+                      className="draft-action-hint"
+                    >
+                      Draft an action to send to Signal Tasks.
+                    </span>
                   )}
               </div>
             </div>
@@ -652,22 +688,25 @@ export function Notebook({ initialNotes }: NotebookProps) {
                   </p>
                 ) : (
                   <p className="extract-drafted-meta">
-                    Action drafted &middot; pending Tasks send
+                    Saved. Ready to send to Signal Tasks.
                   </p>
                 )}
                 <p className="extract-drafted-body">{openNote.extractBody}</p>
                 <div className="extract-drafted-controls">
                   {openNote.promotedTaskId ? (
-                    sentResults.get(openNote.id)?.taskUrl && (
-                      <a
-                        className="btn-delete"
-                        href={sentResults.get(openNote.id)!.taskUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Open in Tasks
-                      </a>
-                    )
+                    (() => {
+                      const sent = sentResults.get(openNote.id);
+                      return sent?.taskUrl ? (
+                        <a
+                          className="btn-delete"
+                          href={sent.taskUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Open in Tasks
+                        </a>
+                      ) : null;
+                    })()
                   ) : (
                     <button
                       type="button"
@@ -720,7 +759,12 @@ export function Notebook({ initialNotes }: NotebookProps) {
       {undoTarget && (
         <div className="undo-toast" role="status" aria-live="polite">
           <span>Note deleted.</span>
-          <button type="button" className="undo-toast-btn" onClick={undoDelete}>
+          <button
+            ref={undoBtnRef}
+            type="button"
+            className="undo-toast-btn"
+            onClick={undoDelete}
+          >
             Undo
           </button>
         </div>
@@ -739,7 +783,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
             <dd>Private by default</dd>
           </div>
           <div>
-            <dt>Stream</dt>
+            <dt>Notes</dt>
             <dd>
               <em>{notes.length}</em> {notes.length === 1 ? "note" : "notes"}
             </dd>
@@ -757,8 +801,8 @@ export function Notebook({ initialNotes }: NotebookProps) {
             </dd>
           </div>
           <div>
-            <dt>Status</dt>
-            <dd>Private build</dd>
+            <dt>Notebook</dt>
+            <dd>Your notes</dd>
           </div>
         </dl>
       </aside>

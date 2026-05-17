@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type CaptureState =
   | { tier: "pro"; address: string }
@@ -16,9 +16,13 @@ const PRICING_URL = "https://signalstudio.ie/pricing";
  *
  * Click-to-copy mirrors the PRODUCT.md §5 budget: power users
  * already in muscle memory shouldn't need a modal.
+ * Fallback: when navigator.clipboard is unavailable a selectable
+ * readonly input is revealed so the address is never inaccessible.
  */
 export function CaptureEmailRow({ state }: { state: CaptureState }) {
   const [copied, setCopied] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
+  const fallbackRef = useRef<HTMLInputElement | null>(null);
 
   if (state.tier === "free") {
     return (
@@ -31,26 +35,50 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
 
   const address = state.address;
   function onCopy() {
-    if (!navigator.clipboard) return;
-    navigator.clipboard.writeText(address).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1400);
-    });
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(address).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1400);
+      }).catch(() => {
+        setShowFallback(true);
+        window.setTimeout(() => {
+          fallbackRef.current?.select();
+        }, 0);
+      });
+    } else {
+      // Clipboard API unavailable — reveal a selectable readonly input.
+      setShowFallback(true);
+      window.setTimeout(() => {
+        fallbackRef.current?.select();
+      }, 0);
+    }
   }
 
   return (
     <p className="capture-email capture-email--pro">
       <span aria-hidden>✉</span>
       <span>Email a note: </span>
-      <button
-        type="button"
-        onClick={onCopy}
-        aria-label="Copy capture email address"
-        className="capture-email__address"
-      >
-        <code>{address}</code>
-        <span className="capture-email__hint">{copied ? "copied" : "copy"}</span>
-      </button>
+      {showFallback ? (
+        <input
+          ref={fallbackRef}
+          type="text"
+          readOnly
+          value={address}
+          aria-label="Capture email address — select to copy"
+          className="capture-email__fallback-input"
+          onBlur={() => setShowFallback(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={onCopy}
+          aria-label="Copy capture email address"
+          className="capture-email__address"
+        >
+          <code>{address}</code>
+          <span className="capture-email__hint">{copied ? "copied" : "copy"}</span>
+        </button>
+      )}
     </p>
   );
 }

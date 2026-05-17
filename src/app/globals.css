@@ -5,6 +5,83 @@
    keep Notes's green/mustard/Inter aesthetic. Don't re-flag as a
    BRAND.md visual-register violation. */
 
+/* ── SIGNAL STUDIO MOTION CONTRACT v1 ───────────────────────────── */
+:root {
+  --motion-instant:   80ms;
+  --motion-fast:     140ms;
+  --motion-base:     220ms;
+  --motion-moderate: 320ms;
+  --motion-slow:     480ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out:      cubic-bezier(0, 0, 0.2, 1);
+  --ease-in:       cubic-bezier(0.4, 0, 1, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant:   0.01ms;
+    --motion-fast:      0.01ms;
+    --motion-base:      0.01ms;
+    --motion-moderate:  0.01ms;
+    --motion-slow:      0.01ms;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    translate: none !important;
+    animation: none !important;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-fade var(--motion-slow) var(--ease-out) both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+  @keyframes reveal-fade {
+    from { opacity: 0; translate: 0 12px; }
+    to   { opacity: 1; translate: 0 0;    }
+  }
+}
+/* ── End Motion Contract v1 ──────────────────────────────────────── */
+
+/* ── Suite-wide focus ring ──────────────────────────────────────── */
+/* Single treatment for all interactive elements. Uses --color-signal
+   (indigo #4f46e5 — suite-locked accent) as the focus colour, matching
+   the Notes wordmark dot and the established focus convention in
+   capture-email__fallback-input. 3px offset keeps the ring clear of
+   sticky suitebar chrome (WCAG 2.4.11). */
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+/* Context overrides — elements where a tighter radius reads better */
+.note-row:focus-visible,
+.btn-draft-action:focus-visible,
+.btn-delete:focus-visible,
+.undo-toast-btn:focus-visible {
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Rounded elements (pills, avatar) */
+.notes-mark:focus-visible,
+.wordmark:focus-visible {
+  border-radius: 4px;
+}
+/* Search input: suppress ring for pointer focus (mouse/touch), keep it
+   for keyboard navigation — `:focus-visible` fires for keyboard only. */
+.search input:not(:focus-visible) {
+  outline: none;
+}
+.search input:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* ── End focus ring ─────────────────────────────────────────────── */
+
 @theme {
   --color-bg: #f7f8f2;
   --color-paper: #fffefa;
@@ -111,7 +188,7 @@ button, input, textarea { font: inherit; }
   align-items: baseline;
   gap: 12px;
 }
-.suite-breadcrumb > a:first-child { transition: color 120ms ease; }
+.suite-breadcrumb > a:first-child { transition: color var(--motion-instant) var(--ease-out); }
 .suite-breadcrumb > a:first-child:hover { color: var(--color-ink); }
 
 .sr-only {
@@ -137,7 +214,7 @@ button, input, textarea { font: inherit; }
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
   padding: clamp(32px, 7vh, 72px) 0 56px;
-  animation: notes-shell-rise 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+  animation: notes-shell-rise var(--motion-slow) var(--ease-out) var(--motion-instant) both;
 }
 @keyframes notes-shell-rise {
   from { opacity: 0; transform: translateY(8px); }
@@ -221,19 +298,18 @@ button, input, textarea { font: inherit; }
   border-radius: 0;
   background: transparent;
   color: var(--color-ink);
-  outline: none;
   padding: 6px 0 7px;
   text-transform: none;
   letter-spacing: 0;
   font-weight: 400;
   font-size: 14px;
-  transition: border-color 180ms ease;
+  transition: border-color var(--motion-base) var(--ease-out);
 }
 .search input::placeholder {
   color: var(--color-ink-faint);
   opacity: 0.6;
 }
-.search input:focus { border-color: var(--color-accent); }
+.search input:focus-visible { border-color: var(--color-accent); }
 
 .capture {
   --capture-pad: clamp(20px, 4vw, 42px);
@@ -260,6 +336,12 @@ button, input, textarea { font: inherit; }
   caret-color: var(--color-accent);
   font-family: inherit;
 }
+/* Restore keyboard focus ring suppressed by outline:0 above (WCAG 2.4.7) */
+.capture textarea:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
 
 .private-notes-empty-state {
   position: absolute;
@@ -279,8 +361,8 @@ button, input, textarea { font: inherit; }
   pointer-events: none;
   transform: translateY(0);
   transition:
-    opacity 520ms ease,
-    transform 640ms ease;
+    opacity var(--motion-moderate) var(--ease-standard),
+    transform var(--motion-slow) var(--ease-standard);
 }
 
 .private-notes-empty-state.is-changing,
@@ -364,15 +446,14 @@ button, input, textarea { font: inherit; }
   color: var(--color-ink);
   text-align: left;
   cursor: pointer;
-  transition: background-color 160ms ease;
+  transition: background-color var(--motion-fast) var(--ease-out);
 }
 .note-row:hover,
 .note-row:focus-visible {
   background: var(--color-field);
-  outline: none;
 }
 .note-row.is-fresh {
-  animation: note-row-arrive 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: note-row-arrive var(--motion-moderate) var(--ease-out) both;
 }
 @keyframes note-row-arrive {
   from { opacity: 0; transform: translateY(-6px); background: color-mix(in srgb, var(--color-accent-2) 8%, var(--color-paper)); }
@@ -422,7 +503,9 @@ button, input, textarea { font: inherit; }
   border-top: 1px solid var(--color-line-strong);
   background: color-mix(in srgb, var(--color-paper) 94%, white);
   padding: 18px clamp(20px, 4vw, 42px) 22px;
-  animation: open-note-expand 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: open-note-expand var(--motion-base) var(--ease-out) both;
+  max-height: min(40vh, 320px);
+  overflow-y: auto;
 }
 @keyframes open-note-expand {
   from { opacity: 0; transform: translateY(6px); }
@@ -450,14 +533,6 @@ button, input, textarea { font: inherit; }
   white-space: pre-wrap;
 }
 
-.promote-soon {
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--color-ink-faint);
-  font-family: var(--font-mono-stack, ui-monospace, SFMono-Regular, Menlo, monospace);
-  white-space: nowrap;
-}
 .open-note-head-controls {
   display: flex;
   align-items: center;
@@ -486,7 +561,7 @@ button, input, textarea { font: inherit; }
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 6px 12px;
-  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+  transition: border-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
 }
 .btn-draft-action:hover {
   border-color: var(--color-signal);
@@ -495,6 +570,14 @@ button, input, textarea { font: inherit; }
 .btn-draft-action:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* First-use hint shown beside the Draft action button when the stream
+   is empty or contains a single note. Quiet — does not compete. */
+.draft-action-hint {
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  letter-spacing: 0.01em;
 }
 
 .extract-input {
@@ -512,6 +595,8 @@ button, input, textarea { font: inherit; }
   font-size: 14px;
   line-height: 1.5;
   padding: 4px 0;
+}
+.extract-input input:not(:focus-visible) {
   outline: none;
 }
 .extract-input input::placeholder {
@@ -701,7 +786,7 @@ button, input, textarea { font: inherit; }
   box-shadow: 0 8px 32px rgba(22, 24, 21, 0.22);
   z-index: 200;
   white-space: nowrap;
-  animation: undo-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: undo-in var(--motion-fast) var(--ease-out) both;
 }
 
 @keyframes undo-in {
@@ -719,11 +804,58 @@ button, input, textarea { font: inherit; }
   font-weight: 600;
   letter-spacing: 0.02em;
   padding: 4px 10px;
-  transition: border-color 120ms ease, background 120ms ease;
+  transition: border-color var(--motion-instant) var(--ease-out), background var(--motion-instant) var(--ease-out);
 }
 .undo-toast-btn:hover {
   border-color: rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Extract-drafted reveal ──────────────────────────────────────── */
+/* The "Saved. Ready to send to Signal Tasks." panel enters on opacity
+   + translateY only — no height animation (the open-note max-height
+   approach handles overflow; we never animate height). Calm, not flashy. */
+.extract-drafted {
+  animation: extract-drafted-in var(--motion-base) var(--ease-out) both;
+}
+@keyframes extract-drafted-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .extract-drafted { animation: none; }
+}
+
+/* ── Linear calm: reduce chrome weight ──────────────────────────── */
+/* Dial-down pass: borders and decorative separators that read heavier
+   than the content they bound. Opacity-only — no hue change (palette
+   exempt). Each target is a visible seam; reducing to ~70-75% keeps
+   structure without competing with content. */
+.notebook {
+  border-color: rgba(217, 221, 207, 0.72);
+}
+.notebook-top {
+  border-bottom-color: rgba(217, 221, 207, 0.72);
+}
+.capture {
+  border-bottom-color: rgba(217, 221, 207, 0.72);
+}
+.stream-head {
+  border-bottom-color: rgba(217, 221, 207, 0.72);
+}
+.note-row {
+  border-bottom-color: rgba(217, 221, 207, 0.6);
+}
+/* The open-note border-top is load-bearing as a visual break before
+   the sticky panel — keep it at moderate strength, just not full. */
+.open-note {
+  border-top-color: rgba(183, 191, 170, 0.72);
+}
+/* note-dot (the indigo indicator on rows with an extract) is already
+   small; reduce opacity slightly so it reads as a quiet signal, not a
+   notification badge demanding attention. */
+.note-dot {
+  opacity: 0.72;
 }
 
 /* ── Capture-by-email footer (N-1b · 2026-05-14) ──
@@ -775,4 +907,21 @@ button, input, textarea { font: inherit; }
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+/* Clipboard-unavailable fallback: a selectable readonly input that reveals
+   the capture address without requiring the clipboard API. */
+.capture-email__fallback-input {
+  background: transparent;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 4px;
+  color: var(--color-ink);
+  font: inherit;
+  letter-spacing: 0.01em;
+  padding: 1px 6px;
+  width: max-content;
+  max-width: 100%;
+}
+.capture-email__fallback-input:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 1px;
 }

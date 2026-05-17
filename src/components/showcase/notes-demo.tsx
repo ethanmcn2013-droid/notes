@@ -278,7 +278,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
                   style={{
                     cursor: "default",
                     opacity: dimmed ? 0.42 : 1,
-                    transition: "opacity 320ms cubic-bezier(.16,1,.3,1)",
+                    transition: "opacity var(--motion-moderate) var(--ease-out)",
                   }}
                 >
                   <span>
@@ -311,7 +311,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
         /* The hero artifact wants a calmer capture height than the
            full-bleed in-product field; keep the signature scale, trim
            the dead space. The settle is opacity + translateY only —
-           hardware-accelerated, ≤350ms, ease-out. */
+           hardware-accelerated, contract-timed, ease-out. */
         .notebook-demo .capture {
           position: relative;
         }
@@ -321,8 +321,8 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           opacity: 0;
           transform: translateY(8px);
           transition:
-            opacity 340ms cubic-bezier(.22,.61,.36,1),
-            transform 340ms cubic-bezier(.22,.61,.36,1);
+            opacity var(--motion-moderate) var(--ease-out),
+            transform var(--motion-moderate) var(--ease-out);
         }
         .notebook-demo .capture textarea[data-shown="true"] {
           opacity: 1;

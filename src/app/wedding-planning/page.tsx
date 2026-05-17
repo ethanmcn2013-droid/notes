@@ -36,7 +36,7 @@ const NOTE = {
   meta: "Captured in 11 minutes. Promoted to Tasks the next morning as three items: send the venue email, follow up on dietary list, lock photographer.",
 };
 
-const PAGE_BG = "var(--bg, #fafaf7)";
+const PAGE_BG = "var(--color-bg)";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -106,12 +106,10 @@ export default function WeddingPlanningNotePage() {
       >
         <SuiteLauncher current="notes" />
         <span aria-hidden style={{ color: "var(--color-ink-faint, #9b9b94)", fontSize: 12 }}>/</span>
-        <a
-          href="/"
-          style={{ color: "var(--color-ink, #14151a)", textDecoration: "none", fontWeight: 600 }}
-        >
-          notes<span style={{ color: "var(--accent-2, #d4a534)" }}>.</span>
-        </a>
+        <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
+          <span className="word">notes</span>
+          <span className="dot" aria-hidden />
+        </Link>
       </header>
 
       <main
@@ -202,6 +200,8 @@ export default function WeddingPlanningNotePage() {
               lineHeight: 1.72,
               color: "var(--color-ink-soft, #2f2f2a)",
               margin: 0,
+              overflowWrap: "break-word",
+              wordBreak: "break-word",
             }}
           >
             {NOTE.body}
@@ -249,13 +249,13 @@ export default function WeddingPlanningNotePage() {
               padding: 0,
               margin: 0,
               display: "grid",
-              gap: 12,
+              gap: 20,
               fontSize: 14,
             }}
           >
             <li>
-              <Link
-                href="https://tasks.signalstudio.ie/templates/wedding-planning-workspace"
+              <a
+                href="https://tasks.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -263,12 +263,15 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The wedding workspace in Tasks &rarr;
-              </Link>
+                Signal Tasks &rarr;
+              </a>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
+                Your notes become the workspace. Three actions from this note, held in one place.
+              </p>
             </li>
             <li>
-              <Link
-                href="https://roadmap.signalstudio.ie/wedding-planning/update"
+              <a
+                href="https://roadmap.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -276,12 +279,15 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The roadmap the couple sees &rarr;
-              </Link>
+                Signal Roadmap &rarr;
+              </a>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
+                A shared view for the couple. They see progress. You keep the detail.
+              </p>
             </li>
             <li>
-              <Link
-                href="https://analytics.signalstudio.ie/wedding-planning"
+              <a
+                href="https://analytics.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -289,8 +295,11 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Sunday morning briefing &rarr;
-              </Link>
+                Signal Analytics &rarr;
+              </a>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
+                A morning briefing that surfaces what still needs an answer before the day starts.
+              </p>
             </li>
           </ul>
         </section>
