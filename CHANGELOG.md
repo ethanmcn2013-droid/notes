@@ -3,7 +3,27 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
-## 2026-05-16 · N·13 · ships · The demo performs the act it describes
+## 2026-05-17 · N·17 · tightens · Capture-by-email stops when the tier does
+
+**Capture-by-email was checked once, when the address was handed
+out, and never again. A workspace that lapsed to Free kept a live
+forwarding address — mail still landed, notes still appeared, a
+paid feature still working months after the payment stopped. The
+pricing page promises the workspace "drops to Free" when it ends.
+For this one feature, it didn't. Now it does.**
+
+The inbound route resolves the address to a person, then asks the
+same question the rest of the suite asks — is this person on
+Workspace, right now — before it writes the note. If the answer is
+no, the message is accepted and quietly dropped, the same silent
+shape a stranger's mail gets, so nothing about who pays leaks back
+to a sender. On a database blip the answer defaults to no: a brief
+outage tightens the gate, never loosens it, because serving a paid
+feature for free is the failure the brand can't afford. The check
+was already written and centralised; this just calls it at the
+moment that was missing.
+
+
 
 **N·12 made the demo the real surface. It still didn't do
 anything — a populated sheet and a search-dim loop, while the hero
