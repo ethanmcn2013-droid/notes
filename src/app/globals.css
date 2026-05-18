@@ -54,7 +54,7 @@
 :root {
   --load-bg:               var(--paper, #ffffff);
   --load-dot-color:        var(--indigo, #4f46e5);
-  --load-dot-size:         10px;
+  --load-dot-size:         12px;   /* D8: 10px→12px — perceptibility floor fix */
   --load-dot-radius:       50%;
   --load-pulse-scale-min:  0.72;
   --load-pulse-scale-max:  1.0;

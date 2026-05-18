@@ -537,7 +537,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
             id="capture"
             ref={captureRef}
             rows={3}
-            placeholder=""
+            placeholder="Capture a thought…"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onCaptureKeyDown}
