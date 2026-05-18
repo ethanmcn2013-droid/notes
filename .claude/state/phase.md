@@ -11,3 +11,7 @@ Verified live on desktop and at 390px mobile across every changed surface.
 
 Phase vocabulary: Notes uses `N·NN` cycle codes (dispatch shape per BRAND.md §6.5).
 Next cycle increments from N·11b.
+
+UX remediation pass 1 — R1/R3/R9/R14 prod-verified 2026-05-17; R9 footer pending human /app smoke
+
+Seamless ecosystem — notes L2/3/4 (auth-aware entry + §14 shell) prod-verified 2026-05-18
