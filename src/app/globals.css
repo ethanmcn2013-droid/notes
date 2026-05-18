@@ -46,6 +46,57 @@
 }
 /* ── End Motion Contract v1 ──────────────────────────────────────── */
 
+/* ── Suite loading tokens — LOADING_SYSTEM.md §1 (copied verbatim) ── */
+/* These token names are frozen. Values must match across all five repos. */
+/* Note: Notes uses #fffefa as its notebook canvas. The loading field    */
+/* uses var(--paper, #ffffff) — white — per LOADING_SYSTEM.md §1 Notes  */
+/* special case. The warm canvas is the notebook surface, not the load.  */
+:root {
+  --load-bg:               var(--paper, #ffffff);
+  --load-dot-color:        var(--indigo, #4f46e5);
+  --load-dot-size:         10px;
+  --load-dot-radius:       50%;
+  --load-pulse-scale-min:  0.72;
+  --load-pulse-scale-max:  1.0;
+  --load-pulse-duration:   1.8s;
+  --load-pulse-easing:     cubic-bezier(.4, 0, .6, 1);
+  --load-z:                9999;
+  --load-fade-out:         120ms;
+  --load-fade-easing:      ease-out;
+  --shell-fade-in:         160ms;
+  --shell-fade-easing:     ease-out;
+  --content-fade-in:       200ms;
+  --content-fade-easing:   cubic-bezier(.22, .61, .36, 1);
+  --skeleton-max:          200ms;
+  --stagger-content-item:  40ms;
+}
+
+@keyframes signal-load-pulse {
+  0%, 100% { transform: scale(var(--load-pulse-scale-min, 0.72)); opacity: 0.7; }
+  50%       { transform: scale(var(--load-pulse-scale-max, 1.0));  opacity: 1; }
+}
+
+@keyframes suite-content-arrive {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .signal-loading-dot {
+    animation: signal-load-pulse var(--load-pulse-duration, 1.8s) var(--load-pulse-easing, cubic-bezier(.4, 0, .6, 1)) infinite;
+  }
+}
+
+/* Reduced motion: static dot, no animation. Field is still paper-white
+   and dot is still indigo. Brand is present. Motion is not. */
+@media (prefers-reduced-motion: reduce) {
+  .signal-loading-dot {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+/* ── End suite loading tokens ──────────────────────────────────────── */
+
 /* ── Suite-wide focus ring ──────────────────────────────────────── */
 /* Single treatment for all interactive elements. Uses --color-signal
    (indigo #4f46e5 — suite-locked accent) as the focus colour, matching
