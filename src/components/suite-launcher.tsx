@@ -13,8 +13,21 @@ type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
 
 /**
  * Unauthed mode: marketing taglines, links to product marketing homepages.
- * Authed mode: app-context labels, links to each product's /app entry.
- * Per DESIGN.md §14 auth-aware switcher spec.
+ * Authed mode: canonical app-context labels, links to each product's /app entry.
+ *
+ * Product order: Roadmap → Tasks → Notes → Analytics (ratified 2026-05-16
+ * hierarchy, IA_COHERENCE.md §2E). Both arrays use this order.
+ *
+ * Popover header: "Signal Studio" / "Four products, one studio." — no
+ * auth-state variation (IA_COHERENCE.md §1E). Retired variants:
+ *   "Products" (authed L1) — IA_COHERENCE.md §2C
+ *   "Jump to any product." (authed L2) — IA_COHERENCE.md §2C
+ *
+ * Authed labels — canonical (IA_COHERENCE.md §1C). Retired variants:
+ *   "Open the workspace" → "Open tasks"
+ *   "Open the roadmap"   → "Open roadmap"
+ *   "Open the notebook"  → "Open notes"
+ *   "Open the briefing"  → "Open analytics"
  */
 const PRODUCTS_UNAUTHED: {
   slug: ProductSlug;
@@ -22,8 +35,8 @@ const PRODUCTS_UNAUTHED: {
   tagline: string;
   url: string;
 }[] = [
-  { slug: "tasks",     word: "tasks",     tagline: "Execution clarity", url: TASKS_URL },
   { slug: "roadmap",   word: "roadmap",   tagline: "Direction clarity", url: ROADMAP_URL },
+  { slug: "tasks",     word: "tasks",     tagline: "Execution clarity", url: TASKS_URL },
   { slug: "notes",     word: "notes",     tagline: "Capture clarity",   url: NOTES_URL },
   { slug: "analytics", word: "analytics", tagline: "Attention clarity", url: ANALYTICS_URL },
 ];
@@ -34,15 +47,15 @@ const PRODUCTS_AUTHED: {
   label: string;
   url: string;
 }[] = [
-  { slug: "tasks",     word: "tasks",     label: "Open the workspace", url: `${TASKS_URL}/app` },
-  { slug: "roadmap",   word: "roadmap",   label: "Open the roadmap",   url: `${ROADMAP_URL}/app` },
-  { slug: "notes",     word: "notes",     label: "Open the notebook",  url: `${NOTES_URL}/app` },
-  { slug: "analytics", word: "analytics", label: "Open the briefing",  url: `${ANALYTICS_URL}/app` },
+  { slug: "roadmap",   word: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
+  { slug: "tasks",     word: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
+  { slug: "notes",     word: "notes",     label: "Open notes",      url: `${NOTES_URL}/app` },
+  { slug: "analytics", word: "analytics", label: "Open analytics",  url: `${ANALYTICS_URL}/app` },
 ];
 
 const INDIGO = "#4f46e5";
 
-const PRODUCT_ORIGINS = [TASKS_URL, ROADMAP_URL, NOTES_URL, ANALYTICS_URL];
+const PRODUCT_ORIGINS = [ROADMAP_URL, TASKS_URL, NOTES_URL, ANALYTICS_URL];
 
 /**
  * Phase 3 (instant-jump): warm a sibling product on hover/focus so the
@@ -98,21 +111,24 @@ interface SuiteLauncherProps {
   current: ProductSlug;
   /**
    * When true the switcher renders in authed mode: app-entry deep-links
-   * and app-context labels instead of marketing taglines.
-   * Per DESIGN.md §14 auth-aware switcher spec.
+   * and canonical app-context labels instead of marketing taglines.
+   * Per IA_COHERENCE.md §1C and §2C.
    */
   isAuthed?: boolean;
 }
 
 /**
- * Suite launcher. Replaces the static `signal studio.` breadcrumb anchor
- * with a click-to-open popover listing all four products. Notes uses
- * Inter (per the locked Notes aesthetic) so this component inherits the
- * surrounding font; other tokens come from the Notes ink CSS variables.
+ * Suite launcher. The `signal studio.` breadcrumb anchor opens a popover
+ * listing all four products. Notes uses Inter (per the locked Notes
+ * aesthetic) so this component inherits the surrounding font; other tokens
+ * come from the Notes ink CSS variables.
  *
- * Two modes (DESIGN.md §14):
- *   Unauthed — marketing taglines + marketing homepage links (current behaviour)
- *   Authed   — app-context labels + /app deep-links per the spec
+ * Two modes (IA_COHERENCE.md §2B):
+ *   Unauthed — marketing taglines + marketing homepage links
+ *   Authed   — canonical labels + /app deep-links
+ *
+ * Popover header is identical in both modes: "Signal Studio" / "Four
+ * products, one studio." — IA_COHERENCE.md §1E.
  */
 export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps) {
   const [open, setOpen] = useState(false);
@@ -194,6 +210,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
             boxShadow: "0 24px 60px -24px rgba(60,50,30,0.18)",
           }}
         >
+          {/* Header — identical in both auth states. IA_COHERENCE.md §1E. */}
           <div
             style={{
               borderBottom: "1px solid var(--color-line)",
@@ -208,7 +225,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
                 color: "var(--color-ink)",
               }}
             >
-              {isAuthed ? "Products" : "Signal Studio"}
+              Signal Studio
             </div>
             <div
               style={{
@@ -217,7 +234,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
                 color: "var(--color-ink-faint)",
               }}
             >
-              {isAuthed ? "Jump to any product." : "Four products, one studio."}
+              Four products, one studio.
             </div>
           </div>
           <ul style={{ padding: 4, listStyle: "none", margin: 0 }}>
@@ -315,7 +332,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
             })}
           </ul>
           {isAuthed ? (
-            // Authed footer: "Back to Signal Studio" per §14 spec.
+            // Authed footer: "Back to Signal Studio →" same-tab. IA_COHERENCE.md §1F.
             <a
               href={STUDIO_URL}
               onClick={() => setOpen(false)}
@@ -341,7 +358,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
               Back to Signal Studio →
             </a>
           ) : (
-            // Unauthed footer: open studio in a new tab (marketing behaviour).
+            // Unauthed footer: open studio in a new tab. IA_COHERENCE.md §1F.
             <a
               href={STUDIO_URL}
               target="_blank"

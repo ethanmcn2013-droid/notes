@@ -121,6 +121,21 @@ export function Notebook({ initialNotes }: NotebookProps) {
     new Map(),
   );
 
+  // P3-1: Deterministic first-paint focus — cursor ready, nothing highlighted.
+  // autoFocus on <textarea> causes the browser to select-all content on mount,
+  // producing the intermittent blue-highlight artifact (ISSUE_REGISTER P3-1).
+  // Instead: focus on the first paint, then collapse the selection to the end
+  // so cursor is ready but no text is selected. setSelectionRange(end, end)
+  // is a no-op on an empty textarea — safe for both empty and pre-filled states.
+  useEffect(() => {
+    const el = captureRef.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    const len = el.value.length;
+    el.setSelectionRange(len, len);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-only — intentionally empty deps
+
   // Refocus capture when the tab returns to foreground (PRODUCT.md §5 budget)
   useEffect(() => {
     const refocus = () => {
@@ -521,9 +536,8 @@ export function Notebook({ initialNotes }: NotebookProps) {
           <textarea
             id="capture"
             ref={captureRef}
-            autoFocus
             rows={3}
-            placeholder=""
+            placeholder="Capture a thought…"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onCaptureKeyDown}

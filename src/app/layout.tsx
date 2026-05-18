@@ -21,6 +21,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // D4 Layer-0: kill dark-UA chrome/tab before any CSS resolves.
+  // LOADING_SYSTEM.md §2: "theme-color controls browser chrome (address bar, tab)."
+  themeColor: "#ffffff",
 };
 
 export const metadata: Metadata = {
@@ -64,8 +67,25 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="en" className={`${inter.variable} ${geist.variable}`}>
-        <body className="min-h-full">{children}</body>
+      {/*
+        D4 Layer-0 instant canvas — DECISIONS.md D4, LOADING_SYSTEM.md §2.
+        background:#fff on <html> fires before any stylesheet resolves.
+        colorScheme:light prevents UA dark-mode grey void pre-CSS.
+        These are the only two tokens that fix P1-1 without JavaScript.
+        The inline <style> in <head> is belt-and-braces synchronous.
+        Note: Notes notebook canvas (#fffefa) is NOT used here — the
+        loading field precedes the product chrome (LOADING_SYSTEM.md §1).
+      */}
+      <html
+        lang="en"
+        className={`${inter.variable} ${geist.variable}`}
+        style={{ background: "#fff", colorScheme: "light" }}
+      >
+        <head>
+          {/* Belt-and-braces: inline style fires before linked stylesheet. */}
+          <style dangerouslySetInnerHTML={{ __html: "html{background:#fff}" }} />
+        </head>
+        <body className="min-h-full" style={{ background: "#fff" }}>{children}</body>
       </html>
     </ClerkProvider>
   );

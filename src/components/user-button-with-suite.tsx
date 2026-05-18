@@ -12,14 +12,23 @@ import {
 type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
 
 /**
- * App-entry deep-links per DESIGN.md §14 auth-aware switcher spec.
- * Authed users land at the app, not the marketing page.
+ * App-entry deep-links. Labels are the canonical cross-product set per
+ * IA_COHERENCE.md §1C and §4B: lowercase product noun, plain "Open [product]".
+ *
+ * Product order: Roadmap → Tasks → Notes → Analytics (ratified 2026-05-16
+ * hierarchy, IA_COHERENCE.md §1I). Current product is excluded at render.
+ *
+ * Retired variants (do not restore):
+ *   "Open the workspace" → "Open tasks"
+ *   "Open the roadmap"   → "Open roadmap"
+ *   "Open the notebook"  → "Open notes"
+ *   "Open the briefing"  → "Open analytics"
  */
 const PRODUCTS: { slug: ProductSlug; label: string; url: string }[] = [
-  { slug: "tasks",     label: "Open the workspace", url: `${TASKS_URL}/app` },
-  { slug: "roadmap",   label: "Open the roadmap",   url: `${ROADMAP_URL}/app` },
-  { slug: "notes",     label: "Open the notebook",  url: `${NOTES_URL}/app` },
-  { slug: "analytics", label: "Open the briefing",  url: `${ANALYTICS_URL}/app` },
+  { slug: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
+  { slug: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
+  { slug: "notes",     label: "Open notes",      url: `${NOTES_URL}/app` },
+  { slug: "analytics", label: "Open analytics",  url: `${ANALYTICS_URL}/app` },
 ];
 
 /** Cookie name per DESIGN.md §14 escape hatch spec. */
