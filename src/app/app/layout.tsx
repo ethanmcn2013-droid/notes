@@ -9,7 +9,7 @@ export default function AppLayout({
     <>
       <header className="suitebar" aria-label="Signal Notes notebook chrome">
         <div className="suite-breadcrumb">
-          <SuiteLauncher current="notes" />
+          <SuiteLauncher current="notes" isAuthed={true} />
           <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
           <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
             <span className="word">notes</span>

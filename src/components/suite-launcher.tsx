@@ -11,16 +11,33 @@ import {
 
 type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
 
-const PRODUCTS: {
+/**
+ * Unauthed mode: marketing taglines, links to product marketing homepages.
+ * Authed mode: app-context labels, links to each product's /app entry.
+ * Per DESIGN.md §14 auth-aware switcher spec.
+ */
+const PRODUCTS_UNAUTHED: {
   slug: ProductSlug;
   word: string;
   tagline: string;
   url: string;
 }[] = [
-  { slug: "tasks", word: "tasks", tagline: "Execution clarity", url: TASKS_URL },
-  { slug: "roadmap", word: "roadmap", tagline: "Direction clarity", url: ROADMAP_URL },
-  { slug: "notes", word: "notes", tagline: "Capture clarity", url: NOTES_URL },
+  { slug: "tasks",     word: "tasks",     tagline: "Execution clarity", url: TASKS_URL },
+  { slug: "roadmap",   word: "roadmap",   tagline: "Direction clarity", url: ROADMAP_URL },
+  { slug: "notes",     word: "notes",     tagline: "Capture clarity",   url: NOTES_URL },
   { slug: "analytics", word: "analytics", tagline: "Attention clarity", url: ANALYTICS_URL },
+];
+
+const PRODUCTS_AUTHED: {
+  slug: ProductSlug;
+  word: string;
+  label: string;
+  url: string;
+}[] = [
+  { slug: "tasks",     word: "tasks",     label: "Open the workspace", url: `${TASKS_URL}/app` },
+  { slug: "roadmap",   word: "roadmap",   label: "Open the roadmap",   url: `${ROADMAP_URL}/app` },
+  { slug: "notes",     word: "notes",     label: "Open the notebook",  url: `${NOTES_URL}/app` },
+  { slug: "analytics", word: "analytics", label: "Open the briefing",  url: `${ANALYTICS_URL}/app` },
 ];
 
 const INDIGO = "#4f46e5";
@@ -49,6 +66,7 @@ function prefetchProduct(url: string) {
  * feels like one surface re-skinning, not four apps. Pure DOM so it is
  * style-system agnostic. Reduced-motion + modifier clicks skip this at
  * the call site (normal same-tab nav). ~380ms, then location.href.
+ * Perceived continuity — not a true SPA (locked no-monorepo decision).
  */
 function suiteJump(url: string) {
   if (typeof document === "undefined") {
@@ -76,13 +94,27 @@ function suiteJump(url: string) {
   }, 380);
 }
 
+interface SuiteLauncherProps {
+  current: ProductSlug;
+  /**
+   * When true the switcher renders in authed mode: app-entry deep-links
+   * and app-context labels instead of marketing taglines.
+   * Per DESIGN.md §14 auth-aware switcher spec.
+   */
+  isAuthed?: boolean;
+}
+
 /**
  * Suite launcher. Replaces the static `signal studio.` breadcrumb anchor
  * with a click-to-open popover listing all four products. Notes uses
  * Inter (per the locked Notes aesthetic) so this component inherits the
  * surrounding font; other tokens come from the Notes ink CSS variables.
+ *
+ * Two modes (DESIGN.md §14):
+ *   Unauthed — marketing taglines + marketing homepage links (current behaviour)
+ *   Authed   — app-context labels + /app deep-links per the spec
  */
-export function SuiteLauncher({ current }: { current: ProductSlug }) {
+export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -121,6 +153,8 @@ export function SuiteLauncher({ current }: { current: ProductSlug }) {
       document.head.appendChild(l);
     }
   }, [open]);
+
+  const products = isAuthed ? PRODUCTS_AUTHED : PRODUCTS_UNAUTHED;
 
   return (
     <div ref={wrapRef} style={{ position: "relative", display: "inline-flex" }}>
@@ -174,7 +208,7 @@ export function SuiteLauncher({ current }: { current: ProductSlug }) {
                 color: "var(--color-ink)",
               }}
             >
-              Signal Studio
+              {isAuthed ? "Products" : "Signal Studio"}
             </div>
             <div
               style={{
@@ -183,12 +217,13 @@ export function SuiteLauncher({ current }: { current: ProductSlug }) {
                 color: "var(--color-ink-faint)",
               }}
             >
-              Four products, one studio.
+              {isAuthed ? "Jump to any product." : "Four products, one studio."}
             </div>
           </div>
           <ul style={{ padding: 4, listStyle: "none", margin: 0 }}>
-            {PRODUCTS.map((p) => {
+            {products.map((p) => {
               const isCurrent = p.slug === current;
+              const label = "label" in p ? p.label : p.tagline;
               return (
                 <li key={p.slug}>
                   <a
@@ -258,7 +293,7 @@ export function SuiteLauncher({ current }: { current: ProductSlug }) {
                           color: "var(--color-ink-faint)",
                         }}
                       >
-                        {p.tagline}
+                        {label}
                       </div>
                     </div>
                     {isCurrent ? (
@@ -279,32 +314,61 @@ export function SuiteLauncher({ current }: { current: ProductSlug }) {
               );
             })}
           </ul>
-          <a
-            href={STUDIO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-            style={{
-              display: "block",
-              borderTop: "1px solid var(--color-line)",
-              padding: "10px 14px",
-              fontSize: 11,
-              color: "var(--color-ink-faint)",
-              textDecoration: "none",
-              transition: "background 120ms, color 120ms",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background =
-                "color-mix(in srgb, var(--color-ink) 4%, transparent)";
-              e.currentTarget.style.color = "var(--color-ink)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "var(--color-ink-faint)";
-            }}
-          >
-            Visit signalstudio.ie →
-          </a>
+          {isAuthed ? (
+            // Authed footer: "Back to Signal Studio" per §14 spec.
+            <a
+              href={STUDIO_URL}
+              onClick={() => setOpen(false)}
+              style={{
+                display: "block",
+                borderTop: "1px solid var(--color-line)",
+                padding: "10px 14px",
+                fontSize: 11,
+                color: "var(--color-ink-faint)",
+                textDecoration: "none",
+                transition: "background 120ms, color 120ms",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background =
+                  "color-mix(in srgb, var(--color-ink) 4%, transparent)";
+                e.currentTarget.style.color = "var(--color-ink)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "var(--color-ink-faint)";
+              }}
+            >
+              Back to Signal Studio →
+            </a>
+          ) : (
+            // Unauthed footer: open studio in a new tab (marketing behaviour).
+            <a
+              href={STUDIO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              style={{
+                display: "block",
+                borderTop: "1px solid var(--color-line)",
+                padding: "10px 14px",
+                fontSize: 11,
+                color: "var(--color-ink-faint)",
+                textDecoration: "none",
+                transition: "background 120ms, color 120ms",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background =
+                  "color-mix(in srgb, var(--color-ink) 4%, transparent)";
+                e.currentTarget.style.color = "var(--color-ink)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "var(--color-ink-faint)";
+              }}
+            >
+              Visit signalstudio.ie →
+            </a>
+          )}
         </div>
       ) : null}
     </div>
