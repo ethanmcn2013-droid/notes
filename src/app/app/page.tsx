@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { listNotes } from "@/server/actions/notes";
+import { listArchivedNotes, listNotes } from "@/server/actions/notes";
 import { getCaptureEmail } from "@/server/actions/capture-email";
 import { Notebook } from "./Notebook";
 import { CaptureEmailRow } from "./CaptureEmailRow";
@@ -28,8 +28,9 @@ export default async function NotebookPage() {
     redirect("/sign-in");
   }
 
-  const [initialNotes, captureEmail] = await Promise.all([
+  const [initialNotes, initialArchivedNotes, captureEmail] = await Promise.all([
     listNotes(),
+    listArchivedNotes(),
     getCaptureEmail(),
   ]);
   // Three rendering branches:
@@ -47,7 +48,7 @@ export default async function NotebookPage() {
   }
   return (
     <>
-      <Notebook initialNotes={initialNotes} />
+      <Notebook initialNotes={initialNotes} initialArchivedNotes={initialArchivedNotes} />
       {captureState ? <CaptureEmailRow state={captureState} /> : null}
     </>
   );

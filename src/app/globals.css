@@ -992,3 +992,299 @@ button, input, textarea { font: inherit; }
   outline: 2px solid var(--color-signal);
   outline-offset: 1px;
 }
+
+/* ── RW-3a: Promote gesture styles ──────────────────────────────── */
+
+/* note-list-item: position context for ghost button + tray */
+.note-list-item {
+  position: relative;
+}
+
+/* note-row-wrapper: positions the row + the ghost button side-by-side */
+.note-row-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.note-row-wrapper .note-row {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Ghost button — "→ Tasks" on hover (pointer devices only).
+   Hidden on touch devices via @media (hover: none). Sits at the right
+   edge of the note row, same vertical position as the timestamp. */
+.note-ghost-promote {
+  position: absolute;
+  right: clamp(20px, 4vw, 42px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  padding: 4px 0 4px 8px;
+  font-size: 11.5px;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out);
+  font-family: inherit;
+  line-height: 1;
+  z-index: 2;
+}
+/* Only show on pointer devices (not touch) */
+@media (hover: hover) and (pointer: fine) {
+  .note-row-wrapper:hover .note-ghost-promote,
+  .note-row-wrapper:focus-within .note-ghost-promote {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .note-ghost-promote:hover,
+  .note-ghost-promote:focus-visible {
+    color: var(--color-accent);
+    opacity: 1;
+  }
+}
+/* Hide on touch so it doesn't linger on tap */
+@media (hover: none) {
+  .note-ghost-promote {
+    display: none;
+  }
+}
+
+/* Long-press feedback: slight scale-down + opacity dim at 350ms.
+   Uses --motion-fast + --ease-standard per UX_SPEC. */
+.note-row.is-longpress-feedback {
+  transform: scale(0.98);
+  opacity: 0.82;
+  transition:
+    transform var(--motion-fast) var(--ease-standard),
+    opacity var(--motion-fast) var(--ease-standard);
+}
+
+/* Promoting state: note fades to 0.5, gains "In Tasks" label.
+   After grace period the row slides up and height collapses. */
+.note-row.is-promoted {
+  opacity: 0.5;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-base) var(--ease-standard);
+}
+
+/* "In Tasks" text label shown on the note-meta area when promoting */
+.note-tasks-label {
+  font-size: 11px;
+  color: var(--color-accent);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Inline tray (touch long-press confirm) — 44px tall, slides up from
+   below the note row. Two text buttons: primary ink, cancel faint. */
+.note-promote-tray {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  min-height: 44px;
+  padding: 0 clamp(20px, 4vw, 42px);
+  background: color-mix(in srgb, var(--color-paper) 92%, var(--color-accent) 8%);
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  animation: tray-slide-up var(--motion-fast) var(--ease-out) both;
+}
+@keyframes tray-slide-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-promote-tray { animation: none; }
+}
+
+.note-tray-promote {
+  background: transparent;
+  border: 0;
+  color: var(--color-ink);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  font-family: inherit;
+  transition: color var(--motion-instant) var(--ease-out);
+}
+.note-tray-promote:hover,
+.note-tray-promote:focus-visible {
+  color: var(--color-accent);
+}
+
+.note-tray-cancel {
+  background: transparent;
+  border: 0;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 10px 16px;
+  font-family: inherit;
+  transition: color var(--motion-instant) var(--ease-out);
+}
+.note-tray-cancel:hover,
+.note-tray-cancel:focus-visible {
+  color: var(--color-ink);
+}
+
+/* "In Tasks" label on the open-note promote result */
+.open-note-promoted-label {
+  font-size: 12px;
+  color: var(--color-accent);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 8px;
+}
+
+/* ── RW-3a: "In Tasks" section ──────────────────────────────────── */
+
+/* Collapsible section at the bottom of the notebook stream.
+   Not a dump — a named, calm place. Never says "Archived". */
+.in-tasks-section {
+  border-top: 1px solid var(--color-line);
+  margin-top: auto;
+}
+
+.in-tasks-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px clamp(20px, 4vw, 42px);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: left;
+  transition: color var(--motion-fast) var(--ease-out);
+  font-family: inherit;
+}
+.in-tasks-toggle:hover {
+  color: var(--color-ink-soft);
+}
+
+.in-tasks-chevron {
+  display: inline-block;
+  transition: transform var(--motion-fast) var(--ease-out);
+  transform: rotate(-90deg);
+  font-style: normal;
+  font-size: 10px;
+}
+.in-tasks-chevron.is-open {
+  transform: rotate(0deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .in-tasks-chevron { transition: none; }
+}
+
+.in-tasks-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  animation: tray-slide-up var(--motion-fast) var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .in-tasks-list { animation: none; }
+}
+
+.in-tasks-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px clamp(20px, 4vw, 42px);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.in-tasks-title {
+  font-size: 14px;
+  color: var(--color-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 560;
+}
+
+.in-tasks-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.in-tasks-extract {
+  font-size: 11px;
+  color: var(--color-ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.in-tasks-link {
+  font-size: 11px;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.in-tasks-link:hover {
+  text-decoration-color: var(--color-accent);
+}
+
+/* Footer note in the "In Tasks" section — "Note returned here.
+   The task stays in Tasks." Displayed as the last list item. */
+.in-tasks-footer {
+  padding: 10px clamp(20px, 4vw, 42px);
+  font-size: 11px;
+  color: var(--color-ink-faint);
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* ── Promote toast ───────────────────────────────────────────────── */
+
+/* Sits just above the undo-toast position; uses the same dark pill shape.
+   Success is a quiet whisper (no action needed). Error has a Retry button. */
+.promote-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  line-height: 1;
+  padding: 10px 14px 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(22, 24, 21, 0.22);
+  z-index: 201;
+  white-space: nowrap;
+  animation: undo-in var(--motion-fast) var(--ease-out) both;
+}
+.promote-toast--success {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+.promote-toast--error {
+  background: var(--color-error);
+  color: #fff;
+}
+/* ── End RW-3a styles ────────────────────────────────────────────── */
