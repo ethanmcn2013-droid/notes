@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SuiteLauncher } from "@/components/suite-launcher";
 import { OtherWorkedExamples } from "@/components/worked-examples";
+import { SiteFooter } from "@/components/marketing/site-footer";
 
 export const metadata: Metadata = {
   title: "A freelancer's evening — a studio note — Signal Notes",
@@ -246,12 +247,12 @@ export default function FreelanceStudioNotePage() {
               padding: 0,
               margin: 0,
               display: "grid",
-              gap: 12,
+              gap: 20,
               fontSize: 14,
             }}
           >
             <li>
-              <Link
+              <a
                 href="https://tasks.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
@@ -260,11 +261,14 @@ export default function FreelanceStudioNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The studio workspace in Tasks &rarr;
-              </Link>
+                Signal Tasks &rarr;
+              </a>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
+                Your notes become the workspace. The invoices, the hero options, the Thursday block — in one place.
+              </p>
             </li>
             <li>
-              <Link
+              <a
                 href="https://roadmap.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
@@ -273,11 +277,14 @@ export default function FreelanceStudioNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                The roadmap each client sees &rarr;
-              </Link>
+                Signal Roadmap &rarr;
+              </a>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
+                A shared view for each client. They see where their project stands without another email.
+              </p>
             </li>
             <li>
-              <Link
+              <a
                 href="https://analytics.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
@@ -286,41 +293,18 @@ export default function FreelanceStudioNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Monday morning briefing &rarr;
-              </Link>
+                Signal Analytics &rarr;
+              </a>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
+                A morning briefing that surfaces the invoice you keep not sending before the day fills up.
+              </p>
             </li>
           </ul>
         </section>
 
         <OtherWorkedExamples current="freelance-studio" />
 
-        <footer
-          style={{
-            marginTop: 56,
-            paddingTop: 28,
-            borderTop: "1px solid var(--color-line, #e7e4d8)",
-            fontSize: 12,
-            fontFamily: "var(--font-mono-stack, ui-monospace)",
-            letterSpacing: "0.04em",
-            color: "var(--color-ink-faint, #9b9b94)",
-          }}
-        >
-          Signal Notes · part of{" "}
-          <a
-            href="https://signalstudio.ie"
-            style={{ color: "var(--color-ink-soft, #4a4a44)", textDecoration: "underline", textDecorationStyle: "dotted" }}
-          >
-            Signal Studio
-          </a>
-          . Contact{" "}
-          <a
-            href="mailto:hello@signalstudio.ie"
-            style={{ color: "var(--color-ink-soft, #4a4a44)", textDecoration: "underline", textDecorationStyle: "dotted" }}
-          >
-            hello@signalstudio.ie
-          </a>
-          .
-        </footer>
+        <SiteFooter />
       </main>
     </div>
   );

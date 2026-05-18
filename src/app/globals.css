@@ -737,9 +737,15 @@ button, input, textarea { font: inherit; }
 .extract-drafted {
   margin-top: 14px;
   padding: 10px 14px 10px;
-  border-left: 2px solid var(--color-signal);
-  background: color-mix(in srgb, var(--color-paper) 96%, var(--color-signal) 4%);
-  border-radius: 0 6px 6px 0;
+  /* Neutralised 2026-05-18: was an indigo left-rule + indigo-tinted fill
+     (--color-signal #4f46e5) that read as a distracting purple box and
+     was an off-system suite colour inside Notes' own green/mustard palette
+     (DESIGN.md §11). The block is functional (holds the send-to-Tasks
+     controls) so it stays — now in Notes' calm native line/paper system.
+     Status is carried by the meta line, not colour. */
+  border: 1px solid var(--color-line);
+  background: transparent;
+  border-radius: 6px;
 }
 .extract-drafted-meta {
   margin: 0;

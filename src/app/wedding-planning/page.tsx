@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SuiteLauncher } from "@/components/suite-launcher";
 import { OtherWorkedExamples } from "@/components/worked-examples";
+import { SiteFooter } from "@/components/marketing/site-footer";
 
 export const metadata: Metadata = {
   title: "Wedding planning — a venue meeting note — Signal Notes",
@@ -306,33 +307,7 @@ export default function WeddingPlanningNotePage() {
 
         <OtherWorkedExamples current="wedding-planning" />
 
-        <footer
-          style={{
-            marginTop: 56,
-            paddingTop: 28,
-            borderTop: "1px solid var(--color-line, #e7e4d8)",
-            fontSize: 12,
-            fontFamily: "var(--font-mono-stack, ui-monospace)",
-            letterSpacing: "0.04em",
-            color: "var(--color-ink-faint, #9b9b94)",
-          }}
-        >
-          Signal Notes · part of{" "}
-          <a
-            href="https://signalstudio.ie"
-            style={{ color: "var(--color-ink-soft, #4a4a44)", textDecoration: "underline", textDecorationStyle: "dotted" }}
-          >
-            Signal Studio
-          </a>
-          . Contact{" "}
-          <a
-            href="mailto:hello@signalstudio.ie"
-            style={{ color: "var(--color-ink-soft, #4a4a44)", textDecoration: "underline", textDecorationStyle: "dotted" }}
-          >
-            hello@signalstudio.ie
-          </a>
-          .
-        </footer>
+        <SiteFooter />
       </main>
     </div>
   );

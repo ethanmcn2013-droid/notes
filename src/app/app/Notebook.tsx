@@ -235,6 +235,60 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
+  // Keyboard note navigation — utility pass 2026-05-18.
+  // j / ArrowDown → next note, k / ArrowUp → previous, Enter/Space open
+  // (native <button>), Esc closes the open note (or exits the search box
+  // back to the list). Mirrors the existing Cmd/K idiom. Reads live DOM so
+  // it always tracks the rendered (filtered) list with no stale closures.
+  // No new styling — reuses the app's existing focus-visible ring.
+  useEffect(() => {
+    const isTypingTarget = (el: EventTarget | null) => {
+      const n = el as HTMLElement | null;
+      if (!n) return false;
+      return (
+        n.tagName === "INPUT" ||
+        n.tagName === "TEXTAREA" ||
+        n.tagName === "SELECT" ||
+        n.isContentEditable
+      );
+    };
+    const onNav = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTypingTarget(document.activeElement)) {
+        if (event.key === "Escape") {
+          (document.activeElement as HTMLElement).blur();
+        }
+        return;
+      }
+      if (event.key === "Escape") {
+        setOpenId((cur) => (cur ? null : cur));
+        return;
+      }
+      const isNext = event.key === "j" || event.key === "ArrowDown";
+      const isPrev = event.key === "k" || event.key === "ArrowUp";
+      if (!isNext && !isPrev) return;
+      const rows = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-note-row]"),
+      );
+      if (rows.length === 0) return;
+      event.preventDefault();
+      const idx = rows.findIndex((r) => r === document.activeElement);
+      const nextIdx =
+        idx === -1
+          ? isNext
+            ? 0
+            : rows.length - 1
+          : isNext
+            ? Math.min(idx + 1, rows.length - 1)
+            : Math.max(idx - 1, 0);
+      const target = rows[nextIdx];
+      target.focus();
+      target.scrollIntoView({ block: "nearest" });
+    };
+    document.addEventListener("keydown", onNav);
+    return () => document.removeEventListener("keydown", onNav);
+  }, []);
+
   // Dismiss tray on outside click / scroll
   useEffect(() => {
     if (!activeTrayId) return;
@@ -856,6 +910,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                     onTouchMove={(e) => onNoteTouchMove(e, note.id)}
                     onTouchEnd={() => onNoteTouchEnd(note.id)}
                     onTouchCancel={() => onNoteTouchEnd(note.id)}
+                    data-note-row={note.id}
                     aria-expanded={isOpen}
                     aria-controls={`note-panel-${note.id}`}
                   >
