@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, isNotNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/server/auth";
@@ -13,7 +13,13 @@ function makeId() {
 
 export type NoteRead = Pick<
   Note,
-  "id" | "body" | "createdAt" | "updatedAt" | "extractBody" | "promotedTaskId"
+  | "id"
+  | "body"
+  | "createdAt"
+  | "updatedAt"
+  | "extractBody"
+  | "promotedTaskId"
+  | "archivedAt"
 >;
 
 /**
@@ -65,6 +71,7 @@ export async function createNote(body: string): Promise<NoteRead> {
     updatedAt: now,
     extractBody: null,
     promotedTaskId: null,
+    archivedAt: null,
   };
 }
 
@@ -90,9 +97,10 @@ export async function listNotes(): Promise<NoteRead[]> {
       updatedAt: notes.updatedAt,
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
     })
     .from(notes)
-    .where(eq(notes.userId, userId))
+    .where(and(eq(notes.userId, userId), isNull(notes.archivedAt)))
     .orderBy(desc(notes.createdAt));
 
   return rows;
@@ -149,11 +157,13 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
     updated_at: number;
     extract_body: string | null;
     promoted_task_id: string | null;
+    archived_at: number | null;
   }>(sql`
-    SELECT n.id, n.body, n.created_at, n.updated_at, n.extract_body, n.promoted_task_id
+    SELECT n.id, n.body, n.created_at, n.updated_at, n.extract_body, n.promoted_task_id, n.archived_at
     FROM notes_fts fts
     JOIN notes n ON n.rowid = fts.rowid
     WHERE fts.user_id = ${userId}
+      AND n.archived_at IS NULL
       AND notes_fts MATCH ${match}
     ORDER BY fts.rank
     LIMIT 100
@@ -166,6 +176,7 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
     updatedAt: r.updated_at,
     extractBody: r.extract_body,
     promotedTaskId: r.promoted_task_id,
+    archivedAt: r.archived_at,
   }));
 }
 
@@ -217,6 +228,7 @@ export async function setNoteExtract(
       updatedAt: notes.updatedAt,
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
     });
 
   const row = result[0];
@@ -248,6 +260,7 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
       updatedAt: notes.updatedAt,
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
     });
 
   const row = result[0];
@@ -368,11 +381,14 @@ export async function sendExtractToTasks(
   }
   const result = raw as ExtractSendResult;
 
-  // Persist the task id Notes-side so the next render shows the
-  // "Sent to [workspace]" state without re-calling Tasks.
+  // Persist the task id and archive the note Notes-side (RW-3a D1
+  // semantics). The note leaves the active stream; listArchivedNotes()
+  // surfaces it in the "In Tasks" section. The task in Tasks is
+  // independent — it is never deleted by un-promote.
+  const now2 = Date.now();
   const updated = await db
     .update(notes)
-    .set({ promotedTaskId: result.taskId, updatedAt: Date.now() })
+    .set({ promotedTaskId: result.taskId, archivedAt: now2, updatedAt: now2 })
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning({
       id: notes.id,
@@ -381,6 +397,7 @@ export async function sendExtractToTasks(
       updatedAt: notes.updatedAt,
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
     });
 
   const noteRow = updated[0];
@@ -390,4 +407,231 @@ export async function sendExtractToTasks(
 
   revalidatePath("/app");
   return { note: noteRow, result };
+}
+
+/**
+ * RW-3a: Direct promote — the note body's first line becomes the task
+ * title without requiring an intermediate "Draft action" step.
+ *
+ * This is the gesture path (long-press on touch; hover ghost button on
+ * pointer). It sets extractBody to the first line of the note body,
+ * then fires the same cross-repo write as sendExtractToTasks, and
+ * archives the note (D1 semantics). The two-step "Draft action → Send
+ * to Tasks" flow in the open-note panel remains unchanged as an escape
+ * hatch for notes that need reshaping before becoming tasks.
+ *
+ * Privacy guardrail: only the first line (extract) crosses the boundary,
+ * never the full raw note body. Same as sendExtractToTasks.
+ *
+ * Idempotency: Tasks keys on (userId, noteId) — repeat calls return the
+ * same task, not a duplicate. Safe to retry after a network failure.
+ */
+export async function promoteNoteToTasks(
+  noteId: string
+): Promise<{ note: NoteRead; result: ExtractSendResult }> {
+  const userId = await requireUser();
+
+  const tasksUrlRaw =
+    process.env.TASKS_API_URL ??
+    (process.env.VERCEL_ENV === "production"
+      ? "https://tasks.signalstudio.ie"
+      : null);
+  if (!tasksUrlRaw) {
+    throw new Error(
+      "Cross-repo send is not configured (TASKS_API_URL missing)"
+    );
+  }
+  const tasksUrl = tasksUrlRaw.replace(/\/+$/, "");
+  const secret = process.env.NOTES_TO_TASKS_SECRET;
+  if (!secret) {
+    throw new Error(
+      "Cross-repo send is not configured (NOTES_TO_TASKS_SECRET missing)"
+    );
+  }
+
+  // Read the note fresh — confirms ownership, gets the latest body.
+  const [note] = await db
+    .select({
+      id: notes.id,
+      body: notes.body,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+      extractBody: notes.extractBody,
+      promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
+    })
+    .from(notes)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .limit(1);
+
+  if (!note) {
+    throw new Error("Note not found");
+  }
+  if (note.archivedAt !== null) {
+    throw new Error("Note is already promoted");
+  }
+
+  // Derive the task title from the first non-empty line of the body.
+  // This is the gesture path: the jot IS the task, no rephrasing needed.
+  const firstLine = note.body.trim().split(/\r?\n/)[0]?.trim() ?? "";
+  if (!firstLine) {
+    throw new Error("Note body is empty");
+  }
+  // Cap at 280 chars (same ceiling as extract_body).
+  const taskTitle = firstLine.length > 280 ? firstLine.slice(0, 280) : firstLine;
+
+  // Write extractBody so the note reads correctly in the "In Tasks"
+  // section even when no sentResults entry exists (e.g. after a reload).
+  await db
+    .update(notes)
+    .set({ extractBody: taskTitle, updatedAt: Date.now() })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)));
+
+  // Cross-repo write — same endpoint + auth as sendExtractToTasks.
+  let response: Response;
+  try {
+    response = await fetch(`${tasksUrl}/api/notes-extract`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify({ userId, noteId, body: taskTitle }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "TimeoutError") {
+      throw new Error("Tasks timed out — try again in a moment");
+    }
+    throw err;
+  }
+
+  if (!response.ok) {
+    let detail = `Tasks returned ${response.status}`;
+    try {
+      const data = (await response.json()) as { error?: string };
+      if (data.error) detail = data.error;
+    } catch {
+      // ignore — keep the status-code fallback
+    }
+    throw new Error(detail);
+  }
+
+  const raw = await response.json();
+  if (
+    typeof raw !== "object" ||
+    !raw ||
+    typeof (raw as Record<string, unknown>).taskId !== "string" ||
+    typeof (raw as Record<string, unknown>).taskUrl !== "string"
+  ) {
+    throw new Error("Tasks returned an invalid response — try again");
+  }
+  const result = raw as ExtractSendResult;
+
+  // Archive the note (D1 semantics) and persist the taskId.
+  const archiveTs = Date.now();
+  const updated = await db
+    .update(notes)
+    .set({
+      promotedTaskId: result.taskId,
+      archivedAt: archiveTs,
+      updatedAt: archiveTs,
+    })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .returning({
+      id: notes.id,
+      body: notes.body,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+      extractBody: notes.extractBody,
+      promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
+    });
+
+  const noteRow = updated[0];
+  if (!noteRow) {
+    throw new Error("Note vanished between promote and archive");
+  }
+
+  revalidatePath("/app");
+  return { note: noteRow, result };
+}
+
+/**
+ * RW-3a: List promoted (archived) notes for the "In Tasks" section.
+ *
+ * Returns notes where archived_at IS NOT NULL AND promoted_task_id IS
+ * NOT NULL, ordered newest-archived first. These are the notes Niamh
+ * can find below the active stream, always — never hidden in a dump.
+ */
+export async function listArchivedNotes(): Promise<NoteRead[]> {
+  const userId = await requireUser();
+
+  const rows = await db
+    .select({
+      id: notes.id,
+      body: notes.body,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+      extractBody: notes.extractBody,
+      promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
+    })
+    .from(notes)
+    .where(
+      and(
+        eq(notes.userId, userId),
+        isNotNull(notes.archivedAt),
+        isNotNull(notes.promotedTaskId)
+      )
+    )
+    .orderBy(desc(notes.archivedAt));
+
+  return rows;
+}
+
+/**
+ * RW-3a: Un-promote a note — clear archived_at and promoted_task_id,
+ * returning the note to the active stream.
+ *
+ * The task in Tasks is NOT deleted — it was intentionally created and
+ * Tasks owns it. This action only severs the Notes-side archive state.
+ * Copy in the UI: "Note returned here. The task stays in Tasks."
+ *
+ * Un-promote is undoable via the existing undo-toast pattern (6s
+ * window, same as delete). No confirm dialog — reversibility is built
+ * into the model.
+ */
+export async function unPromoteNote(noteId: string): Promise<NoteRead> {
+  const userId = await requireUser();
+
+  const now = Date.now();
+  const result = await db
+    .update(notes)
+    .set({ archivedAt: null, promotedTaskId: null, updatedAt: now })
+    .where(
+      and(
+        eq(notes.id, noteId),
+        eq(notes.userId, userId),
+        isNotNull(notes.archivedAt)
+      )
+    )
+    .returning({
+      id: notes.id,
+      body: notes.body,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+      extractBody: notes.extractBody,
+      promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
+    });
+
+  const row = result[0];
+  if (!row) {
+    throw new Error("Note not found or not promoted");
+  }
+
+  revalidatePath("/app");
+  return row;
 }

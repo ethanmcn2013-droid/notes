@@ -19,6 +19,13 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
  * by clearNoteExtract. promoted_task_id is filled in by the cross-repo
  * write (Cycle 9.4b, shipped) once the action lands as a Task. Both
  * null = no extract drafted.
+ *
+ * archived_at (Unix ms, nullable) — RW-3a D1 promote semantics.
+ *   NULL     = note is in the active stream (listNotes returns it).
+ *   non-null = note has been promoted and archived from the stream.
+ * listNotes() filters WHERE archived_at IS NULL; listArchivedNotes()
+ * returns the complement. unPromoteNote() clears both this and
+ * promoted_task_id, restoring the note to the stream.
  */
 
 export const notes = sqliteTable(
@@ -35,6 +42,7 @@ export const notes = sqliteTable(
       .default(sql`(unixepoch() * 1000)`),
     extractBody: text("extract_body"),
     promotedTaskId: text("promoted_task_id"),
+    archivedAt: integer("archived_at", { mode: "number" }),
   },
   (table) => ({
     userCreated: index("notes_user_created_idx").on(

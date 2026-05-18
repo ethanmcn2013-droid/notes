@@ -14,9 +14,12 @@ import {
   clearNoteExtract,
   createNote,
   deleteNote,
+  listArchivedNotes,
+  promoteNoteToTasks,
   searchNotes,
   sendExtractToTasks,
   setNoteExtract,
+  unPromoteNote,
   type ExtractSendResult,
   type NoteRead,
 } from "@/server/actions/notes";
@@ -24,6 +27,16 @@ import {
 // Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts — kept in
 // sync by hand because a "use server" module can't export a const.
 const MAX_NOTE_BODY_CHARS = 10_000;
+
+// Long-press timing per UX_SPEC RW-3a.
+const LONG_PRESS_CONFIRM_MS = 450; // tray appears at this threshold
+const LONG_PRESS_FEEDBACK_MS = 350; // scale-down feedback before confirm
+const LONG_PRESS_MOVE_THRESHOLD_PX = 8; // cancel if touch moves more than this
+
+// Grace period before the promoted note slides out of the stream view.
+const PROMOTE_GRACE_MS = 1500;
+// Toast auto-dismiss for success/error.
+const PROMOTE_TOAST_DISMISS_MS = 3000;
 
 function makeOptimisticId() {
   return `opt_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
@@ -84,12 +97,20 @@ function relativeTime(ts: number, now = Date.now()) {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+// ── Toast state ─────────────────────────────────────────────────────
+
+type PromoteToast =
+  | { kind: "success"; message: string }
+  | { kind: "error"; message: string; noteId: string };
+
 interface NotebookProps {
   initialNotes: NoteRead[];
+  initialArchivedNotes: NoteRead[];
 }
 
-export function Notebook({ initialNotes }: NotebookProps) {
+export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) {
   const [notes, setNotes] = useState<NoteRead[]>(initialNotes);
+  const [archivedNotes, setArchivedNotes] = useState<NoteRead[]>(initialArchivedNotes);
   const [openId, setOpenId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
@@ -103,30 +124,61 @@ export function Notebook({ initialNotes }: NotebookProps) {
     new Map()
   );
   const [undoTarget, setUndoTarget] = useState<NoteRead | null>(null);
+
+  // Promote gesture state
+  // activeTrayId: which note row shows the inline action tray (touch path)
+  const [activeTrayId, setActiveTrayId] = useState<string | null>(null);
+  // pendingFeedbackIds: note rows showing scale-down pre-confirm feedback
+  const [pendingFeedbackIds, setPendingFeedbackIds] = useState<Set<string>>(new Set());
+  // promotingIds: note rows with optimistic "is-promoted" state (fading out)
+  const [promotingIds, setPromotingIds] = useState<Set<string>>(new Set());
+  // promoteToast: the "Added to Tasks" / error whisper at the bottom
+  const [promoteToast, setPromoteToast] = useState<PromoteToast | null>(null);
+  // archivedOpen: whether the "In Tasks" collapsible section is open
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  // unpromotingIds: tracks which archived notes are being un-promoted
+  const [unpromotingIds, setUnpromotingIds] = useState<Set<string>>(new Set());
+  // Mobile nudge: one-time "Long-press any note to send it to Tasks"
+  // Shown on first visit if no promoted notes exist. localStorage-gated.
+  // UX_SPEC §RW-3a "First-touch test lens" item 1.
+  const NUDGE_KEY = "notes-longpress-nudge-dismissed";
+  const [showNudge, setShowNudge] = useState(false);
+
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const extractInputRef = useRef<HTMLInputElement | null>(null);
   const undoBtnRef = useRef<HTMLButtonElement | null>(null);
-  // Track the element focused before the undo toast appeared so we can
-  // restore focus when the toast dismisses (keyboard a11y).
   const undoReturnFocusRef = useRef<HTMLElement | null>(null);
-  // Pending fresh-marker timers keyed by note id; cleared on unmount.
   const freshTimersRef = useRef<Map<string, number>>(new Map());
-  // Pending-delete timers per note. Each entry owns its own 4s
-  // commit window so a fast second delete no longer force-commits
-  // the first; both can independently undo until their own timer
-  // fires. The visible toast still only tracks the latest.
   const pendingDeletesRef = useRef<Map<string, { note: NoteRead; timer: number }>>(
     new Map(),
   );
+  const promoteToastTimerRef = useRef<number | null>(null);
+  // Long-press timers per note id
+  const longPressFeedbackTimerRef = useRef<Map<string, number>>(new Map());
+  const longPressConfirmTimerRef = useRef<Map<string, number>>(new Map());
+  // Touch start coords for move-threshold check
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Mobile nudge: show once on first visit if no promoted notes exist.
+  // Read localStorage after mount so SSR doesn't throw.
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem(NUDGE_KEY) === "1";
+      if (!dismissed && initialArchivedNotes.length === 0) {
+        setShowNudge(true);
+      }
+    } catch { /* private browsing */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function dismissNudge() {
+    setShowNudge(false);
+    try { localStorage.setItem(NUDGE_KEY, "1"); } catch { /* private browsing */ }
+  }
 
   // P3-1: Deterministic first-paint focus — cursor ready, nothing highlighted.
-  // autoFocus on <textarea> causes the browser to select-all content on mount,
-  // producing the intermittent blue-highlight artifact (ISSUE_REGISTER P3-1).
-  // Instead: focus on the first paint, then collapse the selection to the end
-  // so cursor is ready but no text is selected. setSelectionRange(end, end)
-  // is a no-op on an empty textarea — safe for both empty and pre-filled states.
   useEffect(() => {
     const el = captureRef.current;
     if (!el) return;
@@ -134,9 +186,8 @@ export function Notebook({ initialNotes }: NotebookProps) {
     const len = el.value.length;
     el.setSelectionRange(len, len);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // mount-only — intentionally empty deps
+  }, []);
 
-  // Refocus capture when the tab returns to foreground (PRODUCT.md §5 budget)
   useEffect(() => {
     const refocus = () => {
       if (document.visibilityState === "visible" && document.activeElement !== searchRef.current) {
@@ -147,23 +198,20 @@ export function Notebook({ initialNotes }: NotebookProps) {
     return () => document.removeEventListener("visibilitychange", refocus);
   }, []);
 
-  // Cancel all pending timers on unmount to avoid calling setState on an
-  // unmounted component.
   useEffect(() => {
     return () => {
       freshTimersRef.current.forEach((id) => window.clearTimeout(id));
       pendingDeletesRef.current.forEach(({ timer }) => window.clearTimeout(timer));
       if (extractFocusTimerRef.current !== null) window.clearTimeout(extractFocusTimerRef.current);
+      if (promoteToastTimerRef.current !== null) window.clearTimeout(promoteToastTimerRef.current);
+      longPressFeedbackTimerRef.current.forEach((id) => window.clearTimeout(id));
+      longPressConfirmTimerRef.current.forEach((id) => window.clearTimeout(id));
     };
   }, []);
 
-  // When the undo toast appears: record where focus was, then move it
-  // to the Undo button so keyboard users can act within the 6s window.
-  // When the toast disappears: return focus to the recorded element.
   useEffect(() => {
     if (undoTarget) {
       undoReturnFocusRef.current = document.activeElement as HTMLElement | null;
-      // One paint delay — the button must be in the DOM first.
       window.setTimeout(() => undoBtnRef.current?.focus(), 0);
     } else {
       if (undoReturnFocusRef.current?.isConnected) {
@@ -175,7 +223,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
     }
   }, [undoTarget]);
 
-  // ⌘K / Ctrl+K focuses search inline. Universal pattern — no jargon.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -188,11 +235,18 @@ export function Notebook({ initialNotes }: NotebookProps) {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Server-side FTS5 search (N-2, 2026-05-14). Debounced 180ms so
-  // each keystroke doesn't fire a round-trip. Empty query bypasses
-  // the server and renders the full stream. Stale-result guarding via
-  // a sequence counter — fast typing where an earlier query resolves
-  // after a later one would otherwise stomp the visible state.
+  // Dismiss tray on outside click / scroll
+  useEffect(() => {
+    if (!activeTrayId) return;
+    const dismiss = () => setActiveTrayId(null);
+    document.addEventListener("click", dismiss, { capture: true, once: true });
+    document.addEventListener("scroll", dismiss, { capture: true, once: true });
+    return () => {
+      document.removeEventListener("click", dismiss, { capture: true });
+      document.removeEventListener("scroll", dismiss, { capture: true });
+    };
+  }, [activeTrayId]);
+
   const [searchResults, setSearchResults] = useState<NoteRead[] | null>(null);
   const searchSeq = useRef(0);
   useEffect(() => {
@@ -212,12 +266,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
 
   const filteredNotes = useMemo(() => {
     if (!query.trim()) return notes;
-    // While the first round-trip is still in flight, fall back to the
-    // client-side filter on the already-loaded stream so the UI feels
-    // responsive. FTS5 ranking takes over the moment results arrive.
-    // Normalize both sides to match the server's remove_diacritics=2
-    // tokenizer so accented input doesn't flicker between fallback
-    // and server result.
     if (searchResults === null) {
       const q = normalizeForSearch(query.trim());
       return notes.filter((n) => normalizeForSearch(n.body).includes(q));
@@ -227,6 +275,195 @@ export function Notebook({ initialNotes }: NotebookProps) {
 
   const lastSavedTs = notes[0]?.createdAt ?? null;
   const draftIsEmpty = draft.trim().length === 0;
+
+  // ── Promote toast helpers ────────────────────────────────────────
+
+  function showPromoteToast(toast: PromoteToast) {
+    if (promoteToastTimerRef.current !== null) {
+      window.clearTimeout(promoteToastTimerRef.current);
+    }
+    setPromoteToast(toast);
+    promoteToastTimerRef.current = window.setTimeout(() => {
+      promoteToastTimerRef.current = null;
+      setPromoteToast(null);
+    }, PROMOTE_TOAST_DISMISS_MS);
+  }
+
+  // ── Core promote action (shared by touch + pointer paths) ────────
+
+  const executePromote = useCallback(
+    (noteId: string) => {
+      // Optimistic: mark as promoting (fades to 0.5, "In Tasks" label).
+      setPromotingIds((prev) => new Set(prev).add(noteId));
+
+      // After grace period: remove from active stream.
+      window.setTimeout(() => {
+        setNotes((prev) => prev.filter((n) => n.id !== noteId));
+        setPromotingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(noteId);
+          return next;
+        });
+        // Close open-note panel if this note was open.
+        setOpenId((current) => (current === noteId ? null : current));
+      }, PROMOTE_GRACE_MS);
+
+      startTransition(async () => {
+        try {
+          const { note: updated, result } = await promoteNoteToTasks(noteId);
+          // Merge the server result into archivedNotes for the "In Tasks" section.
+          setArchivedNotes((prev) => {
+            const without = prev.filter((n) => n.id !== noteId);
+            return [updated, ...without];
+          });
+          setSentResults((prev) => {
+            const next = new Map(prev);
+            next.set(noteId, result);
+            return next;
+          });
+          showPromoteToast({ kind: "success", message: "Added to Tasks" });
+          dismissNudge();
+        } catch (err) {
+          // Rollback: restore note to active stream.
+          setNotes((prev) => {
+            // Find the note in promoting state or just restore from scratch.
+            const fromArchive = archivedNotes.find((n) => n.id === noteId);
+            if (!fromArchive) return prev;
+            const restored = { ...fromArchive, archivedAt: null, promotedTaskId: null };
+            const next = [...prev, restored].sort((a, b) => b.createdAt - a.createdAt);
+            return next;
+          });
+          setPromotingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(noteId);
+            return next;
+          });
+          showPromoteToast({
+            kind: "error",
+            message: "Couldn't add to Tasks — tap to try again",
+            noteId,
+          });
+        }
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [archivedNotes]
+  );
+
+  // ── Long-press gesture (touch) ───────────────────────────────────
+
+  const clearLongPressTimers = useCallback((noteId: string) => {
+    const fTimer = longPressFeedbackTimerRef.current.get(noteId);
+    if (fTimer !== undefined) {
+      window.clearTimeout(fTimer);
+      longPressFeedbackTimerRef.current.delete(noteId);
+    }
+    const cTimer = longPressConfirmTimerRef.current.get(noteId);
+    if (cTimer !== undefined) {
+      window.clearTimeout(cTimer);
+      longPressConfirmTimerRef.current.delete(noteId);
+    }
+    setPendingFeedbackIds((prev) => {
+      const next = new Set(prev);
+      next.delete(noteId);
+      return next;
+    });
+  }, []);
+
+  const onNoteTouchStart = useCallback(
+    (event: React.TouchEvent, noteId: string) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+
+      // Feedback at 350ms
+      const fTimer = window.setTimeout(() => {
+        longPressFeedbackTimerRef.current.delete(noteId);
+        setPendingFeedbackIds((prev) => new Set(prev).add(noteId));
+      }, LONG_PRESS_FEEDBACK_MS);
+      longPressFeedbackTimerRef.current.set(noteId, fTimer);
+
+      // Tray at 450ms
+      const cTimer = window.setTimeout(() => {
+        longPressConfirmTimerRef.current.delete(noteId);
+        setPendingFeedbackIds((prev) => {
+          const next = new Set(prev);
+          next.delete(noteId);
+          return next;
+        });
+        setActiveTrayId(noteId);
+      }, LONG_PRESS_CONFIRM_MS);
+      longPressConfirmTimerRef.current.set(noteId, cTimer);
+    },
+    []
+  );
+
+  const onNoteTouchMove = useCallback(
+    (event: React.TouchEvent, noteId: string) => {
+      const touch = event.touches[0];
+      const start = touchStartRef.current;
+      if (!touch || !start) return;
+      const dx = Math.abs(touch.clientX - start.x);
+      const dy = Math.abs(touch.clientY - start.y);
+      if (dx > LONG_PRESS_MOVE_THRESHOLD_PX || dy > LONG_PRESS_MOVE_THRESHOLD_PX) {
+        clearLongPressTimers(noteId);
+      }
+    },
+    [clearLongPressTimers]
+  );
+
+  const onNoteTouchEnd = useCallback(
+    (noteId: string) => {
+      clearLongPressTimers(noteId);
+      touchStartRef.current = null;
+    },
+    [clearLongPressTimers]
+  );
+
+  // ── Un-promote ───────────────────────────────────────────────────
+
+  const handleUnpromote = useCallback(
+    (noteId: string) => {
+      setUnpromotingIds((prev) => new Set(prev).add(noteId));
+      startTransition(async () => {
+        try {
+          const restored = await unPromoteNote(noteId);
+          setArchivedNotes((prev) => prev.filter((n) => n.id !== noteId));
+          // Re-insert into active stream with fresh marker.
+          setNotes((prev) => {
+            const next = [restored, ...prev].sort(
+              (a, b) => b.createdAt - a.createdAt
+            );
+            return next;
+          });
+          setFreshIds((prev) => new Set(prev).add(noteId));
+          window.clearTimeout(freshTimersRef.current.get(noteId));
+          freshTimersRef.current.set(
+            noteId,
+            window.setTimeout(() => {
+              freshTimersRef.current.delete(noteId);
+              setFreshIds((p) => {
+                const n2 = new Set(p);
+                n2.delete(noteId);
+                return n2;
+              });
+            }, 600)
+          );
+        } catch (err) {
+          setError(friendlyError(err, "Could not remove from Tasks"));
+        } finally {
+          setUnpromotingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(noteId);
+            return next;
+          });
+        }
+      });
+    },
+    []
+  );
+
+  // ── Existing note actions ────────────────────────────────────────
 
   const commit = useCallback(() => {
     const body = draft.trim();
@@ -241,14 +478,13 @@ export function Notebook({ initialNotes }: NotebookProps) {
       updatedAt: now,
       extractBody: null,
       promotedTaskId: null,
+      archivedAt: null,
     };
     setNotes((prev) => [optimistic, ...prev]);
     setFreshIds((prev) => new Set(prev).add(tempId));
     setDraft("");
     setError(null);
 
-    // Clear the "fresh" marker after the entry animation finishes.
-    // Cancel any prior timer for this id before registering a new one.
     window.clearTimeout(freshTimersRef.current.get(tempId));
     freshTimersRef.current.set(
       tempId,
@@ -266,7 +502,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
       try {
         const saved = await createNote(body);
         setNotes((prev) => prev.map((n) => (n.id === tempId ? saved : n)));
-        // Carry the fresh marker over to the real id briefly.
         setFreshIds((prev) => {
           const next = new Set(prev);
           next.add(saved.id);
@@ -296,9 +531,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
       try {
         await deleteNote(noteToDelete.id);
       } catch (err) {
-        // Restore the note if the server delete failed.
         setNotes((prev) => {
-          // Re-insert in original position (sorted newest-first by createdAt).
           const next = [...prev, noteToDelete].sort((a, b) => b.createdAt - a.createdAt);
           return next;
         });
@@ -308,9 +541,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
   }, []);
 
   const undoDelete = useCallback(() => {
-    // Restore the note currently shown in the toast (the latest
-    // delete). Older deletes already in their own undo window keep
-    // ticking — they commit when their timers fire.
     setUndoTarget((current) => {
       if (!current) return null;
       const entry = pendingDeletesRef.current.get(current.id);
@@ -344,8 +574,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
 
       const timer = window.setTimeout(() => {
         pendingDeletesRef.current.delete(noteToDelete.id);
-        // Only clear the visible toast if it still points at this
-        // note — a later delete may have already replaced it.
         setUndoTarget((current) =>
           current && current.id === noteToDelete.id ? null : current,
         );
@@ -366,7 +594,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
     setEditingExtractFor(note.id);
     setDraftAction(note.extractBody ?? "");
     setExtractError(null);
-    // Focus runs on next paint — cancel any pending focus timer first.
     if (extractFocusTimerRef.current !== null) {
       window.clearTimeout(extractFocusTimerRef.current);
     }
@@ -451,6 +678,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
     [cancelEditingExtract, commitExtract]
   );
 
+  // Two-step send (escape hatch for notes needing extract shaping).
   const sendToTasks = useCallback(
     (noteId: string) => {
       setSendingExtractFor(noteId);
@@ -458,14 +686,21 @@ export function Notebook({ initialNotes }: NotebookProps) {
       startTransition(async () => {
         try {
           const { note: updated, result } = await sendExtractToTasks(noteId);
-          setNotes((prev) =>
-            prev.map((n) => (n.id === noteId ? updated : n))
-          );
+          // sendExtractToTasks now also archives the note (D1 semantics).
+          // Remove from active stream, add to archived.
+          setNotes((prev) => prev.filter((n) => n.id !== noteId));
+          setOpenId((current) => (current === noteId ? null : current));
+          setArchivedNotes((prev) => {
+            const without = prev.filter((n) => n.id !== noteId);
+            return [updated, ...without];
+          });
           setSentResults((prev) => {
             const next = new Map(prev);
             next.set(noteId, result);
             return next;
           });
+          showPromoteToast({ kind: "success", message: "Added to Tasks" });
+          dismissNudge();
         } catch (err) {
           setExtractError(friendlyError(err, "Could not send to Tasks"));
         } finally {
@@ -473,6 +708,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
         }
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -483,8 +719,6 @@ export function Notebook({ initialNotes }: NotebookProps) {
         setDraft("");
         return;
       }
-      // Enter saves; Shift+Enter for newline (slight refinement over PRODUCT.md
-      // §4 — keeps multi-line bodies easy without losing the 3-second budget).
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         commit();
@@ -502,6 +736,16 @@ export function Notebook({ initialNotes }: NotebookProps) {
       }
     },
     []
+  );
+
+  // Open-note promote (button in the open-note panel controls).
+  const promoteFromOpenNote = useCallback(
+    (noteId: string) => {
+      setOpenId(null);
+      setActiveTrayId(null);
+      executePromote(noteId);
+    },
+    [executePromote]
   );
 
   const openNote = notes.find((n) => n.id === openId) ?? null;
@@ -574,43 +818,171 @@ export function Notebook({ initialNotes }: NotebookProps) {
 
         {notes.length > 0 && filteredNotes.length === 0 && query.trim() && (
           <p className="empty-state">
-            No notes match <em>“{query.trim()}”</em>.
+            No notes match <em>"{query.trim()}"</em>.
           </p>
         )}
 
         <ol className="stream" aria-label="Recent notes">
           {filteredNotes.map((note) => {
             const isOpen = openId === note.id;
+            const isPromoting = promotingIds.has(note.id);
+            const hasFeedback = pendingFeedbackIds.has(note.id);
+            const hasTray = activeTrayId === note.id;
             return (
-              <li key={note.id}>
-                <button
-                  type="button"
-                  className={`note-row${freshIds.has(note.id) ? " is-fresh" : ""}`}
-                  onClick={() => setOpenId(isOpen ? null : note.id)}
-                  aria-expanded={isOpen}
-                  aria-controls={`note-panel-${note.id}`}
-                >
-                  <span>
-                    <span className="note-title">{firstLine(note.body)}</span>
-                    {preview(note.body) && !isOpen && (
-                      <span className="note-preview">{preview(note.body)}</span>
-                    )}
-                  </span>
-                  <span className="note-meta">
-                    {(note.extractBody || note.promotedTaskId) && (
-                      <span
-                        aria-label="Private action drafted"
-                        className="note-dot"
-                      />
-                    )}
+              <li key={note.id} className="note-list-item">
+                {/* Note row — the main clickable target */}
+                <div className="note-row-wrapper">
+                  <button
+                    type="button"
+                    className={[
+                      "note-row",
+                      freshIds.has(note.id) ? "is-fresh" : "",
+                      isPromoting ? "is-promoted" : "",
+                      hasFeedback ? "is-longpress-feedback" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onClick={(e) => {
+                      // Don't open/close if tray is showing — the tray
+                      // handles the confirm.
+                      if (hasTray) {
+                        e.stopPropagation();
+                        return;
+                      }
+                      setOpenId(isOpen ? null : note.id);
+                      setActiveTrayId(null);
+                    }}
+                    onTouchStart={(e) => onNoteTouchStart(e, note.id)}
+                    onTouchMove={(e) => onNoteTouchMove(e, note.id)}
+                    onTouchEnd={() => onNoteTouchEnd(note.id)}
+                    onTouchCancel={() => onNoteTouchEnd(note.id)}
+                    aria-expanded={isOpen}
+                    aria-controls={`note-panel-${note.id}`}
+                  >
                     <span>
-                      <RelativeTime ts={note.createdAt} />
+                      <span className="note-title">{firstLine(note.body)}</span>
+                      {preview(note.body) && !isOpen && (
+                        <span className="note-preview">{preview(note.body)}</span>
+                      )}
                     </span>
-                  </span>
-                </button>
+                    <span className="note-meta">
+                      {isPromoting && (
+                        <span className="note-tasks-label" aria-label="In Tasks">
+                          In Tasks
+                        </span>
+                      )}
+                      {!isPromoting && (note.extractBody || note.promotedTaskId) && (
+                        <span
+                          aria-label="Private action drafted"
+                          className="note-dot"
+                        />
+                      )}
+                      {!isPromoting && (
+                        <span>
+                          <RelativeTime ts={note.createdAt} />
+                        </span>
+                      )}
+                    </span>
+                  </button>
+
+                  {/* Pointer hover ghost button — "→ Tasks" */}
+                  {/* Only shown on non-touch pointer devices via CSS.
+                      Does not appear when the note is already promoting. */}
+                  {!isPromoting && (
+                    <button
+                      type="button"
+                      className="note-ghost-promote"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveTrayId(null);
+                        executePromote(note.id);
+                      }}
+                      title={`Will add: ${firstLine(note.body).slice(0, 40)}${firstLine(note.body).length > 40 ? "…" : ""}`}
+                      aria-label={`Promote to task: ${firstLine(note.body)}`}
+                    >
+                      → Tasks
+                    </button>
+                  )}
+                </div>
+
+                {/* Inline tray (touch long-press confirm) */}
+                {hasTray && (
+                  <div
+                    className="note-promote-tray"
+                    role="group"
+                    aria-label="Promote note"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      className="note-tray-promote"
+                      onClick={() => {
+                        setActiveTrayId(null);
+                        executePromote(note.id);
+                      }}
+                    >
+                      Promote to task
+                    </button>
+                    <button
+                      type="button"
+                      className="note-tray-cancel"
+                      onClick={() => setActiveTrayId(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </li>
             );
-          })}
+          }).flatMap((liEl, idx) =>
+            // BV-3: nudge renders as a <li> immediately after the first note row.
+            // UX_SPEC §RW-3a "First-touch test lens" item 1: "below the first note row".
+            // Logic unchanged — same showNudge condition, same dismiss handler.
+            idx === 0 && showNudge && filteredNotes.length > 0
+              ? [
+                  liEl,
+                  <li key="mobile-nudge" className="note-nudge-li" aria-hidden>
+                    <div
+                      className="note-nudge"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "6px 0 2px",
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "var(--color-ink-faint, #d4d4d8)",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        Long-press any note to send it to Tasks.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={dismissNudge}
+                        aria-label="Dismiss hint"
+                        style={{
+                          fontSize: 10,
+                          color: "var(--color-ink-faint, #d4d4d8)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "2px 4px",
+                          lineHeight: 1,
+                          flexShrink: 0,
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </li>,
+                ]
+              : [liEl],
+          )}
         </ol>
 
         {openNote && (
@@ -628,7 +1000,23 @@ export function Notebook({ initialNotes }: NotebookProps) {
                 >
                   Delete
                 </button>
+                {/* "Promote to task" explicit button — always visible in
+                    the open-note panel. This is the pointer escape hatch
+                    and the post-promote "In Tasks" state label. */}
+                {openNote.promotedTaskId ? (
+                  <span className="open-note-promoted-label">In Tasks</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-draft-action"
+                    onClick={() => promoteFromOpenNote(openNote.id)}
+                    aria-label="Promote to task"
+                  >
+                    Promote to task
+                  </button>
+                )}
                 {!openNote.extractBody &&
+                  !openNote.promotedTaskId &&
                   editingExtractFor !== openNote.id && (
                     <button
                       type="button"
@@ -640,6 +1028,7 @@ export function Notebook({ initialNotes }: NotebookProps) {
                     </button>
                   )}
                 {!openNote.extractBody &&
+                  !openNote.promotedTaskId &&
                   editingExtractFor !== openNote.id &&
                   notes.length <= 1 && (
                     <span
@@ -767,6 +1156,64 @@ export function Notebook({ initialNotes }: NotebookProps) {
             )}
           </article>
         )}
+
+        {/* ── "In Tasks" collapsible section (D1 archived notes) ── */}
+        {archivedNotes.length > 0 && (
+          <div className="in-tasks-section">
+            <button
+              type="button"
+              className="in-tasks-toggle"
+              aria-expanded={archivedOpen}
+              onClick={() => setArchivedOpen((v) => !v)}
+            >
+              <span>In Tasks ({archivedNotes.length})</span>
+              <span className={`in-tasks-chevron${archivedOpen ? " is-open" : ""}`} aria-hidden>
+                ▾
+              </span>
+            </button>
+
+            {archivedOpen && (
+              <ol className="in-tasks-list" aria-label="Promoted notes in Tasks">
+                {archivedNotes.map((note) => {
+                  const sent = sentResults.get(note.id);
+                  const isUnpromoting = unpromotingIds.has(note.id);
+                  return (
+                    <li key={note.id} className="in-tasks-row">
+                      <span className="in-tasks-title">{firstLine(note.body)}</span>
+                      <span className="in-tasks-meta">
+                        {note.extractBody && (
+                          <span className="in-tasks-extract">{note.extractBody}</span>
+                        )}
+                        {sent?.taskUrl && (
+                          <a
+                            href={sent.taskUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="in-tasks-link"
+                          >
+                            Open in Tasks
+                          </a>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-delete"
+                        onClick={() => handleUnpromote(note.id)}
+                        disabled={isUnpromoting}
+                        aria-label={`Remove from Tasks: ${firstLine(note.body)}`}
+                      >
+                        {isUnpromoting ? "Removing…" : "Remove from Tasks"}
+                      </button>
+                    </li>
+                  );
+                })}
+                <li className="in-tasks-footer">
+                  Note returned here. The task stays in Tasks.
+                </li>
+              </ol>
+            )}
+          </div>
+        )}
       </section>
 
       {/* ── Undo toast ──────────────────────────────────────────── */}
@@ -781,6 +1228,30 @@ export function Notebook({ initialNotes }: NotebookProps) {
           >
             Undo
           </button>
+        </div>
+      )}
+
+      {/* ── Promote toast ───────────────────────────────────────── */}
+      {promoteToast && (
+        <div
+          className={`promote-toast promote-toast--${promoteToast.kind}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span>{promoteToast.message}</span>
+          {promoteToast.kind === "error" && (
+            <button
+              type="button"
+              className="undo-toast-btn"
+              onClick={() => {
+                const id = promoteToast.noteId;
+                setPromoteToast(null);
+                executePromote(id);
+              }}
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
 
