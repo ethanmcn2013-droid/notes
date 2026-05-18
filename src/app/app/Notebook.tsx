@@ -138,6 +138,11 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const [archivedOpen, setArchivedOpen] = useState(false);
   // unpromotingIds: tracks which archived notes are being un-promoted
   const [unpromotingIds, setUnpromotingIds] = useState<Set<string>>(new Set());
+  // Mobile nudge: one-time "Long-press any note to send it to Tasks"
+  // Shown on first visit if no promoted notes exist. localStorage-gated.
+  // UX_SPEC §RW-3a "First-touch test lens" item 1.
+  const NUDGE_KEY = "notes-longpress-nudge-dismissed";
+  const [showNudge, setShowNudge] = useState(false);
 
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
@@ -155,6 +160,23 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const longPressConfirmTimerRef = useRef<Map<string, number>>(new Map());
   // Touch start coords for move-threshold check
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Mobile nudge: show once on first visit if no promoted notes exist.
+  // Read localStorage after mount so SSR doesn't throw.
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem(NUDGE_KEY) === "1";
+      if (!dismissed && initialArchivedNotes.length === 0) {
+        setShowNudge(true);
+      }
+    } catch { /* private browsing */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function dismissNudge() {
+    setShowNudge(false);
+    try { localStorage.setItem(NUDGE_KEY, "1"); } catch { /* private browsing */ }
+  }
 
   // P3-1: Deterministic first-paint focus — cursor ready, nothing highlighted.
   useEffect(() => {
@@ -300,6 +322,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             return next;
           });
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
+          dismissNudge();
         } catch (err) {
           // Rollback: restore note to active stream.
           setNotes((prev) => {
@@ -677,6 +700,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             return next;
           });
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
+          dismissNudge();
         } catch (err) {
           setExtractError(friendlyError(err, "Could not send to Tasks"));
         } finally {
@@ -796,6 +820,49 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           <p className="empty-state">
             No notes match <em>"{query.trim()}"</em>.
           </p>
+        )}
+
+        {/* Mobile nudge: one-time hint below the first note.
+            Shown on touch devices on first visit when no notes are promoted.
+            UX_SPEC §RW-3a "First-touch test lens" item 1. */}
+        {showNudge && filteredNotes.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "6px 0 2px",
+              gap: 8,
+            }}
+            className="note-nudge"
+          >
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--color-ink-faint, #d4d4d8)",
+                lineHeight: 1.4,
+              }}
+            >
+              Long-press any note to send it to Tasks.
+            </span>
+            <button
+              type="button"
+              onClick={dismissNudge}
+              aria-label="Dismiss hint"
+              style={{
+                fontSize: 10,
+                color: "var(--color-ink-faint, #d4d4d8)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "2px 4px",
+                lineHeight: 1,
+                flexShrink: 0,
+              }}
+            >
+              ✕
+            </button>
+          </div>
         )}
 
         <ol className="stream" aria-label="Recent notes">
