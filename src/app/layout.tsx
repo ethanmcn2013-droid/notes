@@ -38,6 +38,11 @@ export const metadata: Metadata = {
     description: "A private place for thoughts before they become work.",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Signal Notes — capture clarity",
+    description: "A private place for thoughts before they become work.",
+  },
 };
 
 export default function RootLayout({
@@ -47,23 +52,22 @@ export default function RootLayout({
     <ClerkProvider
       appearance={{
         variables: {
-          colorPrimary: "#335f54",
-          colorBackground: "#fffefa",
-          colorText: "#161815",
+          colorPrimary: "#4f46e5",
+          colorBackground: "#ffffff",
+          colorText: "#111111",
           fontFamily: "var(--font-inter)",
           borderRadius: "0.6rem",
         },
         elements: {
           // Mobile correctness — 48px min-height + 16px input font (no iOS
-          // auto-zoom). Notes's green/mustard palette preserved per
-          // feedback_notes_aesthetic; only sizing changes.
+          // auto-zoom). Suite indigo accent per BRAND.md §5 D01.
           formFieldInput:
             "!min-h-[48px] !text-[16px]",
           formButtonPrimary:
-            "bg-[#161815] hover:bg-[#335f54] text-[#fffefa] rounded-full !min-h-[48px] !text-[15px]",
+            "!bg-[#4f46e5] hover:!bg-[#4338ca] !text-white rounded-full !min-h-[48px] !text-[15px]",
           socialButtonsBlockButton:
             "!min-h-[48px] !text-[15px]",
-          card: "shadow-[0_22px_70px_rgba(41,48,37,0.12)]",
+          card: "shadow-[0_22px_70px_rgba(20,21,26,0.12)]",
         },
       }}
     >
