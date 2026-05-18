@@ -822,49 +822,6 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           </p>
         )}
 
-        {/* Mobile nudge: one-time hint below the first note.
-            Shown on touch devices on first visit when no notes are promoted.
-            UX_SPEC §RW-3a "First-touch test lens" item 1. */}
-        {showNudge && filteredNotes.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "6px 0 2px",
-              gap: 8,
-            }}
-            className="note-nudge"
-          >
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--color-ink-faint, #d4d4d8)",
-                lineHeight: 1.4,
-              }}
-            >
-              Long-press any note to send it to Tasks.
-            </span>
-            <button
-              type="button"
-              onClick={dismissNudge}
-              aria-label="Dismiss hint"
-              style={{
-                fontSize: 10,
-                color: "var(--color-ink-faint, #d4d4d8)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "2px 4px",
-                lineHeight: 1,
-                flexShrink: 0,
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
         <ol className="stream" aria-label="Recent notes">
           {filteredNotes.map((note) => {
             const isOpen = openId === note.id;
@@ -977,7 +934,55 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                 )}
               </li>
             );
-          })}
+          }).flatMap((liEl, idx) =>
+            // BV-3: nudge renders as a <li> immediately after the first note row.
+            // UX_SPEC §RW-3a "First-touch test lens" item 1: "below the first note row".
+            // Logic unchanged — same showNudge condition, same dismiss handler.
+            idx === 0 && showNudge && filteredNotes.length > 0
+              ? [
+                  liEl,
+                  <li key="mobile-nudge" className="note-nudge-li" aria-hidden>
+                    <div
+                      className="note-nudge"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "6px 0 2px",
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "var(--color-ink-faint, #d4d4d8)",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        Long-press any note to send it to Tasks.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={dismissNudge}
+                        aria-label="Dismiss hint"
+                        style={{
+                          fontSize: 10,
+                          color: "var(--color-ink-faint, #d4d4d8)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "2px 4px",
+                          lineHeight: 1,
+                          flexShrink: 0,
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </li>,
+                ]
+              : [liEl],
+          )}
         </ol>
 
         {openNote && (
