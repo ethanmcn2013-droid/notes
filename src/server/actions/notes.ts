@@ -480,14 +480,12 @@ export async function promoteNoteToTasks(
   // Cap at 280 chars (same ceiling as extract_body).
   const taskTitle = firstLine.length > 280 ? firstLine.slice(0, 280) : firstLine;
 
-  // Write extractBody so the note reads correctly in the "In Tasks"
-  // section even when no sentResults entry exists (e.g. after a reload).
-  await db
-    .update(notes)
-    .set({ extractBody: taskTitle, updatedAt: Date.now() })
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)));
-
   // Cross-repo write — same endpoint + auth as sendExtractToTasks.
+  // extractBody is written ONLY after a successful Tasks response,
+  // consolidated into the final archive update below. Writing it here
+  // (before the fetch) was P0-1: a failed fetch left the note with
+  // extractBody set but no promotedTaskId/archivedAt, corrupting it
+  // permanently in listNotes().
   let response: Response;
   try {
     response = await fetch(`${tasksUrl}/api/notes-extract`, {
@@ -529,11 +527,14 @@ export async function promoteNoteToTasks(
   }
   const result = raw as ExtractSendResult;
 
-  // Archive the note (D1 semantics) and persist the taskId.
+  // Archive the note (D1 semantics) and persist the taskId + extractBody
+  // in a single atomic write. All three fields are written together so a
+  // Tasks-fetch failure (above) leaves the note completely untouched.
   const archiveTs = Date.now();
   const updated = await db
     .update(notes)
     .set({
+      extractBody: taskTitle,
       promotedTaskId: result.taskId,
       archivedAt: archiveTs,
       updatedAt: archiveTs,
