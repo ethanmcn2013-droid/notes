@@ -15,8 +15,8 @@ type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
  * App-entry deep-links. Labels are the canonical cross-product set per
  * IA_COHERENCE.md §1C and §4B: lowercase product noun, plain "Open [product]".
  *
- * Product order: Roadmap → Tasks → Notes → Analytics (ratified 2026-05-16
- * hierarchy, IA_COHERENCE.md §1I). Current product is excluded at render.
+ * Product order (operator-directed 2026-05-18): notes → tasks → roadmap → analytics.
+ * Current product is excluded at render.
  *
  * Retired variants (do not restore):
  *   "Open the workspace" → "Open tasks"
@@ -25,9 +25,9 @@ type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
  *   "Open the briefing"  → "Open analytics"
  */
 const PRODUCTS: { slug: ProductSlug; label: string; url: string }[] = [
-  { slug: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
-  { slug: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
   { slug: "notes",     label: "Open notes",      url: `${NOTES_URL}/app` },
+  { slug: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
+  { slug: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
   { slug: "analytics", label: "Open analytics",  url: `${ANALYTICS_URL}/app` },
 ];
 

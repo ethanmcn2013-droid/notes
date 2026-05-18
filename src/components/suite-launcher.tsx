@@ -15,8 +15,8 @@ type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
  * Unauthed mode: marketing taglines, links to product marketing homepages.
  * Authed mode: canonical app-context labels, links to each product's /app entry.
  *
- * Product order: Roadmap → Tasks → Notes → Analytics (ratified 2026-05-16
- * hierarchy, IA_COHERENCE.md §2E). Both arrays use this order.
+ * Product order (operator-directed 2026-05-18): notes → tasks → roadmap → analytics.
+ * Both arrays use this order.
  *
  * Popover header: "Signal Studio" / "Four products, one studio." — no
  * auth-state variation (IA_COHERENCE.md §1E). Retired variants:
@@ -35,9 +35,9 @@ const PRODUCTS_UNAUTHED: {
   tagline: string;
   url: string;
 }[] = [
-  { slug: "roadmap",   word: "roadmap",   tagline: "Direction clarity", url: ROADMAP_URL },
-  { slug: "tasks",     word: "tasks",     tagline: "Execution clarity", url: TASKS_URL },
   { slug: "notes",     word: "notes",     tagline: "Capture clarity",   url: NOTES_URL },
+  { slug: "tasks",     word: "tasks",     tagline: "Execution clarity", url: TASKS_URL },
+  { slug: "roadmap",   word: "roadmap",   tagline: "Direction clarity", url: ROADMAP_URL },
   { slug: "analytics", word: "analytics", tagline: "Attention clarity", url: ANALYTICS_URL },
 ];
 
@@ -47,15 +47,15 @@ const PRODUCTS_AUTHED: {
   label: string;
   url: string;
 }[] = [
-  { slug: "roadmap",   word: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
-  { slug: "tasks",     word: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
   { slug: "notes",     word: "notes",     label: "Open notes",      url: `${NOTES_URL}/app` },
+  { slug: "tasks",     word: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
+  { slug: "roadmap",   word: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
   { slug: "analytics", word: "analytics", label: "Open analytics",  url: `${ANALYTICS_URL}/app` },
 ];
 
 const INDIGO = "#4f46e5";
 
-const PRODUCT_ORIGINS = [ROADMAP_URL, TASKS_URL, NOTES_URL, ANALYTICS_URL];
+const PRODUCT_ORIGINS = [NOTES_URL, TASKS_URL, ROADMAP_URL, ANALYTICS_URL];
 
 /**
  * Phase 3 (instant-jump): warm a sibling product on hover/focus so the
