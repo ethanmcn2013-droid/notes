@@ -1097,6 +1097,13 @@ button, input, textarea { font: inherit; }
     color: var(--color-accent);
     opacity: 1;
   }
+  /* Hide the timestamp when the ghost button is visible (Defect 3).
+     The ghost button sits at the same right-edge position as the
+     timestamp — both visible at once causes label collision "jdTasku". */
+  .note-row-wrapper:hover .note-meta > span:last-child,
+  .note-row-wrapper:focus-within .note-meta > span:last-child {
+    visibility: hidden;
+  }
 }
 /* Hide on touch so it doesn't linger on tap */
 @media (hover: none) {

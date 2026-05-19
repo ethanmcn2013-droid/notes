@@ -209,6 +209,19 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     };
   }, []);
 
+  // Defect 4: clear stale promote toast when the stream empties (last-note
+  // delete). A toast referencing a note that no longer exists in the list
+  // can never be retried and confuses the empty state render.
+  useEffect(() => {
+    if (notes.length === 0 && promoteToast !== null) {
+      if (promoteToastTimerRef.current !== null) {
+        window.clearTimeout(promoteToastTimerRef.current);
+        promoteToastTimerRef.current = null;
+      }
+      setPromoteToast(null);
+    }
+  }, [notes.length, promoteToast]);
+
   useEffect(() => {
     if (undoTarget) {
       undoReturnFocusRef.current = document.activeElement as HTMLElement | null;

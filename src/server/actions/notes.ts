@@ -405,7 +405,14 @@ export async function sendExtractToTasks(
     throw new Error("Note vanished between send and store");
   }
 
-  revalidatePath("/app");
+  // Revalidation is best-effort: a Turso hiccup here must not surface
+  // as an unhandled SC render error to the user (D2 hardening).
+  try {
+    revalidatePath("/app");
+  } catch {
+    // Non-fatal — the extract was sent and archived; the client
+    // will see the updated state on next natural refresh.
+  }
   return { note: noteRow, result };
 }
 
@@ -555,7 +562,13 @@ export async function promoteNoteToTasks(
     throw new Error("Note vanished between promote and archive");
   }
 
-  revalidatePath("/app");
+  // Revalidation is best-effort: a Turso hiccup here must not surface
+  // as an unhandled SC render error to the user (D2 hardening).
+  try {
+    revalidatePath("/app");
+  } catch {
+    // Non-fatal — the promote completed; client sees state on next refresh.
+  }
   return { note: noteRow, result };
 }
 
