@@ -190,7 +190,7 @@ export async function deleteNote(id: string): Promise<void> {
     .delete(notes)
     .where(and(eq(notes.id, id), eq(notes.userId, userId)));
 
-  revalidatePath("/app");
+  revalidatePath("/app", "page");
 }
 
 /**
@@ -408,7 +408,7 @@ export async function sendExtractToTasks(
   // Revalidation is best-effort: a Turso hiccup here must not surface
   // as an unhandled SC render error to the user (D2 hardening).
   try {
-    revalidatePath("/app");
+    revalidatePath("/app", "page");
   } catch {
     // Non-fatal — the extract was sent and archived; the client
     // will see the updated state on next natural refresh.
@@ -565,7 +565,7 @@ export async function promoteNoteToTasks(
   // Revalidation is best-effort: a Turso hiccup here must not surface
   // as an unhandled SC render error to the user (D2 hardening).
   try {
-    revalidatePath("/app");
+    revalidatePath("/app", "page");
   } catch {
     // Non-fatal — the promote completed; client sees state on next refresh.
   }
@@ -646,6 +646,6 @@ export async function unPromoteNote(noteId: string): Promise<NoteRead> {
     throw new Error("Note not found or not promoted");
   }
 
-  revalidatePath("/app");
+  revalidatePath("/app", "page");
   return row;
 }

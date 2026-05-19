@@ -149,6 +149,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   // receipt) carries the screen-reader confirmation. Shared by both the
   // direct-promote and extract-send success paths.
   const [srConfirm, setSrConfirm] = useState("");
+  // Live mirror of `notes` so async callbacks can snapshot the current note
+  // object synchronously without taking a stale-closure dependency.
+  const notesRef = useRef<NoteRead[]>(initialNotes);
 
   // Mobile nudge: one-time "Long-press any note to send it to Tasks"
   // Shown on first visit if no promoted notes exist. localStorage-gated.
@@ -213,6 +216,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     document.addEventListener("visibilitychange", refocus);
     return () => document.removeEventListener("visibilitychange", refocus);
   }, []);
+
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
 
   useEffect(() => {
     return () => {
@@ -377,11 +384,16 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
   const executePromote = useCallback(
     (noteId: string) => {
+      // Snapshot the note BEFORE any optimistic mutation so a server
+      // failure can restore it even if the grace removal already ran.
+      const snapshot = notesRef.current.find((n) => n.id === noteId) ?? null;
+
       // Optimistic: mark as promoting (fades to 0.5, "In Tasks" label).
       setPromotingIds((prev) => new Set(prev).add(noteId));
 
-      // After grace period: remove from active stream.
-      window.setTimeout(() => {
+      // After grace period: remove from active stream. Tracked so a
+      // failure can cancel it before the note disappears.
+      const graceTimer = window.setTimeout(() => {
         setNotes((prev) => prev.filter((n) => n.id !== noteId));
         setPromotingIds((prev) => {
           const next = new Set(prev);
@@ -408,14 +420,15 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
           dismissNudge();
         } catch (err) {
-          // Rollback: restore note to active stream.
+          // Cancel the pending removal so the note never disappears, then
+          // restore it from the pre-mutation snapshot if the grace timer
+          // already fired (slow server → error after PROMOTE_GRACE_MS).
+          window.clearTimeout(graceTimer);
           setNotes((prev) => {
-            // Find the note in promoting state or just restore from scratch.
-            const fromArchive = archivedNotes.find((n) => n.id === noteId);
-            if (!fromArchive) return prev;
-            const restored = { ...fromArchive, archivedAt: null, promotedTaskId: null };
-            const next = [...prev, restored].sort((a, b) => b.createdAt - a.createdAt);
-            return next;
+            if (prev.some((n) => n.id === noteId)) return prev;
+            if (!snapshot) return prev;
+            const restored = { ...snapshot, archivedAt: null, promotedTaskId: null };
+            return [...prev, restored].sort((a, b) => b.createdAt - a.createdAt);
           });
           setPromotingIds((prev) => {
             const next = new Set(prev);
@@ -431,7 +444,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [archivedNotes]
+    []
   );
 
   // ── Long-press gesture (touch) ───────────────────────────────────
@@ -767,19 +780,25 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   // Shows the in-panel receipt + drives the SR announcer, then closes the
   // open-note panel after 800ms. The later PROMOTE_GRACE_MS close is a
   // no-op once this has already nulled openId (guarded at its callsite).
-  const beginOpenNoteConfirm = useCallback((noteId: string) => {
-    setOpenNoteConfirmId(noteId);
-    setSrConfirm("Added to your Tasks workspace.");
-    if (openNoteConfirmTimerRef.current !== null) {
-      window.clearTimeout(openNoteConfirmTimerRef.current);
-    }
-    openNoteConfirmTimerRef.current = window.setTimeout(() => {
-      openNoteConfirmTimerRef.current = null;
-      setOpenNoteConfirmId(null);
-      setSrConfirm("");
-      setOpenId(null);
-    }, 800);
-  }, []);
+  const beginOpenNoteConfirm = useCallback(
+    (noteId: string, onSettle?: () => void) => {
+      setOpenNoteConfirmId(noteId);
+      setSrConfirm("Added to your Tasks workspace.");
+      if (openNoteConfirmTimerRef.current !== null) {
+        window.clearTimeout(openNoteConfirmTimerRef.current);
+      }
+      openNoteConfirmTimerRef.current = window.setTimeout(() => {
+        openNoteConfirmTimerRef.current = null;
+        setOpenNoteConfirmId(null);
+        setSrConfirm("");
+        // Deferred stream mutation (extract path keeps the note visible so
+        // the in-panel receipt actually renders during the 800ms window).
+        onSettle?.();
+        setOpenId(null);
+      }, 800);
+    },
+    []
+  );
 
   const sendToTasks = useCallback(
     (noteId: string) => {
@@ -792,11 +811,6 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           // Remove from active stream, add to archived. Panel close is
           // deferred to beginOpenNoteConfirm so the extract path has the
           // same in-panel receipt as the direct-promote path.
-          setNotes((prev) => prev.filter((n) => n.id !== noteId));
-          setArchivedNotes((prev) => {
-            const without = prev.filter((n) => n.id !== noteId);
-            return [updated, ...without];
-          });
           setSentResults((prev) => {
             const next = new Map(prev);
             next.set(noteId, result);
@@ -804,7 +818,17 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           });
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
           dismissNudge();
-          beginOpenNoteConfirm(noteId);
+          // Keep the note in the active stream so the open-note panel (and
+          // its in-panel receipt) stays mounted for the 800ms confirm
+          // window; move it to archived as the panel closes. This gives
+          // the extract path true visual parity with direct-promote.
+          beginOpenNoteConfirm(noteId, () => {
+            setNotes((prev) => prev.filter((n) => n.id !== noteId));
+            setArchivedNotes((prev) => {
+              const without = prev.filter((n) => n.id !== noteId);
+              return [updated, ...without];
+            });
+          });
         } catch (err) {
           setExtractError(friendlyError(err, "Could not send to Tasks"));
         } finally {
