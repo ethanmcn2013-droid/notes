@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { SuiteLauncher } from "@/components/suite-launcher";
+import { SuiteSwitcher } from "@/components/suite-switcher-pills";
 import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 
 export default function AppLayout({
@@ -8,13 +7,11 @@ export default function AppLayout({
   return (
     <>
       <header className="suitebar" aria-label="Signal Notes notebook chrome">
+        {/* §14 (amended 2026-05-19): umbrella anchor (once) + always-visible
+            4-product pill switcher. The active pill is the
+            product-you-are-in indicator (no separate breadcrumb). */}
         <div className="suite-breadcrumb">
-          <SuiteLauncher current="notes" isAuthed={true} />
-          <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
-          <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
-            <span className="word">notes</span>
-            <span className="dot" aria-hidden />
-          </Link>
+          <SuiteSwitcher current="notes" />
         </div>
         <UserButtonWithSuite current="notes" />
       </header>

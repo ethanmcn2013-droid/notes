@@ -3,6 +3,17 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-19 · N·18 · ships · the notebook chrome carries four visible pills
+
+**The authed `/app` chrome now shows all four products as always-visible
+pills instead of the hidden "signal studio." popover trigger.** The shared
+canonical `SuiteSwitcher` replaces the launcher and the notes-mark
+breadcrumb in the notebook chrome — the active pill is the
+product-you-are-in indicator. It carries the umbrella anchor once, the
+dot-morph jump, hover-prefetch and preconnect, byte-identical with the rest
+of the suite; Notes's own aesthetic is untouched everywhere else. Build
+clean; deployed to prod and verified (200 marketing, 307 app entry).
+
 ## 2026-05-17 · N·17 · tightens · Capture-by-email stops when the tier does
 
 **Capture-by-email was checked once, when the address was handed
