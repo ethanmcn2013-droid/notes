@@ -822,16 +822,21 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           // its in-panel receipt) stays mounted for the 800ms confirm
           // window; move it to archived as the panel closes. This gives
           // the extract path true visual parity with direct-promote.
+          // Keep sendingExtractFor set through the 800ms confirm window so
+          // the send button stays disabled (no double-tap → false error
+          // toast on an already-succeeded promote); clear it as the note
+          // settles to archived and the panel closes.
           beginOpenNoteConfirm(noteId, () => {
             setNotes((prev) => prev.filter((n) => n.id !== noteId));
             setArchivedNotes((prev) => {
               const without = prev.filter((n) => n.id !== noteId);
               return [updated, ...without];
             });
+            setSendingExtractFor(null);
           });
         } catch (err) {
           setExtractError(friendlyError(err, "Could not send to Tasks"));
-        } finally {
+          // Clear on failure so the user can retry immediately.
           setSendingExtractFor(null);
         }
       });
@@ -978,7 +983,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             const isOpen = openId === note.id;
             const isPromoting = promotingIds.has(note.id);
             const hasFeedback = pendingFeedbackIds.has(note.id);
-            const hasTray = activeTrayId === note.id;
+            // Tray hides the moment a promote is in flight — prevents a
+            // second tap on an already-succeeding note (false error toast).
+            const hasTray = activeTrayId === note.id && !isPromoting;
             return (
               <li key={note.id} className="note-list-item">
                 {/* Note row — the main clickable target */}
@@ -1068,7 +1075,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                     <button
                       type="button"
                       className="note-tray-promote"
+                      disabled={isPromoting}
                       onClick={() => {
+                        if (isPromoting) return;
                         setActiveTrayId(null);
                         executePromote(note.id);
                       }}
