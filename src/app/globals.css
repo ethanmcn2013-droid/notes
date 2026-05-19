@@ -604,10 +604,22 @@ button, input, textarea { font: inherit; }
   white-space: nowrap;
 }
 .note-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
   background: var(--color-signal);
+  opacity: 0.85;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.note-dot--sent {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-accent);
+  background: transparent;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .open-note {
@@ -1055,12 +1067,7 @@ button, input, textarea { font: inherit; }
 .open-note {
   border-top-color: rgba(183, 191, 170, 0.72);
 }
-/* note-dot (the indigo indicator on rows with an extract) is already
-   small; reduce opacity slightly so it reads as a quiet signal, not a
-   notification badge demanding attention. */
-.note-dot {
-  opacity: 0.72;
-}
+/* note-dot opacity is set directly on the base rule above. */
 
 /* ── Capture-by-email footer (N-1b · 2026-05-14) ──
    Quiet row beneath the stream. Workspace+ shows the address; free

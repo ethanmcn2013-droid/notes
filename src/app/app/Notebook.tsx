@@ -816,22 +816,23 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             next.set(noteId, result);
             return next;
           });
+          // Move the note to archivedNotes immediately so the sidebar
+          // "IN TASKS n notes" count ticks right away (D3-A fix).
+          setArchivedNotes((prev) => {
+            const without = prev.filter((n) => n.id !== noteId);
+            return [updated, ...without];
+          });
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
           dismissNudge();
           // Keep the note in the active stream so the open-note panel (and
           // its in-panel receipt) stays mounted for the 800ms confirm
-          // window; move it to archived as the panel closes. This gives
-          // the extract path true visual parity with direct-promote.
+          // window; remove it from the active stream as the panel closes.
           // Keep sendingExtractFor set through the 800ms confirm window so
           // the send button stays disabled (no double-tap → false error
           // toast on an already-succeeded promote); clear it as the note
           // settles to archived and the panel closes.
           beginOpenNoteConfirm(noteId, () => {
             setNotes((prev) => prev.filter((n) => n.id !== noteId));
-            setArchivedNotes((prev) => {
-              const without = prev.filter((n) => n.id !== noteId);
-              return [updated, ...without];
-            });
             setSendingExtractFor(null);
           });
         } catch (err) {
@@ -1030,11 +1031,11 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                           In Tasks
                         </span>
                       )}
-                      {!isPromoting && (note.extractBody || note.promotedTaskId) && (
-                        <span
-                          aria-label="Private action drafted"
-                          className="note-dot"
-                        />
+                      {!isPromoting && note.promotedTaskId && (
+                        <span aria-label="In Tasks" className="note-dot--sent" />
+                      )}
+                      {!isPromoting && note.extractBody && !note.promotedTaskId && (
+                        <span aria-label="Extract drafted — not yet in Tasks" className="note-dot" />
                       )}
                       {!isPromoting && (
                         <span>
