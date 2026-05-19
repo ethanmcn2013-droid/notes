@@ -12,8 +12,20 @@ const PRIVATE_NOTES_EMPTY_LINES = [
   "Some things are only for you.",
 ] as const;
 
+// E7(b) — settled placeholder shown to users with ≥ this many notes.
+// At this point the user knows the app; the rotating poem is first-touch
+// guidance, not a permanent feature. The settled string is calm, not a CTA.
+const SETTLED_NOTE_THRESHOLD = 8;
+const SETTLED_LINE = "A place to think before you speak.";
+
 interface PrivateNotesEmptyStateProps {
   visible: boolean;
+  /**
+   * Total number of notes the user has saved. When this reaches
+   * SETTLED_NOTE_THRESHOLD the placeholder poem stops rotating and
+   * shows one quiet stable string instead.
+   */
+  noteCount?: number;
 }
 
 function usePrefersReducedMotion() {
@@ -30,17 +42,21 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-export function PrivateNotesEmptyState({ visible }: PrivateNotesEmptyStateProps) {
+export function PrivateNotesEmptyState({ visible, noteCount = 0 }: PrivateNotesEmptyStateProps) {
   const [index, setIndex] = useState(0);
   const [changing, setChanging] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
 
-  useEffect(() => {
-    if (!visible || reducedMotion) setChanging(false);
-  }, [visible, reducedMotion]);
+  // E7(b): settled users get a stable string, no rotation.
+  const settled = noteCount >= SETTLED_NOTE_THRESHOLD;
 
   useEffect(() => {
-    if (!visible || reducedMotion) return;
+    if (!visible || reducedMotion || settled) setChanging(false);
+  }, [visible, reducedMotion, settled]);
+
+  useEffect(() => {
+    // No rotation: reduced-motion users, settled users, or hidden state.
+    if (!visible || reducedMotion || settled) return;
 
     let transitionTimer: number | undefined;
     const rotationTimer = window.setInterval(() => {
@@ -55,7 +71,9 @@ export function PrivateNotesEmptyState({ visible }: PrivateNotesEmptyStateProps)
       window.clearInterval(rotationTimer);
       if (transitionTimer) window.clearTimeout(transitionTimer);
     };
-  }, [visible, reducedMotion]);
+  }, [visible, reducedMotion, settled]);
+
+  const displayText = settled ? SETTLED_LINE : PRIVATE_NOTES_EMPTY_LINES[index];
 
   return (
     <span
@@ -68,7 +86,7 @@ export function PrivateNotesEmptyState({ visible }: PrivateNotesEmptyStateProps)
         .filter(Boolean)
         .join(" ")}
     >
-      <span>{PRIVATE_NOTES_EMPTY_LINES[index]}</span>
+      <span>{displayText}</span>
       <span className="private-notes-empty-caret" />
     </span>
   );

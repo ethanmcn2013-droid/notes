@@ -855,7 +855,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             maxLength={MAX_NOTE_BODY_CHARS}
             spellCheck
           />
-          <PrivateNotesEmptyState visible={draftIsEmpty} />
+          <PrivateNotesEmptyState visible={draftIsEmpty} noteCount={notes.length} />
           <p className="capture-hint">
             <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
           </p>
@@ -868,9 +868,14 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
         <div className="stream-head">
           <span>Stream</span>
-          {(notes.length > 0 || query.trim()) && (
+          {/* E5 — canonical count string.
+              Unfiltered: "N notes" (or "1 note").
+              Filtered:   "N of M" — only shown when filter is active AND
+              the result count differs from total (kill the identity case
+              "X of X" which adds noise without information). */}
+          {notes.length > 0 && (
             <span>
-              {query.trim()
+              {query.trim() && filteredNotes.length !== notes.length
                 ? `${filteredNotes.length} of ${notes.length}`
                 : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
             </span>
@@ -966,7 +971,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                         executePromote(note.id);
                       }}
                       title={`Will add: ${firstLine(note.body).slice(0, 40)}${firstLine(note.body).length > 40 ? "…" : ""}`}
-                      aria-label={`Promote to task: ${firstLine(note.body)}`}
+                      aria-label={`Send to Tasks: ${firstLine(note.body)}`}
                     >
                       → Tasks
                     </button>
@@ -989,7 +994,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                         executePromote(note.id);
                       }}
                     >
-                      Promote to task
+                      Send to Tasks
                     </button>
                     <button
                       type="button"
@@ -1020,7 +1025,23 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                         gap: 8,
                       }}
                     >
+                      {/* E7(a) — pointer-aware hint copy.
+                          CSS media queries control which span is visible:
+                          fine-pointer devices see the click affordance;
+                          coarse-pointer (touch) devices see long-press.
+                          Both render in the DOM; CSS toggles display. */}
                       <span
+                        className="note-nudge-text note-nudge-text--fine"
+                        style={{
+                          fontSize: 11,
+                          color: "var(--color-ink-faint, #d4d4d8)",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        Click any note to send it to Tasks.
+                      </span>
+                      <span
+                        className="note-nudge-text note-nudge-text--coarse"
                         style={{
                           fontSize: 11,
                           color: "var(--color-ink-faint, #d4d4d8)",
@@ -1068,44 +1089,40 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                 >
                   Delete
                 </button>
-                {/* "Promote to task" explicit button — always visible in
-                    the open-note panel. This is the pointer escape hatch
-                    and the post-promote "In Tasks" state label. */}
+                {/* E2 — Unified "Send to Tasks" flow.
+                    Already promoted: show "In Tasks" label + open link.
+                    Not yet promoted, no extract drafted:
+                      Primary "Send to Tasks" → direct promote (one click).
+                      Secondary "rename" link → expands the extract input
+                      inline (the old "Draft action" path lives inside
+                      this flow, not beside it).
+                    Extract drafted but not yet sent:
+                      Handled below in the extract-drafted panel.
+                    The ghost button (→ Tasks, pointer) and long-press tray
+                    (touch) remain on each note row as before — those are
+                    the gesture paths, not the open-note panel. */}
                 {openNote.promotedTaskId ? (
                   <span className="open-note-promoted-label">In Tasks</span>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn-draft-action"
-                    onClick={() => promoteFromOpenNote(openNote.id)}
-                    aria-label="Promote to task"
-                  >
-                    Promote to task
-                  </button>
-                )}
-                {!openNote.extractBody &&
-                  !openNote.promotedTaskId &&
-                  editingExtractFor !== openNote.id && (
+                ) : !openNote.extractBody && editingExtractFor !== openNote.id ? (
+                  <>
                     <button
                       type="button"
                       className="btn-draft-action"
-                      onClick={() => startEditingExtract(openNote)}
-                      aria-describedby={notes.length <= 1 ? "draft-action-hint" : undefined}
+                      onClick={() => promoteFromOpenNote(openNote.id)}
+                      aria-label="Send note to Tasks"
                     >
-                      Draft action
+                      Send to Tasks
                     </button>
-                  )}
-                {!openNote.extractBody &&
-                  !openNote.promotedTaskId &&
-                  editingExtractFor !== openNote.id &&
-                  notes.length <= 1 && (
-                    <span
-                      id="draft-action-hint"
-                      className="draft-action-hint"
+                    <button
+                      type="button"
+                      className="btn-rename-before-send"
+                      onClick={() => startEditingExtract(openNote)}
+                      aria-label="Rename before sending to Tasks"
                     >
-                      Draft an action to send to Signal Tasks.
-                    </span>
-                  )}
+                      rename first
+                    </button>
+                  </>
+                ) : null}
               </div>
             </div>
             <p className="open-note-body">{openNote.body}</p>
@@ -1323,14 +1340,13 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
         </div>
       )}
 
-      {/* ── Brand aside (right column) ──────────────────────────── */}
-      <aside className="product">
-        <p className="product-eyebrow">Signal Notes</p>
-        <h1 className="product-h1">Capture clarity.</h1>
-        <p className="product-promise">
-          A private layer for thoughts before they become work.
-        </p>
-        <dl className="product-stats">
+      {/* ── Right rail (authed state) ────────────────────────────
+          Marketing copy (headline + promise) is removed in authed
+          view — user already bought in. The four metadata rows give
+          the rail its weight; a quiet reassurance line (Geist Mono,
+          11px, ink-faint) anchors the bottom without competing. */}
+      <aside className="product product--authed">
+        <dl className="product-stats product-stats--first">
           <div>
             <dt>Privacy</dt>
             <dd>Private by default</dd>
@@ -1358,6 +1374,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             <dd>Your notes</dd>
           </div>
         </dl>
+        <p className="product-reassurance">
+          This is yours. Nothing leaves without you saying so.
+        </p>
       </aside>
     </main>
   );

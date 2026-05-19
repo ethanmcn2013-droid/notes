@@ -446,10 +446,14 @@ button, input, textarea { font: inherit; }
 .capture textarea::placeholder {
   color: transparent;
 }
-/* Restore keyboard focus ring suppressed by outline:0 above (WCAG 2.4.7) */
+/* E6 — Restore keyboard focus ring without geometry change (WCAG 2.4.7).
+   box-shadow is colour-only: it doesn't affect layout, so the stream
+   below the capture area never shifts on focus. Matches the indigo
+   suite accent (#4f46e5) as the focus-colour signal. Stable min-height
+   is already set on the textarea; no height rule added here. */
 .capture textarea:focus-visible {
-  outline: 2px solid var(--color-signal);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-signal);
   border-radius: 2px;
 }
 
@@ -682,6 +686,25 @@ button, input, textarea { font: inherit; }
   cursor: not-allowed;
 }
 
+/* E2 — "rename first" secondary affordance beside the primary "Send to Tasks".
+   Appears only before the extract is drafted. Small, dotted-underline,
+   faint — clearly subordinate to the primary action. */
+.btn-rename-before-send {
+  background: transparent;
+  border: 0;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  padding: 0 4px;
+  font-family: inherit;
+  transition: color var(--motion-instant) var(--ease-out);
+}
+.btn-rename-before-send:hover { color: var(--color-ink-soft); }
+
 /* First-use hint shown beside the Draft action button when the stream
    is empty or contains a single note. Quiet — does not compete. */
 .draft-action-hint {
@@ -830,6 +853,30 @@ button, input, textarea { font: inherit; }
   font-size: clamp(16px, 1.6vw, 19px);
   line-height: 1.5;
 }
+
+/* E1 — Authed right rail. Marketing headline + promise removed; stats
+   start at the rail top. A quiet reassurance line at the bottom reclaims
+   the space with privacy-aligned copy rather than leaving it hollow. */
+.product--authed {
+  padding-top: 8px;
+}
+/* First stats block in authed view — no top-margin gap (headline gone) */
+.product-stats--first {
+  margin-top: 0;
+}
+/* Reassurance line — Geist Mono, 11px, ink-faint. Anchors the rail
+   bottom without competing with the metadata above. Sits 24px below
+   the last stat row's border, separated by generous white air. */
+.product-reassurance {
+  margin: 24px 0 0;
+  font-family: var(--font-geist), "Geist", ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  line-height: 1.55;
+  color: var(--color-ink-faint);
+  max-width: 26ch;
+}
+
 .product-stats {
   display: grid;
   gap: 0;
@@ -925,6 +972,17 @@ button, input, textarea { font: inherit; }
 .undo-toast-btn:hover {
   border-color: rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* E7(a) — pointer-aware nudge copy.
+   Show the correct affordance based on the primary pointer type.
+   Default (coarse/unknown) → long-press copy visible, fine hidden.
+   Fine pointer (mouse/trackpad) → click copy visible, coarse hidden. */
+.note-nudge-text--fine  { display: none; }
+.note-nudge-text--coarse { display: inline; }
+@media (pointer: fine) {
+  .note-nudge-text--fine  { display: inline; }
+  .note-nudge-text--coarse { display: none; }
 }
 
 /* ── Extract-drafted reveal ──────────────────────────────────────── */
