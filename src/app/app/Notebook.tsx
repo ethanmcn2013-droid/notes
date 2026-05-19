@@ -143,6 +143,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   // rapid-fire opens don't stale. null = no confirmation showing.
   const [openNoteConfirmId, setOpenNoteConfirmId] = useState<string | null>(null);
   const openNoteConfirmTimerRef = useRef<number | null>(null);
+  // E2 (UX a11y) — always-mounted polite SR announcer. Empty until a send
+  // succeeds; NVDA/TalkBack only announce a live region whose text changes
+  // while it is already mounted, so this string (not the conditional visible
+  // receipt) carries the screen-reader confirmation. Shared by both the
+  // direct-promote and extract-send success paths.
+  const [srConfirm, setSrConfirm] = useState("");
 
   // Mobile nudge: one-time "Long-press any note to send it to Tasks"
   // Shown on first visit if no promoted notes exist. localStorage-gated.
@@ -757,6 +763,24 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   );
 
   // Two-step send (escape hatch for notes needing extract shaping).
+  // E2 — single confirm mechanism shared by both Send-to-Tasks paths.
+  // Shows the in-panel receipt + drives the SR announcer, then closes the
+  // open-note panel after 800ms. The later PROMOTE_GRACE_MS close is a
+  // no-op once this has already nulled openId (guarded at its callsite).
+  const beginOpenNoteConfirm = useCallback((noteId: string) => {
+    setOpenNoteConfirmId(noteId);
+    setSrConfirm("Added to your Tasks workspace.");
+    if (openNoteConfirmTimerRef.current !== null) {
+      window.clearTimeout(openNoteConfirmTimerRef.current);
+    }
+    openNoteConfirmTimerRef.current = window.setTimeout(() => {
+      openNoteConfirmTimerRef.current = null;
+      setOpenNoteConfirmId(null);
+      setSrConfirm("");
+      setOpenId(null);
+    }, 800);
+  }, []);
+
   const sendToTasks = useCallback(
     (noteId: string) => {
       setSendingExtractFor(noteId);
@@ -765,9 +789,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
         try {
           const { note: updated, result } = await sendExtractToTasks(noteId);
           // sendExtractToTasks now also archives the note (D1 semantics).
-          // Remove from active stream, add to archived.
+          // Remove from active stream, add to archived. Panel close is
+          // deferred to beginOpenNoteConfirm so the extract path has the
+          // same in-panel receipt as the direct-promote path.
           setNotes((prev) => prev.filter((n) => n.id !== noteId));
-          setOpenId((current) => (current === noteId ? null : current));
           setArchivedNotes((prev) => {
             const without = prev.filter((n) => n.id !== noteId);
             return [updated, ...without];
@@ -779,6 +804,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           });
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
           dismissNudge();
+          beginOpenNoteConfirm(noteId);
         } catch (err) {
           setExtractError(friendlyError(err, "Could not send to Tasks"));
         } finally {
@@ -823,18 +849,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const promoteFromOpenNote = useCallback(
     (noteId: string) => {
       setActiveTrayId(null);
-      setOpenNoteConfirmId(noteId);
-      if (openNoteConfirmTimerRef.current !== null) {
-        window.clearTimeout(openNoteConfirmTimerRef.current);
-      }
-      openNoteConfirmTimerRef.current = window.setTimeout(() => {
-        openNoteConfirmTimerRef.current = null;
-        setOpenNoteConfirmId(null);
-        setOpenId(null);
-      }, 800);
+      beginOpenNoteConfirm(noteId);
       executePromote(noteId);
     },
-    [executePromote]
+    [executePromote, beginOpenNoteConfirm]
   );
 
   const openNote = notes.find((n) => n.id === openId) ?? null;
@@ -1103,7 +1121,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                           flexShrink: 0,
                         }}
                       >
-                        ✕
+                        ×
                       </button>
                     </div>
                   </li>,
@@ -1114,6 +1132,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
         {openNote && (
           <article className="open-note" aria-label="Open note" id={`note-panel-${openNote.id}`}>
+            {/* Always-mounted polite announcer — empty until success so the
+                screen reader reliably announces the change (NVDA/TalkBack
+                ignore live regions that mount already-populated). */}
+            <span className="sr-only" aria-live="polite" aria-atomic="true">
+              {srConfirm}
+            </span>
             <div className="open-note-head">
               <span>
                 Captured <RelativeTime ts={openNote.createdAt} />
@@ -1169,7 +1193,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                 attention for ~800ms before the panel closes. Ink-faint
                 so it reads as a receipt, not a celebration. */}
             {openNoteConfirmId === openNote.id && (
-              <p className="open-note-promote-confirm" role="status">
+              <p className="open-note-promote-confirm" aria-hidden="true">
                 Added to your Tasks workspace.
               </p>
             )}
@@ -1438,7 +1462,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
               {archivedNotes.length === 0 ? (
                 "—"
               ) : (
-                <em>{archivedNotes.length}</em>
+                <>
+                  <em>{archivedNotes.length}</em>{" "}
+                  {archivedNotes.length === 1 ? "note" : "notes"}
+                </>
               )}
             </dd>
           </div>
