@@ -22,7 +22,7 @@ export default function AppLoading() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#ffffff",
+        background: "#fffefa",
         zIndex: 9999,
       }}
     >
@@ -55,6 +55,7 @@ export default function AppLoading() {
             marginBottom: "0.06em",
             alignSelf: "flex-end",
             flexShrink: 0,
+            animation: "notes-dot-caret 1.1s steps(1,end) infinite",
           }}
         />
       </span>
@@ -63,10 +64,18 @@ export default function AppLoading() {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
+        @keyframes notes-dot-caret {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
+        }
         @media (prefers-reduced-motion: reduce) {
           @keyframes notes-loader-fade {
             from { opacity: 1; }
             to   { opacity: 1; }
+          }
+          @keyframes notes-dot-caret {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 1; }
           }
         }
       `}</style>

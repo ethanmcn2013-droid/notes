@@ -138,6 +138,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const [archivedOpen, setArchivedOpen] = useState(false);
   // unpromotingIds: tracks which archived notes are being un-promoted
   const [unpromotingIds, setUnpromotingIds] = useState<Set<string>>(new Set());
+  // E2 — in-panel success state: shows confirmation text inside the open-note
+  // panel for ~800ms before setOpenId(null) closes it. Keyed by note id so
+  // rapid-fire opens don't stale. null = no confirmation showing.
+  const [openNoteConfirmId, setOpenNoteConfirmId] = useState<string | null>(null);
+  const openNoteConfirmTimerRef = useRef<number | null>(null);
+
   // Mobile nudge: one-time "Long-press any note to send it to Tasks"
   // Shown on first visit if no promoted notes exist. localStorage-gated.
   // UX_SPEC §RW-3a "First-touch test lens" item 1.
@@ -155,6 +161,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     new Map(),
   );
   const promoteToastTimerRef = useRef<number | null>(null);
+  // E5 — SR-only mirror for the stream count string.
+  // aria-live on the visible count causes redundant announcements on
+  // unrelated re-renders; a dedicated hidden span fires only on count change.
+  const srCountRef = useRef<HTMLSpanElement | null>(null);
   // Long-press timers per note id
   const longPressFeedbackTimerRef = useRef<Map<string, number>>(new Map());
   const longPressConfirmTimerRef = useRef<Map<string, number>>(new Map());
@@ -204,6 +214,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       pendingDeletesRef.current.forEach(({ timer }) => window.clearTimeout(timer));
       if (extractFocusTimerRef.current !== null) window.clearTimeout(extractFocusTimerRef.current);
       if (promoteToastTimerRef.current !== null) window.clearTimeout(promoteToastTimerRef.current);
+      if (openNoteConfirmTimerRef.current !== null) window.clearTimeout(openNoteConfirmTimerRef.current);
       longPressFeedbackTimerRef.current.forEach((id) => window.clearTimeout(id));
       longPressConfirmTimerRef.current.forEach((id) => window.clearTimeout(id));
     };
@@ -806,10 +817,21 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   );
 
   // Open-note promote (button in the open-note panel controls).
+  // E2: show in-panel confirmation for ~800ms at the point of attention
+  // before closing the panel — the bottom toast was missed because the
+  // panel vanished under the user's eyes on the same click.
   const promoteFromOpenNote = useCallback(
     (noteId: string) => {
-      setOpenId(null);
       setActiveTrayId(null);
+      setOpenNoteConfirmId(noteId);
+      if (openNoteConfirmTimerRef.current !== null) {
+        window.clearTimeout(openNoteConfirmTimerRef.current);
+      }
+      openNoteConfirmTimerRef.current = window.setTimeout(() => {
+        openNoteConfirmTimerRef.current = null;
+        setOpenNoteConfirmId(null);
+        setOpenId(null);
+      }, 800);
       executePromote(noteId);
     },
     [executePromote]
@@ -855,7 +877,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             maxLength={MAX_NOTE_BODY_CHARS}
             spellCheck
           />
-          <PrivateNotesEmptyState visible={draftIsEmpty} noteCount={notes.length} />
+          <PrivateNotesEmptyState visible={draftIsEmpty} noteCount={notes.length + archivedNotes.length} />
           <p className="capture-hint">
             <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
           </p>
@@ -874,13 +896,28 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
               the result count differs from total (kill the identity case
               "X of X" which adds noise without information). */}
           {notes.length > 0 && (
-            <span>
+            <span aria-hidden>
               {query.trim() && filteredNotes.length !== notes.length
                 ? `${filteredNotes.length} of ${notes.length}`
                 : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
             </span>
           )}
         </div>
+        {/* E5 — SR-only mirror for the stream count. Dedicated span with
+            aria-live so announcements fire on count change without
+            polluting every unrelated re-render that touches the visible span. */}
+        <span
+          ref={srCountRef}
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {query.trim() && filteredNotes.length !== notes.length
+            ? `${filteredNotes.length} of ${notes.length} notes`
+            : notes.length === 0
+              ? "No notes yet"
+              : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
+        </span>
 
         {notes.length === 0 && (
           <p className="empty-state">
@@ -1054,6 +1091,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                         type="button"
                         onClick={dismissNudge}
                         aria-label="Dismiss hint"
+                        tabIndex={-1}
                         style={{
                           fontSize: 10,
                           color: "var(--color-ink-faint, #d4d4d8)",
@@ -1117,15 +1155,24 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                       type="button"
                       className="btn-rename-before-send"
                       onClick={() => startEditingExtract(openNote)}
-                      aria-label="Rename before sending to Tasks"
+                      aria-label="Shape the wording before sending to Tasks"
                     >
-                      rename first
+                      shape it first
                     </button>
                   </>
                 ) : null}
               </div>
             </div>
             <p className="open-note-body">{openNote.body}</p>
+
+            {/* E2 — in-panel success confirmation shown at the point of
+                attention for ~800ms before the panel closes. Ink-faint
+                so it reads as a receipt, not a celebration. */}
+            {openNoteConfirmId === openNote.id && (
+              <p className="open-note-promote-confirm" role="status">
+                Added to your Tasks workspace.
+              </p>
+            )}
 
             {editingExtractFor === openNote.id && (
               <div className="extract-input" role="group" aria-label="Draft action">
@@ -1232,12 +1279,22 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             )}
 
             {extractError && (
-              <p
-                role="alert"
-                className="extract-error"
-              >
-                {extractError}
-              </p>
+              <div role="alert" className="extract-error">
+                <span>{extractError}</span>
+                {/* E2 — retry affordance mirrors promoteToast Retry pattern.
+                    Re-invokes sendExtractToTasks so the error is not a dead end. */}
+                <button
+                  type="button"
+                  className="undo-toast-btn"
+                  style={{ marginLeft: 8 }}
+                  onClick={() => {
+                    setExtractError(null);
+                    sendToTasks(openNote.id);
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
             )}
           </article>
         )}
@@ -1354,7 +1411,13 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           <div>
             <dt>Notes</dt>
             <dd>
-              <em>{notes.length}</em> {notes.length === 1 ? "note" : "notes"}
+              {notes.length === 0 ? (
+                "None yet"
+              ) : (
+                <>
+                  <em>{notes.length}</em> {notes.length === 1 ? "note" : "notes"}
+                </>
+              )}
             </dd>
           </div>
           <div>
@@ -1370,12 +1433,18 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             </dd>
           </div>
           <div>
-            <dt>Notebook</dt>
-            <dd>Your notes</dd>
+            <dt>In Tasks</dt>
+            <dd>
+              {archivedNotes.length === 0 ? (
+                "—"
+              ) : (
+                <em>{archivedNotes.length}</em>
+              )}
+            </dd>
           </div>
         </dl>
         <p className="product-reassurance">
-          This is yours. Nothing leaves without you saying so.
+          Only you can see this.
         </p>
       </aside>
     </main>

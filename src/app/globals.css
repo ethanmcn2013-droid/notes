@@ -704,6 +704,11 @@ button, input, textarea { font: inherit; }
   transition: color var(--motion-instant) var(--ease-out);
 }
 .btn-rename-before-send:hover { color: var(--color-ink-soft); }
+.btn-rename-before-send:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
 
 /* First-use hint shown beside the Draft action button when the stream
    is empty or contains a single note. Quiet — does not compete. */
@@ -856,9 +861,15 @@ button, input, textarea { font: inherit; }
 
 /* E1 — Authed right rail. Marketing headline + promise removed; stats
    start at the rail top. A quiet reassurance line at the bottom reclaims
-   the space with privacy-aligned copy rather than leaving it hollow. */
+   the space with privacy-aligned copy rather than leaving it hollow.
+   flex + justify-content:space-between pins the stat block to the top
+   and the reassurance line to the rail bottom — no trailing dead air. */
 .product--authed {
   padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-self: stretch;
 }
 /* First stats block in authed view — no top-margin gap (headline gone) */
 .product-stats--first {
@@ -980,7 +991,7 @@ button, input, textarea { font: inherit; }
    Fine pointer (mouse/trackpad) → click copy visible, coarse hidden. */
 .note-nudge-text--fine  { display: none; }
 .note-nudge-text--coarse { display: inline; }
-@media (pointer: fine) {
+@media (any-pointer: fine) {
   .note-nudge-text--fine  { display: inline; }
   .note-nudge-text--coarse { display: none; }
 }
@@ -998,6 +1009,25 @@ button, input, textarea { font: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   .extract-drafted { animation: none; }
+}
+
+/* E2 — In-panel promote success confirmation.
+   Shows "Added to your Tasks workspace." at the point of attention
+   (inside the open-note panel) for ~800ms before the panel closes.
+   ink-faint colour keeps it calm — not a celebration, just a receipt. */
+.open-note-promote-confirm {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  letter-spacing: 0.01em;
+  animation: promote-confirm-in var(--motion-fast) var(--ease-out) both;
+}
+@keyframes promote-confirm-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .open-note-promote-confirm { animation: none; }
 }
 
 /* ── Linear calm: reduce chrome weight ──────────────────────────── */
