@@ -59,7 +59,7 @@ const ANN: { slot: Slot; label: string; note: string }[] = [
   },
   {
     slot: "extract",
-    label: "Tasks pip",
+    label: "Tasks indicator",
     note: "Quiet when nothing's sent. Ringed when this note is already in Tasks.",
   },
   {
