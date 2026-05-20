@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { Hero } from "@/components/showcase/hero";
+import { NoteAnatomy } from "@/components/marketing/note-anatomy";
 import { SuiteLauncher } from "@/components/suite-launcher";
 import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -41,6 +42,8 @@ export default async function HomePage() {
 
       <main className="mx-auto max-w-[860px] px-7 pt-24 pb-32 sm:pt-28">
         <Hero />
+
+        <NoteAnatomy />
 
         {/* ── Anti-feature register (BRAND.md §6) ─────────────────────────── */}
         <section className="reveal mt-28 grid gap-5 sm:grid-cols-3">
