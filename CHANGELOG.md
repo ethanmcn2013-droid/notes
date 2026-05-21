@@ -3,6 +3,10 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-05-21 · N·19 · ships · close your account, install the notebook to your home screen
+
+**Settings · Account is reachable from the avatar dropdown, with an irreversible delete that closes your Signal identity in one step; the notebook installs to a phone or desktop home screen with the green Notes tile.** Typing your email confirms the delete; the server purges every note you've captured and your per-user preferences, then asks the identity layer to close the account. There is no grace period; the action is final and visible before you commit to it. Installable add-to-home-screen ships a manifest carrying Notes' own paper canvas as the splash, an Apple touch icon with the notebook mark, and a green maskable Android tile so the install reads as a notebook on any phone. Required for Apple App Store submission later this summer.
+
 ## 2026-05-19 · N·18 · ships · the notebook chrome carries four visible pills
 
 **The authed `/app` chrome now shows all four products as always-visible
