@@ -18,6 +18,16 @@ const PRIVATE_NOTES_EMPTY_LINES = [
 const SETTLED_NOTE_THRESHOLD = 8;
 const SETTLED_LINE = "A place to think before you speak.";
 
+// Typewriter rotation tuning. Total cycle ≈ 30s per line, composed of:
+//   - Type-in:  N chars × TYPE_INTERVAL_MS  (e.g. 40 chars × 50ms = 2000ms)
+//   - Settled hold: TOTAL_CYCLE_MS − type-in − fade-out  (≈ 27s)
+//   - Fade-out: FADE_OUT_MS                              (≈ 800ms)
+// Settled hold is computed dynamically per-line so longer/shorter lines
+// stay on-screen for the same total rotation cadence.
+const TYPE_INTERVAL_MS = 50;
+const FADE_OUT_MS = 800;
+const TOTAL_CYCLE_MS = 30_000;
+
 interface PrivateNotesEmptyStateProps {
   visible: boolean;
   /**
@@ -42,38 +52,74 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+type Phase = "typing" | "settled" | "fading";
+
 export function PrivateNotesEmptyState({ visible, noteCount = 0 }: PrivateNotesEmptyStateProps) {
   const [index, setIndex] = useState(0);
-  const [changing, setChanging] = useState(false);
+  const [typedChars, setTypedChars] = useState(0);
+  const [phase, setPhase] = useState<Phase>("typing");
   const reducedMotion = usePrefersReducedMotion();
 
   // E7(b): settled users get a stable string, no rotation.
   const settled = noteCount >= SETTLED_NOTE_THRESHOLD;
+  const fullText = settled ? SETTLED_LINE : PRIVATE_NOTES_EMPTY_LINES[index];
 
+  // Reduced-motion + settled-state short-circuit: skip the typewriter entirely
+  // and render the full line. The caret still renders but its blink is killed
+  // by the prefers-reduced-motion media query below.
+  const animateTypewriter = !reducedMotion && !settled;
+
+  // Type-in tick. Adds one character per TYPE_INTERVAL_MS until the line is
+  // fully revealed, then flips to the settled phase. Skipped entirely when
+  // typewriter is disabled (reduced motion / settled / hidden).
   useEffect(() => {
-    if (!visible || reducedMotion || settled) setChanging(false);
-  }, [visible, reducedMotion, settled]);
+    if (!animateTypewriter || !visible) return;
+    if (phase !== "typing") return;
+    if (typedChars >= fullText.length) {
+      setPhase("settled");
+      return;
+    }
+    const t = window.setTimeout(() => setTypedChars((c) => c + 1), TYPE_INTERVAL_MS);
+    return () => window.clearTimeout(t);
+  }, [animateTypewriter, visible, phase, typedChars, fullText.length]);
 
+  // Settled-hold timer. Once the full line is on screen, hold for the
+  // remainder of the 30s cycle, then start fading out. The hold duration is
+  // computed so that (type-in + hold + fade-out) ≈ TOTAL_CYCLE_MS regardless
+  // of line length.
   useEffect(() => {
-    // No rotation: reduced-motion users, settled users, or hidden state.
-    if (!visible || reducedMotion || settled) return;
+    if (!animateTypewriter || !visible) return;
+    if (phase !== "settled") return;
+    const typeInMs = fullText.length * TYPE_INTERVAL_MS;
+    const hold = Math.max(2000, TOTAL_CYCLE_MS - typeInMs - FADE_OUT_MS);
+    const t = window.setTimeout(() => setPhase("fading"), hold);
+    return () => window.clearTimeout(t);
+  }, [animateTypewriter, visible, phase, fullText.length]);
 
-    let transitionTimer: number | undefined;
-    const rotationTimer = window.setInterval(() => {
-      setChanging(true);
-      transitionTimer = window.setTimeout(() => {
-        setIndex((current) => (current + 1) % PRIVATE_NOTES_EMPTY_LINES.length);
-        setChanging(false);
-      }, 420);
-    }, 5200);
+  // Fade-out → advance index → reset to typing for the next line.
+  useEffect(() => {
+    if (!animateTypewriter || !visible) return;
+    if (phase !== "fading") return;
+    const t = window.setTimeout(() => {
+      setIndex((i) => (i + 1) % PRIVATE_NOTES_EMPTY_LINES.length);
+      setTypedChars(0);
+      setPhase("typing");
+    }, FADE_OUT_MS);
+    return () => window.clearTimeout(t);
+  }, [animateTypewriter, visible, phase]);
 
-    return () => {
-      window.clearInterval(rotationTimer);
-      if (transitionTimer) window.clearTimeout(transitionTimer);
-    };
-  }, [visible, reducedMotion, settled]);
+  // When the user transitions into the settled state mid-cycle (note count
+  // crosses the threshold) or reduced-motion turns on, snap to the fully-
+  // shown stable string so we don't leave a half-typed line on screen.
+  useEffect(() => {
+    if (!animateTypewriter) {
+      setTypedChars(fullText.length);
+      setPhase("settled");
+    }
+  }, [animateTypewriter, fullText.length]);
 
-  const displayText = settled ? SETTLED_LINE : PRIVATE_NOTES_EMPTY_LINES[index];
+  const displayText = animateTypewriter ? fullText.slice(0, typedChars) : fullText;
+  const isFading = phase === "fading";
 
   return (
     <span
@@ -81,7 +127,7 @@ export function PrivateNotesEmptyState({ visible, noteCount = 0 }: PrivateNotesE
       className={[
         "private-notes-empty-state",
         visible ? "" : "is-hidden",
-        changing ? "is-changing" : "",
+        isFading ? "is-changing" : "",
       ]
         .filter(Boolean)
         .join(" ")}
