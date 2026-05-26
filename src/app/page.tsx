@@ -23,67 +23,87 @@ export default async function HomePage() {
           </Link>
         </div>
         {isSignedIn ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link
-              href="/app"
-              className="text-[13px] font-medium"
-              style={{
-                color: "var(--color-ink-soft)",
-                textDecoration: "underline",
-                textDecorationStyle: "dotted",
-                textUnderlineOffset: 3,
-              }}
-            >
-              Open the notebook
-            </Link>
+          <div style={{ display: "flex", alignItems: "center" }}>
             <UserButtonWithSuite current="notes" />
           </div>
         ) : null}
       </header>
 
       {/*
-        Hero loader — full-width, outside the max-w container so the animation
-        can use the full viewport. Immediately followed by the product intro +
-        live demo, anatomy, and anti-features below.
+        Page order: animated wordmark hero, live notebook demo, animated
+        anatomy, final CTA. No upper CTA cluster.
       */}
       <NotesHeroLoader />
 
-      <main className="mx-auto max-w-[860px] px-7 pt-16 pb-32 sm:pt-20">
+      <main className="mx-auto max-w-[860px] px-7 pt-14 pb-32 sm:pt-16">
         <Hero />
 
         <NoteAnatomy />
 
-        {/* ── Anti-feature register (BRAND.md §6) ─────────────────────────── */}
-        <section className="reveal mt-28 grid gap-5 sm:grid-cols-3">
-          {[
-            {
-              label: "Not a wiki.",
-              copy: "No links between notes. No backlinks. No graph view.",
-            },
-            {
-              label: "Not a filing system.",
-              copy: "It's a stream and a search field. Nothing to set up.",
-            },
-            {
-              label: "Not AI-tagged.",
-              copy: "Nothing auto-detects, auto-summarises, or auto-promotes.",
-            },
-          ].map((item) => (
-            <div key={item.label}>
-              <p
-                className="text-[14px] font-semibold"
-                style={{ color: "var(--color-ink)" }}
-              >
-                {item.label}
-              </p>
-              <p
-                className="mt-2 text-[13.5px] leading-[1.55]"
-                style={{ color: "var(--color-ink-soft)" }}
-              >
-                {item.copy}
-              </p>
-            </div>
-          ))}
+        <section
+          className="mt-28 border-t py-20 sm:mt-32 sm:py-24"
+          style={{ borderColor: "var(--color-line)" }}
+        >
+          <p
+            className="font-mono"
+            style={{
+              marginBottom: 18,
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--color-ink-faint)",
+            }}
+          >
+            Start with the thought
+          </p>
+          <h2
+            style={{
+              maxWidth: "15ch",
+              fontSize: "clamp(2rem, 1.45rem + 2.6vw, 3.7rem)",
+              fontWeight: 600,
+              lineHeight: 1.02,
+              letterSpacing: "-0.04em",
+              color: "var(--color-ink)",
+              margin: 0,
+            }}
+          >
+            Capture it before it becomes work.
+          </h2>
+          <p
+            style={{
+              marginTop: 22,
+              maxWidth: "40rem",
+              fontSize: 16,
+              lineHeight: 1.6,
+              color: "var(--color-ink-soft)",
+            }}
+          >
+            Open the notebook when the thought is still fresh. Write it down
+            fast, find it later, and choose what crosses into Tasks.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              href="/app"
+              className="inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-medium transition-opacity hover:opacity-90"
+              style={{
+                background: "var(--color-signal)",
+                color: "#ffffff",
+              }}
+            >
+              Open the notebook
+            </Link>
+            <Link
+              href="/wedding-planning"
+              className="inline-flex min-h-11 items-center rounded-full border px-5 text-[14px] font-medium transition-colors"
+              style={{
+                borderColor: "var(--color-line-strong)",
+                color: "var(--color-ink-soft)",
+              }}
+            >
+              See a worked notebook
+            </Link>
+          </div>
         </section>
 
         <SiteFooter />

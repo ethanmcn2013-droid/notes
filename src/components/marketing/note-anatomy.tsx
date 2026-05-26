@@ -20,8 +20,8 @@ import { useEffect, useRef, useState } from "react";
  * by design) is honored — no infinite ticking, no live presence, no
  * typing animation (Notes never simulates typing).
  *
- * Five honest slots — title, preview, stamp, tasks-extract pip, long-
- * press promote. The title is the first line of the body, NOT a
+ * Five honest slots — title, preview, stamp, tasks-extract pip, action
+ * draft. The title is the first line of the body, NOT a
  * separate field — that is the differentiator and the anatomy makes it
  * visible in the type scale (semibold first line, soft preview after).
  *
@@ -64,8 +64,8 @@ const ANN: { slot: Slot; label: string; note: string }[] = [
   },
   {
     slot: "promote",
-    label: "Promote",
-    note: "Hover on desktop, hold on touch. Notes flow to Tasks — never the other way.",
+    label: "Action draft",
+    note: "Only appears when you choose it. Notes can send work to Tasks — never the other way.",
   },
 ];
 
@@ -393,7 +393,7 @@ function DemoRow({
             </div>
           </motion.div>
 
-          {/* Slot 5 — Long-press affordance (gentle scale pulse on beat) */}
+          {/* Slot 5 — chosen action affordance (gentle scale pulse on beat) */}
           <motion.div variants={itemVariants}>
             <motion.div
               {...hoverProps("promote")}
@@ -417,14 +417,14 @@ function DemoRow({
                   className="text-[12px] font-medium"
                   style={{ color: "var(--color-ink-soft)" }}
                 >
-                  → Tasks
+                  Send to Tasks
                 </span>
                 <span
                   aria-hidden
                   className="text-[10.5px] uppercase tracking-[0.1em]"
                   style={{ color: "var(--color-ink-faint)" }}
                 >
-                  hover · hold
+                  choose · send
                 </span>
               </motion.div>
             </motion.div>
@@ -507,7 +507,11 @@ export function NoteAnatomy() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <section className="reveal mt-28 sm:mt-32" aria-label="Anatomy of a note">
+      <section
+        id="anatomy"
+        className="reveal mt-28 scroll-mt-24 sm:mt-32"
+        aria-label="Anatomy of a note"
+      >
         <div className="max-w-[860px]">
           <p
             className="font-mono text-[11px] uppercase"
@@ -536,8 +540,8 @@ export function NoteAnatomy() {
           >
             A note is the body. The title is its first line — the same string,
             no prompt. The stamp stays relative. The pip on the right says
-            whether the note has crossed into Tasks. Promotion is one-way, by
-            design.
+            whether the note has crossed into Tasks. Sending work is one-way,
+            and always chosen by you.
           </p>
           <p
             className="mt-3 max-w-[58ch] text-[13px] leading-[1.55]"

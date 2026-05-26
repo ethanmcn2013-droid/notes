@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { AudienceToggle } from "./audience-toggle";
 import { NotesDemo } from "./notes-demo";
 import { type DomainId } from "@/lib/domains";
-import { WORKED_EXAMPLE_BY_DOMAIN } from "@/components/worked-examples";
 
 /**
- * Notes homepage hero — modelled on Tasks's hero pattern.
- * Eyebrow + H1 + body + CTAs + status pip + audience toggle, with the
- * notebook demo as the dominant artifact below.
+ * Notes live-demo section.
+ *
+ * The animated wordmark above is the hero; this section begins the product
+ * proof immediately afterward: promise copy, audience toggle, and the live
+ * notebook surface. CTAs live only in the closing section.
  */
 export function Hero() {
   const [domain, setDomain] = useState<DomainId>("wedding");
@@ -69,43 +69,10 @@ export function Hero() {
         three seconds. Decide later what becomes work.
       </p>
 
-      <div
-        style={{
-          marginTop: 32,
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: 12,
-        }}
-      >
-        <Link
-          href="/app"
-          className="inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-medium transition-opacity hover:opacity-90"
-          style={{
-            /* R14: suite indigo #4f46e5 per DESIGN.md §6 — black was
-               an undocumented deviation from the locked CTA spec. */
-            background: "var(--color-signal)",
-            color: "#ffffff",
-          }}
-        >
-          Open the notebook
-        </Link>
-        <Link
-          href={WORKED_EXAMPLE_BY_DOMAIN[domain].href}
-          className="inline-flex min-h-11 items-center rounded-full border px-5 text-[14px] font-medium transition-colors"
-          style={{
-            borderColor: "var(--color-line-strong)",
-            color: "var(--color-ink-soft)",
-          }}
-        >
-          {WORKED_EXAMPLE_BY_DOMAIN[domain].label}
-        </Link>
-      </div>
-
       <p
         className="font-mono"
         style={{
-          marginTop: 14,
+          marginTop: 24,
           display: "inline-flex",
           alignItems: "center",
           gap: 8,
@@ -128,10 +95,7 @@ export function Hero() {
         A real notebook · choose whose week
       </p>
 
-      {/* The toggle controls the demo below it — group the two as one
-          unit and open a clear break from the hero CTA cluster so the
-          toggle stops reading as a second row of CTA buttons. */}
-      <div style={{ marginTop: 88 }}>
+      <div id="demo" style={{ marginTop: 48, scrollMarginTop: 80 }}>
         <AudienceToggle domain={domain} onChange={setDomain} />
       </div>
 
