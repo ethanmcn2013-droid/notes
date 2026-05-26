@@ -256,7 +256,9 @@ export default function WeddingPlanningNotePage() {
           >
             <li>
               <a
-                href="https://tasks.signalstudio.ie"
+                href="https://tasks.signalstudio.ie/templates/wedding-planning-workspace"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -272,7 +274,9 @@ export default function WeddingPlanningNotePage() {
             </li>
             <li>
               <a
-                href="https://roadmap.signalstudio.ie"
+                href="https://roadmap.signalstudio.ie/the-wedding"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -288,7 +292,9 @@ export default function WeddingPlanningNotePage() {
             </li>
             <li>
               <a
-                href="https://analytics.signalstudio.ie"
+                href="https://analytics.signalstudio.ie/wedding-planning"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -303,6 +309,22 @@ export default function WeddingPlanningNotePage() {
               </p>
             </li>
           </ul>
+          <p style={{ margin: "28px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
+            For the venue-led version of the loop, see{" "}
+            <a
+              href="https://signalstudio.ie/venues/demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "var(--color-ink, #14151a)",
+                textDecoration: "underline",
+                textDecorationStyle: "dotted",
+                textUnderlineOffset: 4,
+              }}
+            >
+              the Venue Edition demo &rarr;
+            </a>
+          </p>
         </section>
 
         <OtherWorkedExamples current="wedding-planning" />
