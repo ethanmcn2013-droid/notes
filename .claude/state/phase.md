@@ -2,6 +2,8 @@
 
 Notes · 80% mission pass · N·5–N·11b shipped & verified 2026-05-15 — operator-ratified
 
+UX remediation pass 1 — R1/R3/R9/R14 prod-verified 2026-05-17; ff-merged to main 2026-05-18; R9 footer pending one human /app smoke
+
 Voice de-jargoned ("private layer" H1 retired; demo pack de-teched). Four deep,
 dated, in-voice worked examples (wedding / building / teaching / freelance) wired
 through one source of truth; every cross-link resolves. Homepage CTA is
