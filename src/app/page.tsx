@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { NotesHeroLoader } from "@/components/showcase/notes-hero-loader";
 import { Hero } from "@/components/showcase/hero";
 import { NoteAnatomy } from "@/components/marketing/note-anatomy";
 import { SuiteLauncher } from "@/components/suite-launcher";
@@ -40,7 +41,14 @@ export default async function HomePage() {
         ) : null}
       </header>
 
-      <main className="mx-auto max-w-[860px] px-7 pt-24 pb-32 sm:pt-28">
+      {/*
+        Hero loader — full-width, outside the max-w container so the animation
+        can use the full viewport. Immediately followed by the product intro +
+        live demo, anatomy, and anti-features below.
+      */}
+      <NotesHeroLoader />
+
+      <main className="mx-auto max-w-[860px] px-7 pt-16 pb-32 sm:pt-20">
         <Hero />
 
         <NoteAnatomy />
