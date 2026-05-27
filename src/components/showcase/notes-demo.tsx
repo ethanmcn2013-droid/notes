@@ -5,94 +5,92 @@ import { useReducedMotion } from "motion/react";
 import { PrivateNotesEmptyState } from "@/app/app/PrivateNotesEmptyState";
 import { DOMAINS, type DomainId } from "@/lib/domains";
 
-const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const waitMs = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 type DemoNote = { id: string; body: string; stamp: string };
 
-/**
- * Stream order matches the real product: newest first (PRODUCT.md §4,
- * "Recent notes, newest first"). domains.ts authors captures
- * chronologically, so the newest capture is the last entry — reverse
- * for display. searchHitIndex still indexes captures[]; we resolve it
- * to a stable id so display order is free to differ.
- */
+/** Stream order: newest first. captures[] is chronological; reverse for display. */
 function buildNotes(domain: DomainId): DemoNote[] {
   return DOMAINS[domain].captures
-    .map((entry, i) => ({
-      id: `note-${i}`,
-      body: entry.text,
-      stamp: entry.stamp,
-    }))
+    .map((entry, i) => ({ id: `note-${i}`, body: entry.text, stamp: entry.stamp }))
     .slice()
     .reverse();
 }
 
-type Props = {
-  domain?: DomainId;
-};
+/**
+ * Type `text` character-by-character via `setter`.
+ * Returns true on completion, false if the live-check failed mid-type.
+ *
+ * Natural rhythm:
+ *   - base 50ms ±20ms per character
+ *   - +130ms after commas / em-dashes / semicolons / colons
+ *   - +260ms after sentence-end punctuation
+ *   - 3% chance of a 320ms "thinking pause"
+ */
+async function typeText(
+  text: string,
+  setter: (t: string) => void,
+  live: () => boolean,
+  opts?: { baseDelay?: number },
+): Promise<boolean> {
+  const base = opts?.baseDelay ?? 50;
+  let built = "";
+
+  for (const char of text) {
+    if (!live()) return false;
+    built += char;
+    setter(built);
+
+    let delay = base + (Math.random() * 40 - 20);
+    if (char === "," || char === "—" || char === ";" || char === ":") delay += 130;
+    if (char === "." || char === "!" || char === "?" || char === "\n") delay += 260;
+    if (Math.random() < 0.03) delay += 320; // rare hesitation
+
+    await waitMs(Math.max(16, delay));
+  }
+  return true;
+}
+
+type Props = { domain?: DomainId };
 
 /**
- * Marketing demo for Notes.
+ * NotesDemo — the live capture demo on the Notes marketing page.
  *
- * N·13 (2026-05-16): the demo now performs the product's core act —
- * capture — instead of sitting there populated and still. The prior
- * file (N·12) correctly fixed the chrome: it reuses the exact
- * `.notebook` classes the app ships, so it is the real surface, not a
- * lookalike. What it lacked was the act. Every other Signal demo
- * performs (Tasks runs a cinematic; Roadmap advances a dot). This one
- * showed a search-dim loop and never once showed a thought being
- * caught — the one thing Notes is. The product's signature gesture is
- * M·05 *settle* (the slowest motion in the suite by design); it was
- * absent from the product's own demo.
+ * Performs the product's core act: a thought is typed into the capture
+ * field character-by-character (natural rhythm, punctuation pauses, blinking
+ * cursor at the insertion point), held briefly, then committed to the stream
+ * with the product's own `note-row-arrive` CSS gesture.
+ * Followed by a search beat that also types the query in.
  *
- * It now plays, slowly and quietly: the notebook sits at rest, a
- * thought arrives whole into the capture field (settled, never
- * typed-at-you — "never simulate typing", BRAND/PRODUCT), it commits,
- * and the matching row in the stream replays the product's real
- * `note-row-arrive` gesture. Then one calm search beat. Then a long
- * rest. This is Notes's register: the quietest demo in the suite and
- * the most considered. That contrast is the moat, not a violation of
- * it — a busy collaborator-cursor cinematic (Tasks's shape) would
- * betray "not everything needs to be shared".
- *
- * Hard-won properties carried forward (do not regress):
- *  · SSR / no-JS / reduced-motion render the FULL stream at rest,
- *    search empty, count at rest, placeholder static — exactly the app
- *    at rest. The loop is progressive enhancement layered on top.
- *  · The stage is fixed: the stream's DOM length NEVER changes. The
- *    "arrival" is the product's own `.is-fresh` replay on an existing
- *    row, not a DOM insert. Nothing below the notebook ever reflows.
- *    This is the "stop twitching the page" bar (N·11) — the autoplay
- *    loop that collapsed/expanded the stream every ~11s was the exact
- *    jank N·11 removed. Causality reads from capture-field → top row;
- *    no row is added or removed to depict it.
- *  · No views, no taxonomy, no auto-promote (PRODUCT.md §4/§7/§11) —
- *    earlier versions that morphed to a Tags view / long-press
- *    "Promote to Tasks" were removed 2026-05-13. Don't bring them back.
+ * SSR / no-JS: full stream at rest, capture area empty. Correct.
+ * Reduced-motion: no loop fires; stream static.
+ * Tab-visibility: loop pauses when document.hidden.
+ * Domain change: full reset + restart.
  */
 export function NotesDemo({ domain = "wedding" }: Props = {}) {
   const reducedMotion = useReducedMotion();
-  const pack = DOMAINS[domain];
-  const notes = useMemo(() => buildNotes(domain), [domain]);
-  const hitId = `note-${pack.searchHitIndex}`;
+  const pack          = DOMAINS[domain];
+  const notes         = useMemo(() => buildNotes(domain), [domain]);
+  const hitId         = `note-${pack.searchHitIndex}`;
 
-  // Capture-beat state. Empty captureText + captureShown=false is the
-  // resting state where PrivateNotesEmptyState owns the field.
-  const [captureText, setCaptureText] = useState("");
+  // Capture beat
+  const [captureText,  setCaptureText]  = useState("");
   const [captureShown, setCaptureShown] = useState(false);
-  const [freshId, setFreshId] = useState<string | null>(null);
-  const [freshKey, setFreshKey] = useState(0);
+  const [isTyping,     setIsTyping]     = useState(false);
+  const [freshId,      setFreshId]      = useState<string | null>(null);
+  const [freshKey,     setFreshKey]     = useState(0);
 
-  // Search-beat state.
-  const [searchText, setSearchText] = useState("");
+  // Search beat
+  const [searchText,   setSearchText]   = useState("");
   const [searchActive, setSearchActive] = useState(false);
 
   const loopKeyRef = useRef(0);
 
-  // Reset the whole performance whenever the audience changes.
+  // Full reset on domain change
   useEffect(() => {
     setCaptureText("");
     setCaptureShown(false);
+    setIsTyping(false);
     setFreshId(null);
     setSearchText("");
     setSearchActive(false);
@@ -102,94 +100,90 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
   useEffect(() => {
     if (reducedMotion) return;
 
-    const myLoopKey = loopKeyRef.current;
+    const myKey = loopKeyRef.current;
     let cancelled = false;
-    // The full performance plays only when the tab is visible — never
-    // animate to an empty room (perf + restraint).
     const live = () =>
       !cancelled &&
-      myLoopKey === loopKeyRef.current &&
+      myKey === loopKeyRef.current &&
       typeof document !== "undefined" &&
       !document.hidden;
 
-    // captures[] is chronological; play oldest → newest so the newest
-    // lands at the top of the (newest-first) stream and the eye
-    // completes the causality from field → top row.
     const captures = pack.captures;
-
-    async function captureBeat(i: number) {
-      const cap = captures[i];
-      // The thought arrives whole. Placeholder yields (handled by
-      // captureShown gating PrivateNotesEmptyState), text settles in:
-      // opacity + translateY only, ~340ms ease-out. Not typed.
-      setCaptureText(cap.text);
-      setCaptureShown(true);
-      await wait(340);
-      if (!live()) return;
-      // Read it.
-      await wait(1200);
-      if (!live()) return;
-      // Commit: the field releases the thought (180ms fade/rise out)
-      // and, in the same instant, the matching row in the stream
-      // replays the product's real arrival gesture.
-      setCaptureShown(false);
-      const arrivedId = `note-${i}`;
-      setFreshId(arrivedId);
-      setFreshKey((k) => k + 1);
-      await wait(200);
-      if (!live()) return;
-      setCaptureText("");
-      // note-row-arrive is 450ms; let it finish, then settle.
-      await wait(620);
-      if (!live()) return;
-      setFreshId(null);
-      await wait(1600);
-    }
 
     async function searchBeat() {
       setSearchActive(true);
-      await wait(420);
+      await waitMs(320);
       if (!live()) return;
-      // The query settles in whole — consistent with capture, and
-      // honours "never simulate typing".
-      setSearchText(pack.searchQuery);
-      await wait(2800);
+
+      await typeText(pack.searchQuery, setSearchText, live, { baseDelay: 38 });
       if (!live()) return;
+
+      await waitMs(2200);
+      if (!live()) return;
+
       setSearchText("");
       setSearchActive(false);
-      await wait(420);
+      await waitMs(380);
     }
 
     (async function run() {
       while (live()) {
-        // Open on stillness — the notebook just sits there, populated,
-        // placeholder breathing.
-        await wait(3400);
-        if (!live()) {
-          // If we paused (tab hidden) wait a touch and re-check rather
-          // than spinning.
-          await wait(1200);
-          continue;
-        }
+        // Open on stillness. Shorter initial wait (1.5s) so visitors see action quickly.
+        await waitMs(1500);
+        if (!live()) { await waitMs(1200); continue; }
+
         for (let i = 0; i < captures.length; i++) {
-          await captureBeat(i);
           if (!live()) break;
+          const cap = captures[i];
+
+          // ① Empty capture field appears with blinking cursor — "about to type"
+          setCaptureShown(true);
+          setIsTyping(true);
+          await waitMs(420);
+          if (!live()) break;
+
+          // ② Type the thought character by character
+          const ok = await typeText(cap.text, setCaptureText, live);
+          if (!ok || !live()) break;
+
+          // ③ Hold — full thought on screen, cursor still blinking
+          await waitMs(880);
+          if (!live()) break;
+
+          // ④ Cursor disappears (commit moment — Enter key mental-model)
+          setIsTyping(false);
+          await waitMs(180);
+          if (!live()) break;
+
+          // ⑤ Field releases: text fades out, matching stream row re-arrives
+          setCaptureShown(false);
+          setFreshId(`note-${i}`);
+          setFreshKey((k) => k + 1);
+          await waitMs(220);
+          if (!live()) break;
+          setCaptureText("");
+
+          // note-row-arrive is 320ms; let it finish, then settle
+          await waitMs(580);
+          if (!live()) break;
+          setFreshId(null);
+          await waitMs(1400);
         }
+
         if (!live()) continue;
         await searchBeat();
         if (!live()) continue;
-        // A long, quiet rest before the whole thing happens again.
-        await wait(4200);
+
+        // Long quiet rest before the whole thing happens again.
+        await waitMs(3600);
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [reducedMotion, domain, pack]);
 
-  const query = searchText.trim().toLowerCase();
-  const searching = query.length > 0;
+  const query      = searchText.trim().toLowerCase();
+  const searching  = query.length > 0;
   const matchCount = searching
     ? notes.filter((n) => n.body.toLowerCase().includes(query)).length
     : notes.length;
@@ -197,15 +191,12 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
 
   return (
     <div className="notebook-demo">
-      {/* The real product surface — same .notebook chrome the app
-          renders at /app. minHeight override: the app sets a tall
-          full-screen min-height; the hero artifact sizes to content
-          but reserves the resting height so the stage never reflows. */}
       <section
         className="notebook"
         aria-label="Signal Notes — a look at the notebook"
         style={{ minHeight: 0 }}
       >
+        {/* Top bar: wordmark + search */}
         <div className="notebook-top">
           <span className="wordmark" aria-hidden>
             <span className="word">notes</span>
@@ -221,38 +212,40 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
               tabIndex={-1}
               aria-hidden
               spellCheck={false}
-              style={{
-                borderBottomColor: searchActive
-                  ? "var(--color-accent)"
-                  : undefined,
-              }}
+              style={{ borderBottomColor: searchActive ? "var(--color-accent)" : undefined }}
             />
           </span>
         </div>
 
+        {/* Capture area */}
         <div className="capture">
           <div className="sr-only">Capture a private note</div>
-          {/* Read-only replica of the app's capture textarea — the
-              signature giant type. The thought settles into it whole
-              (opacity + translateY), then releases on commit. Non-
-              interactive: the live product is one click away via the
-              hero CTA. */}
-          <textarea
-            rows={3}
-            placeholder=""
-            value={captureText}
-            readOnly
-            tabIndex={-1}
-            aria-hidden
-            data-shown={captureShown ? "true" : "false"}
-          />
+
+          {/*
+            Demo capture display: a styled div (not textarea) so the blinking
+            cursor lives inline at the exact insertion point. Only rendered
+            when captureShown — SSR leaves this empty (stream at rest is correct).
+          */}
+          {captureShown && (
+            <div
+              className="demo-capture-text"
+              aria-hidden
+              data-committing={!isTyping ? "true" : "false"}
+            >
+              {captureText}
+              {isTyping && <span className="demo-capture-cursor" aria-hidden />}
+            </div>
+          )}
+
           <PrivateNotesEmptyState visible={placeholderVisible} />
+
           <p className="capture-hint">
             <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line ·{" "}
             <kbd>Esc</kbd> clears
           </p>
         </div>
 
+        {/* Stream header */}
         <div className="stream-head">
           <span>Stream</span>
           <span>
@@ -262,17 +255,15 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           </span>
         </div>
 
+        {/* Note stream */}
         <ol className="stream" aria-label="Recent notes">
           {notes.map((note) => {
-            const isHit = note.id === hitId;
-            const dimmed = searching && !isHit;
+            const isHit   = note.id === hitId;
+            const dimmed  = searching && !isHit;
             const isFresh = note.id === freshId;
             return (
               <li key={note.id}>
                 <div
-                  // Remounting on freshKey replays the product's real
-                  // note-row-arrive CSS animation without a DOM
-                  // insert — the stream length never changes.
                   key={isFresh ? `${note.id}-${freshKey}` : note.id}
                   className={`note-row${isFresh ? " is-fresh" : ""}`}
                   style={{
@@ -299,6 +290,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
       </section>
 
       <style>{`
+        /* ── Demo shell ───────────────────────────────────────────────── */
         .notebook-demo {
           display: flex;
           justify-content: center;
@@ -308,32 +300,81 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           width: 100%;
           max-width: 620px;
         }
-        /* The hero artifact wants a calmer capture height than the
-           full-bleed in-product field; keep the signature scale, trim
-           the dead space. The settle is opacity + translateY only —
-           hardware-accelerated, contract-timed, ease-out. */
+        /* Reserve height so stream never jumps when capture appears/disappears */
         .notebook-demo .capture {
           position: relative;
+          min-height: 116px;
         }
-        .notebook-demo .capture textarea {
+
+        /* ── Capture text div ─────────────────────────────────────────── */
+        /* Mirrors the product textarea's font scale exactly so it reads as
+           the real surface. Uses a div so the cursor is an inline child. */
+        .demo-capture-text {
+          position: relative;
+          z-index: 1;
+          display: block;
+          width: 100%;
           min-height: 96px;
-          pointer-events: none;
-          opacity: 0;
-          transform: translateY(8px);
-          transition:
-            opacity var(--motion-moderate) var(--ease-out),
-            transform var(--motion-moderate) var(--ease-out);
+          color: var(--color-ink);
+          font-size: clamp(28px, 5vw, 56px);
+          font-weight: 560;
+          line-height: 1.03;
+          letter-spacing: 0;
+          font-family: inherit;
+          word-break: break-word;
+          white-space: pre-wrap;
+          animation: demo-text-in 240ms cubic-bezier(0, 0, 0.2, 1) both;
         }
-        .notebook-demo .capture textarea[data-shown="true"] {
-          opacity: 1;
-          transform: translateY(0);
+        @keyframes demo-text-in {
+          from { opacity: 0; transform: translateY(5px); }
+          to   { opacity: 1; transform: translateY(0);   }
         }
+        /* Exit: commit moment — field rises gently away */
+        .demo-capture-text[data-committing="true"] {
+          animation: demo-text-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
+        }
+        @keyframes demo-text-out {
+          from { opacity: 1; transform: translateY(0);   }
+          to   { opacity: 0; transform: translateY(-5px); }
+        }
+
+        /* ── Blinking cursor ──────────────────────────────────────────── */
+        /* Sits inline at the exact end of the typed text. Indigo accent
+           matches the product's caret-color and the placeholder caret. */
+        .demo-capture-cursor {
+          display: inline-block;
+          width: 2.5px;
+          height: 0.76em;
+          background: var(--color-accent, #4f46e5);
+          margin-left: 4px;
+          vertical-align: baseline;
+          position: relative;
+          top: 0.09em;
+          border-radius: 1px;
+          animation: demo-caret-blink 0.88s ease-in-out infinite;
+        }
+        @keyframes demo-caret-blink {
+          0%, 44% { opacity: 0.16; }
+          50%, 90% { opacity: 1; }
+          100%     { opacity: 0.16; }
+        }
+
+        /* Suppress hover highlight on stream rows in demo */
         .notebook-demo .note-row:hover {
           background: transparent;
         }
+
+        /* ── Reduced motion ───────────────────────────────────────────── */
         @media (prefers-reduced-motion: reduce) {
-          .notebook-demo .capture textarea {
-            transition: none;
+          .demo-capture-text,
+          .demo-capture-text[data-committing="true"] {
+            animation: none !important;
+            opacity: 1;
+            transform: none;
+          }
+          .demo-capture-cursor {
+            animation: none !important;
+            opacity: 1;
           }
         }
       `}</style>
@@ -345,15 +386,14 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
 function renderWithHighlight(body: string, query: string) {
   if (!query) return body;
   const lower = body.toLowerCase();
-  const idx = lower.indexOf(query.toLowerCase());
+  const idx   = lower.indexOf(query.toLowerCase());
   if (idx < 0) return body;
   return (
     <>
       {body.slice(0, idx)}
       <span
         style={{
-          background:
-            "color-mix(in srgb, var(--color-accent) 18%, transparent)",
+          background: "color-mix(in srgb, var(--color-accent) 18%, transparent)",
           borderRadius: 4,
           padding: "0 2px",
           margin: "0 -2px",

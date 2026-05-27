@@ -41,7 +41,7 @@ export default async function HomePage() {
         <NoteAnatomy />
 
         <section
-          className="mt-28 border-t py-20 sm:mt-32 sm:py-24"
+          className="reveal mt-28 border-t py-20 sm:mt-32 sm:py-24"
           style={{ borderColor: "var(--color-line)" }}
         >
           <p
