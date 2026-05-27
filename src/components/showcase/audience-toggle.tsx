@@ -11,16 +11,17 @@ type Props = {
 /**
  * Audience picker for the Notes capture demo.
  *
- * N·13 (2026-05-16): the prior pill was a gradient-bevel-glow chip
- * (linear-gradient + inset white highlight + coloured drop-shadow).
- * That is the YC-SaaS aesthetic the suite refuses (DESIGN.md §10:
- * "glow blooms", "drop-shadows over hairlines as default elevation").
- * It read as a control lifted from a different app — the exact "this
- * doesn't belong" complaint. Re-skinned to the product's own flat
- * language: hairline container, no shadow, a solid ink active pill
- * (same quiet high-contrast register as the hero CTA, so the page now
- * ties together). The sliding marker stays — a shared-element move is
- * honest motion — but it respects reduced-motion.
+ * Previous design (N·13): iOS-style segmented control — thick rounded
+ * container border + solid black filled pill. Off-brand for Notes: too
+ * much chrome, too many competing shapes, the heavy black read "control"
+ * not "thought". DESIGN.md §10 refuses glow and heavy shadow elevation;
+ * the spirit extends to loud selection states.
+ *
+ * New design: plain text tabs in a horizontal row. Active state is a
+ * hairline underline that slides between labels using a shared-element
+ * layout animation. No container border, no filled pill, no shadow.
+ * Ink colour shifts slightly on active; otherwise the labels stay quiet.
+ * This is the Notes register: the smallest gesture that communicates.
  */
 export function AudienceToggle({ domain, onChange }: Props) {
   const active = DOMAINS[domain];
@@ -28,36 +29,38 @@ export function AudienceToggle({ domain, onChange }: Props) {
 
   return (
     <div className="flex flex-col items-start gap-3">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      {/* Description line — changes with audience */}
+      <p
+        style={{
+          fontSize: 13.5,
+          lineHeight: 1.5,
+          color: "var(--color-ink-faint)",
+          letterSpacing: "0.01em",
+          margin: 0,
+        }}
+      >
         <span
           className="font-mono text-[11px] font-semibold uppercase"
           style={{
             color: "var(--color-ink-faint)",
-            letterSpacing: "0.14em",
+            letterSpacing: "0.12em",
+            marginRight: 8,
           }}
         >
           Built for
         </span>
-        <span
-          className="text-[12.5px]"
-          style={{ color: "var(--color-ink-soft)" }}
-        >
-          {active.description}
-        </span>
-      </div>
+        {active.description}
+      </p>
 
+      {/* Tab row — no container border, underline-only active state */}
       <LayoutGroup id="notes-audience-toggle">
         <div
           role="tablist"
           aria-label="Choose an audience"
-          className="relative inline-flex flex-wrap items-center gap-0.5 rounded-full border p-1"
-          style={{
-            borderColor: "var(--color-line)",
-            background: "var(--color-paper)",
-          }}
+          className="flex items-end gap-0"
         >
-          {DOMAIN_ORDER.map((id) => {
-            const pack = DOMAINS[id];
+          {DOMAIN_ORDER.map((id, index) => {
+            const pack    = DOMAINS[id];
             const isActive = id === domain;
             return (
               <button
@@ -65,26 +68,41 @@ export function AudienceToggle({ domain, onChange }: Props) {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => onChange(id)}
-                className="relative inline-flex items-center rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors"
+                className="relative pb-2 text-[13px] transition-colors"
                 style={{
+                  paddingLeft:  index === 0 ? 0 : 16,
+                  paddingRight: 16,
+                  fontWeight: isActive ? 500 : 400,
                   color: isActive
-                    ? "var(--color-paper)"
-                    : "var(--color-ink-soft)",
+                    ? "var(--color-ink)"
+                    : "var(--color-ink-faint)",
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  cursor: "pointer",
+                  letterSpacing: "0.005em",
                 }}
               >
-                {isActive ? (
+                {pack.label}
+
+                {/* Sliding underline — shared layout element */}
+                {isActive && (
                   <motion.span
-                    layoutId="notes-audience-pill"
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: "var(--color-ink)" }}
+                    layoutId="notes-audience-underline"
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{
+                      height: 1.5,
+                      background: "var(--color-ink)",
+                      borderRadius: 1,
+                      marginLeft: index === 0 ? 0 : 16,
+                    }}
                     transition={
                       reducedMotion
                         ? { duration: 0 }
-                        : { type: "spring", stiffness: 360, damping: 30 }
+                        : { type: "spring", stiffness: 400, damping: 32 }
                     }
                   />
-                ) : null}
-                <span className="relative z-10">{pack.label}</span>
+                )}
               </button>
             );
           })}

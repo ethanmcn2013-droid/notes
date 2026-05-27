@@ -222,9 +222,24 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           <div className="sr-only">Capture a private note</div>
 
           {/*
-            Demo capture display: a styled div (not textarea) so the blinking
-            cursor lives inline at the exact insertion point. Only rendered
-            when captureShown — SSR leaves this empty (stream at rest is correct).
+            Height anchor: an invisible, inert textarea that gives .capture
+            its correct block height so the placeholder text never bleeds
+            into the keyboard hint below. Same technique as the original demo
+            (N·12); the typewriter overlay sits absolutely on top of it.
+          */}
+          <textarea
+            rows={3}
+            value=""
+            readOnly
+            tabIndex={-1}
+            aria-hidden
+            className="demo-capture-spacer"
+          />
+
+          {/*
+            Typing overlay: absolutely positioned on top of the spacer.
+            Uses a div (not textarea) so the blinking cursor is an inline
+            child at the exact insertion point. Only mounted when captureShown.
           */}
           {captureShown && (
             <div
@@ -300,21 +315,35 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           width: 100%;
           max-width: 620px;
         }
-        /* Reserve height so stream never jumps when capture appears/disappears */
-        .notebook-demo .capture {
-          position: relative;
-          min-height: 116px;
-        }
-
-        /* ── Capture text div ─────────────────────────────────────────── */
-        /* Mirrors the product textarea's font scale exactly so it reads as
-           the real surface. Uses a div so the cursor is an inline child. */
-        .demo-capture-text {
-          position: relative;
-          z-index: 1;
+        /* ── Height anchor spacer ────────────────────────────────────── */
+        /* An invisible inert textarea that keeps .capture block height
+           stable so the absolutely-positioned placeholder never overflows
+           into the keyboard hint below. */
+        .demo-capture-spacer {
           display: block;
           width: 100%;
           min-height: 96px;
+          opacity: 0;
+          pointer-events: none;
+          resize: none;
+          border: 0;
+          outline: 0;
+          background: transparent;
+          font-size: clamp(28px, 5vw, 56px);
+          font-weight: 560;
+          line-height: 1.03;
+          font-family: inherit;
+        }
+
+        /* ── Capture text overlay ─────────────────────────────────────── */
+        /* Absolutely positioned on top of the spacer; uses a div so the
+           blinking cursor is an inline child at the exact insertion point. */
+        .demo-capture-text {
+          position: absolute;
+          top: var(--capture-pad, 24px);
+          left: var(--capture-pad, 24px);
+          right: var(--capture-pad, 24px);
+          z-index: 2;
           color: var(--color-ink);
           font-size: clamp(28px, 5vw, 56px);
           font-weight: 560;
