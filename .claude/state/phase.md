@@ -12,7 +12,9 @@ notebook (crawler/no-JS safe, zero CLS) with the auto-typing story removed.
 Verified live on desktop and at 390px mobile across every changed surface.
 
 Phase vocabulary: Notes uses `N·NN` cycle codes (dispatch shape per BRAND.md §6.5).
-Next cycle increments from N·11b.
+Next cycle increments from N·21.
+
+Marketing hero N·21 shipped 2026-05-28 — Approach C "The Voice", director panel 9.5+ gate, deployed prod 6a29d8b. Replaces NotesHeroLoader with NotesHeroVoice (voice typing loop, two live carets, full-bleed hairline rule, §13 safety contract).
 
 UX remediation pass 1 — R1/R3/R9/R14 prod-verified 2026-05-17; R9 footer pending human /app smoke
 
