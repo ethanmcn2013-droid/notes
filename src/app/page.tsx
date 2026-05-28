@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { NotesHeroLoader } from "@/components/showcase/notes-hero-loader";
+import { NotesHeroVoice } from "@/components/marketing/notes-hero-voice";
 import { Hero } from "@/components/showcase/hero";
 import { NoteAnatomy } from "@/components/marketing/note-anatomy";
 import { SuiteLauncher } from "@/components/suite-launcher";
@@ -33,7 +33,7 @@ export default async function HomePage() {
         Page order: animated wordmark hero, live notebook demo, animated
         anatomy, final CTA. No upper CTA cluster.
       */}
-      <NotesHeroLoader />
+      <NotesHeroVoice />
 
       <main className="mx-auto max-w-[860px] px-7 pt-14 pb-32 sm:pt-16">
         <Hero />
