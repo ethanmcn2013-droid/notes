@@ -15,25 +15,29 @@ export default async function HomePage() {
   return (
     <>
       <header className="suitebar" aria-label="Signal Notes notebook chrome">
-        <div className="suite-breadcrumb">
-          <SuiteLauncher current="notes" isAuthed={isSignedIn} />
-          <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
-          <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
-            <span className="word">notes</span>
-            <span className="dot" aria-hidden />
-          </Link>
-        </div>
-        {isSignedIn ? (
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <UserButtonWithSuite current="notes" />
+        {/* Centered 1240 container — matches the suite product-header geometry
+            (DESIGN.md §14). Notes keeps its own warm hairline + register. */}
+        <div className="suitebar-inner">
+          <div className="suite-breadcrumb">
+            <SuiteLauncher current="notes" isAuthed={isSignedIn} />
+            <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
+            <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
+              <span className="word">notes</span>
+              <span className="dot" aria-hidden />
+            </Link>
           </div>
-        ) : (
-          /* Sign in is a visible affordance, never a gate — public scanning
-             stays open (canonical product header, DESIGN.md §14). */
-          <Link href="/sign-in" className="notes-signin">
-            Sign in
-          </Link>
-        )}
+          {isSignedIn ? (
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <UserButtonWithSuite current="notes" />
+            </div>
+          ) : (
+            /* Sign in is a visible affordance, never a gate — public scanning
+               stays open (canonical product header, DESIGN.md §14). */
+            <Link href="/sign-in" className="notes-signin">
+              Sign in
+            </Link>
+          )}
+        </div>
       </header>
 
       <SuiteArrows current="notes" />

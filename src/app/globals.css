@@ -271,13 +271,22 @@ button, input, textarea { font: inherit; }
 /* ── Suitebar (notebook chrome) ─────────────────────────────────── */
 .suitebar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   min-height: 44px;
-  padding: 0 28px;
+  padding: 0;
   border-bottom: 1px solid rgba(217, 221, 207, 0.75);
   color: var(--color-ink-soft);
   font-size: 12px;
+}
+/* Centered container — matches suite product-header geometry (max-w 1240 /
+   24px gutters). Border + bar stay full-bleed; only the content is centered. */
+.suitebar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 .suitebar a { text-decoration: none; }
 /* Breadcrumb group: small "signal studio." back-link, "/" separator,
@@ -949,7 +958,7 @@ button, input, textarea { font: inherit; }
 /* ── Responsive: collapse aside on narrow screens ───────────────── */
 
 @media (max-width: 860px) {
-  .suitebar {
+  .suitebar-inner {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
