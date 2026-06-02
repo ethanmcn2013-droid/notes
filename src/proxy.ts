@@ -77,10 +77,12 @@ export default clerkMiddleware(async (auth, req) => {
   // ── Layer 2: M → /app redirect ──────────────────────────────────
   // Only fires on M routes. A/C/X routes are never touched.
   if (MARKETING_PATHS.has(pathname)) {
-    // Read auth state from the __session cookie directly (fast path,
-    // no Clerk round-trip). The shared Clerk PROD instance sets
-    // __session across *.signalstudio.ie; we rely on its presence.
-    const isAuthed = Boolean(req.cookies.get("__session")?.value);
+    // Use the REAL Clerk session (userId), not raw __session cookie presence.
+    // A stale/expired cookie otherwise 307s a signed-out visitor to /app and
+    // walls them at /sign-in ("forced sign-in unless incognito"). Genuine
+    // sessions still redirect to the notebook.
+    const { userId } = await auth();
+    const isAuthed = Boolean(userId);
     const isPreview =
       req.cookies.get("signal_preview_public")?.value === "1" ||
       searchParams.get("preview") === "public";
