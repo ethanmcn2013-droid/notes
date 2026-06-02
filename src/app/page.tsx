@@ -6,6 +6,7 @@ import { NoteAnatomy } from "@/components/marketing/note-anatomy";
 import { SuiteLauncher } from "@/components/suite-launcher";
 import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { SuiteArrows } from "@/components/suite-arrows";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -26,8 +27,16 @@ export default async function HomePage() {
           <div style={{ display: "flex", alignItems: "center" }}>
             <UserButtonWithSuite current="notes" />
           </div>
-        ) : null}
+        ) : (
+          /* Sign in is a visible affordance, never a gate — public scanning
+             stays open (canonical product header, DESIGN.md §14). */
+          <Link href="/sign-in" className="notes-signin">
+            Sign in
+          </Link>
+        )}
       </header>
+
+      <SuiteArrows current="notes" />
 
       {/*
         Page order: animated wordmark hero, live notebook demo, animated
