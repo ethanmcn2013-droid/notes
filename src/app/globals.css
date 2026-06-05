@@ -400,7 +400,8 @@ button, input, textarea { font: inherit; }
 }
 /* Caret blink for the in-app notebook header wordmark. The marketing
    breadcrumb (.notes-mark .dot) deliberately does NOT use this — static
-   there for suite-wide breadcrumb consistency. */
+   there for suite-wide breadcrumb consistency.
+   ~1.1s sharp on/off per BRAND.md §4 — caret gesture. */
 @keyframes notes-dot-caret {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0; }
