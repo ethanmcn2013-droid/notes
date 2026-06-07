@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 
+// Dalí row 4 — trim. Seven lines became four. The cut lines repeated
+// other angles ("For things not ready" overlapped "Ideas before they
+// become decisions"; "For thoughts still forming" overlapped "A place
+// to think"; "Not everything needs to be shared" overlapped "Some
+// things are only for you"). What's left covers four distinct angles:
+// voice, time, mind, ownership.
 const PRIVATE_NOTES_EMPTY_LINES = [
   "Writings you can’t say out loud.",
-  "For things not ready for the room yet.",
   "Ideas before they become decisions.",
-  "Not everything needs to be shared.",
   "A place to think before you speak.",
-  "For thoughts still forming.",
   "Some things are only for you.",
 ] as const;
 
@@ -18,15 +21,16 @@ const PRIVATE_NOTES_EMPTY_LINES = [
 const SETTLED_NOTE_THRESHOLD = 8;
 const SETTLED_LINE = "A place to think before you speak.";
 
-// Typewriter rotation tuning. Total cycle ≈ 30s per line, composed of:
-//   - Type-in:  N chars × TYPE_INTERVAL_MS  (e.g. 40 chars × 50ms = 2000ms)
-//   - Settled hold: TOTAL_CYCLE_MS − type-in − fade-out  (≈ 27s)
+// Typewriter rotation tuning. Total cycle ≈ 18s per line — was 30s,
+// trimmed for Dalí row 4 so a four-line rotation completes in ~72s
+// instead of ~3.5 minutes. The full pass is now short enough to
+// re-encounter a line within one writing session.
+//   - Type-in:  N chars × TYPE_INTERVAL_MS  (e.g. 34 chars × 50ms ≈ 1700ms)
+//   - Settled hold: TOTAL_CYCLE_MS − type-in − fade-out  (≈ 15.5s)
 //   - Fade-out: FADE_OUT_MS                              (≈ 800ms)
-// Settled hold is computed dynamically per-line so longer/shorter lines
-// stay on-screen for the same total rotation cadence.
 const TYPE_INTERVAL_MS = 50;
 const FADE_OUT_MS = 800;
-const TOTAL_CYCLE_MS = 30_000;
+const TOTAL_CYCLE_MS = 18_000;
 
 interface PrivateNotesEmptyStateProps {
   visible: boolean;
