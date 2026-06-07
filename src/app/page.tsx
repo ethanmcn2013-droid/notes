@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { NotesHeroVoice } from "@/components/marketing/notes-hero-voice";
-import { Hero } from "@/components/showcase/hero";
-import { NoteAnatomy } from "@/components/marketing/note-anatomy";
 import { SuiteLauncher } from "@/components/suite-launcher";
 import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 import { SiteFooter } from "@/components/marketing/site-footer";
-import { SuiteArrows } from "@/components/suite-arrows";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -40,22 +37,17 @@ export default async function HomePage() {
         </div>
       </header>
 
-      <SuiteArrows current="notes" />
-
       {/*
-        Page order: animated wordmark hero, live notebook demo, animated
-        anatomy, final CTA. No upper CTA cluster.
+        Page order (Caravaggio walkover, row 1): animated wordmark hero →
+        one-sentence promise → "Open the notebook". The second hero
+        (live notebook demo) and the animated NoteAnatomy were cut from
+        the home — NoteAnatomy now lives at /anatomy as a deep-link.
       */}
       <NotesHeroVoice />
 
       <main className="mx-auto max-w-[860px] px-7 pt-14 pb-32 sm:pt-16">
-        <Hero />
-
-        <NoteAnatomy />
-
         <section
-          className="reveal mt-28 border-t py-20 sm:mt-32 sm:py-24"
-          style={{ borderColor: "var(--color-line)" }}
+          className="reveal mt-4 py-20 sm:py-24"
         >
           <p
             className="font-mono"
@@ -107,14 +99,14 @@ export default async function HomePage() {
               Open the notebook
             </Link>
             <Link
-              href="/wedding-planning"
+              href="/anatomy"
               className="inline-flex min-h-11 items-center rounded-full border px-5 text-[14px] font-medium transition-colors"
               style={{
                 borderColor: "var(--color-line-strong)",
                 color: "var(--color-ink-soft)",
               }}
             >
-              See a worked notebook
+              Anatomy of a note
             </Link>
           </div>
         </section>
