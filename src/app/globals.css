@@ -1145,17 +1145,6 @@ button, input, textarea { font: inherit; }
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* E7(a) — pointer-aware nudge copy.
-   Show the correct affordance based on the primary pointer type.
-   Default (coarse/unknown) → long-press copy visible, fine hidden.
-   Fine pointer (mouse/trackpad) → click copy visible, coarse hidden. */
-.note-nudge-text--fine  { display: none; }
-.note-nudge-text--coarse { display: inline; }
-@media (any-pointer: fine) {
-  .note-nudge-text--fine  { display: inline; }
-  .note-nudge-text--coarse { display: none; }
-}
-
 /* ── Extract-drafted reveal ──────────────────────────────────────── */
 /* The "Saved. Ready to send to Signal Tasks." panel enters on opacity
    + translateY only — no height animation (the open-note max-height

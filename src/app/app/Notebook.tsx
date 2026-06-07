@@ -159,11 +159,14 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   // object synchronously without taking a stale-closure dependency.
   const notesRef = useRef<NoteRead[]>(initialNotes);
 
-  // Mobile nudge: one-time "Long-press any note to send it to Tasks"
-  // Shown on first visit if no promoted notes exist. localStorage-gated.
-  // UX_SPEC §RW-3a "First-touch test lens" item 1.
-  const NUDGE_KEY = "notes-longpress-nudge-dismissed";
-  const [showNudge, setShowNudge] = useState(false);
+  // Caravaggio walkover row 3: the persistent "Long-press any note…" nudge
+  // is removed — the product that refuses tutorials ships no tutorial. The
+  // ghost `→ Tasks` button on hover (fine pointers) plus long-press tray
+  // (coarse pointers) are the affordance. A single quiet session-scoped
+  // toast surfaces *only* on the first misfired promote attempt: when a
+  // user opens a note (clicks the row) instead of promoting it. Stored in
+  // sessionStorage so it never repeats within the tab session.
+  const MISFIRE_TOAST_KEY = "notes-misfire-toast-shown";
 
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
@@ -186,21 +189,18 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   // Touch start coords for move-threshold check
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Mobile nudge: show once on first visit if no promoted notes exist.
-  // Read localStorage after mount so SSR doesn't throw.
-  useEffect(() => {
+  // Misfire toast: fire once per session when a user opens a note instead
+  // of promoting it. Quiet by design — uses the existing promoteToast
+  // surface so we don't grow another UI primitive.
+  function maybeShowMisfireToast() {
     try {
-      const dismissed = localStorage.getItem(NUDGE_KEY) === "1";
-      if (!dismissed && initialArchivedNotes.length === 0) {
-        setShowNudge(true);
-      }
+      if (sessionStorage.getItem(MISFIRE_TOAST_KEY) === "1") return;
+      sessionStorage.setItem(MISFIRE_TOAST_KEY, "1");
     } catch { /* private browsing */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function dismissNudge() {
-    setShowNudge(false);
-    try { localStorage.setItem(NUDGE_KEY, "1"); } catch { /* private browsing */ }
+    showPromoteToast({
+      kind: "success",
+      message: "long-press or use \u2318\u21B5 to send to tasks",
+    });
   }
 
   // P3-1: Deterministic first-paint focus — cursor ready, nothing highlighted.
@@ -455,7 +455,6 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             return next;
           });
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
-          dismissNudge();
         } catch (err) {
           // Cancel the pending removal so the note never disappears, then
           // restore it from the pre-mutation snapshot if the grace timer
@@ -860,7 +859,6 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             return [updated, ...without];
           });
           showPromoteToast({ kind: "success", message: "Added to Tasks" });
-          dismissNudge();
           // Keep the note in the active stream so the open-note panel (and
           // its in-panel receipt) stays mounted for the 800ms confirm
           // window; remove it from the active stream as the panel closes.
@@ -1045,6 +1043,13 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                         e.stopPropagation();
                         return;
                       }
+                      // Row 3: opening (not promoting) a note that isn't
+                      // already in Tasks is a "misfire" relative to the
+                      // promote affordance — surface the quiet one-time
+                      // session toast pointing at long-press / ⌘↵.
+                      if (!isOpen && !note.promotedTaskId && !isPromoting) {
+                        maybeShowMisfireToast();
+                      }
                       setOpenId(isOpen ? null : note.id);
                       setActiveTrayId(null);
                     }}
@@ -1133,72 +1138,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                 )}
               </li>
             );
-          }).flatMap((liEl, idx) =>
-            // BV-3: nudge renders as a <li> immediately after the first note row.
-            // UX_SPEC §RW-3a "First-touch test lens" item 1: "below the first note row".
-            // Logic unchanged — same showNudge condition, same dismiss handler.
-            idx === 0 && showNudge && filteredNotes.length > 0
-              ? [
-                  liEl,
-                  <li key="mobile-nudge" className="note-nudge-li" aria-hidden>
-                    <div
-                      className="note-nudge"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "6px 0 2px",
-                        gap: 8,
-                      }}
-                    >
-                      {/* E7(a) — pointer-aware hint copy.
-                          CSS media queries control which span is visible:
-                          fine-pointer devices see the click affordance;
-                          coarse-pointer (touch) devices see long-press.
-                          Both render in the DOM; CSS toggles display. */}
-                      <span
-                        className="note-nudge-text note-nudge-text--fine"
-                        style={{
-                          fontSize: 11,
-                          color: "var(--color-ink-faint, #d4d4d8)",
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        Click any note to send it to Tasks.
-                      </span>
-                      <span
-                        className="note-nudge-text note-nudge-text--coarse"
-                        style={{
-                          fontSize: 11,
-                          color: "var(--color-ink-faint, #d4d4d8)",
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        Long-press any note to send it to Tasks.
-                      </span>
-                      <button
-                        type="button"
-                        onClick={dismissNudge}
-                        aria-label="Dismiss hint"
-                        tabIndex={-1}
-                        style={{
-                          fontSize: 10,
-                          color: "var(--color-ink-faint, #d4d4d8)",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "2px 4px",
-                          lineHeight: 1,
-                          flexShrink: 0,
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </li>,
-                ]
-              : [liEl],
-          )}
+          })}
         </ol>
 
         {openNote && (
