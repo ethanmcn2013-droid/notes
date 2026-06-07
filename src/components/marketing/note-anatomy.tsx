@@ -402,12 +402,17 @@ function DemoRow({
               className="cursor-default rounded-md px-2 py-1 -mx-2 -my-1 mt-1"
               style={{ outline: "none" }}
             >
+              {/* Dalí row 13 — "Shape it first" promoted to equal
+                  weight with "Send to Tasks". The shaping step is the
+                  editorial move that makes Notes' lifecycle honest;
+                  the send is the dispatch. Both surfaced, same type,
+                  separated by a hairline divider. */}
               <motion.div
                 key={`pulse-${stage.promotePulse}`}
                 initial={{ scale: 1 }}
                 animate={{ scale: [1, 1.015, 1] }}
                 transition={{ duration: 0.9, ease: EASE.inOut }}
-                className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-md border px-3 py-2"
                 style={{
                   borderColor: "var(--color-line)",
                   background: "var(--color-bg)",
@@ -417,14 +422,24 @@ function DemoRow({
                   className="text-[12px] font-medium"
                   style={{ color: "var(--color-ink-soft)" }}
                 >
-                  Send to Tasks
+                  Shape it first
                 </span>
                 <span
                   aria-hidden
-                  className="text-[10.5px] uppercase tracking-[0.1em]"
-                  style={{ color: "var(--color-ink-faint)" }}
+                  className="text-[10.5px] uppercase tracking-[0.12em]"
+                  style={{
+                    color: "var(--color-ink-faint)",
+                    width: 1,
+                    height: 14,
+                    background: "var(--color-line)",
+                    display: "inline-block",
+                  }}
+                />
+                <span
+                  className="text-[12px] font-medium text-right"
+                  style={{ color: "var(--color-ink-soft)" }}
                 >
-                  choose · send
+                  Send to Tasks
                 </span>
               </motion.div>
             </motion.div>
