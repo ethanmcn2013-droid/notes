@@ -112,6 +112,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const [notes, setNotes] = useState<NoteRead[]>(initialNotes);
   const [archivedNotes, setArchivedNotes] = useState<NoteRead[]>(initialArchivedNotes);
   const [openId, setOpenId] = useState<string | null>(null);
+  // Ref-mirror of openId for stable access inside long-lived keydown handlers
+  // (Caravaggio walkover row 2 — Cmd/Ctrl+Backspace delete).
+  const openIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    openIdRef.current = openId;
+  }, [openId]);
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -324,6 +330,37 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     };
     document.addEventListener("keydown", onNav);
     return () => document.removeEventListener("keydown", onNav);
+  }, []);
+
+  // Cmd/Ctrl+Backspace — delete the open note from the keyboard.
+  // Caravaggio walkover row 2: Delete moved out of the always-visible
+  // open-note panel chrome. Long-press on the row tray and this keyboard
+  // shortcut are the two surviving paths so the open-note panel stays
+  // body-only with one corner action.
+  // Uses removeRef to avoid TDZ on the const declared further below.
+  const removeRef = useRef<((id: string) => void) | null>(null);
+  useEffect(() => {
+    const isTypingTarget = (el: EventTarget | null) => {
+      const n = el as HTMLElement | null;
+      if (!n) return false;
+      return (
+        n.tagName === "INPUT" ||
+        n.tagName === "TEXTAREA" ||
+        n.tagName === "SELECT" ||
+        n.isContentEditable
+      );
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      if (event.key !== "Backspace" && event.key !== "Delete") return;
+      if (isTypingTarget(document.activeElement)) return;
+      const id = openIdRef.current;
+      if (!id) return;
+      event.preventDefault();
+      removeRef.current?.(id);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, []);
 
   // Dismiss tray on outside click / scroll
@@ -1172,56 +1209,83 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             <span className="sr-only" aria-live="polite" aria-atomic="true">
               {srConfirm}
             </span>
+            {/* Caravaggio walkover row 2 + row 13:
+                Open-note panel reduces to body + one corner action.
+                Delete is no longer always-visible chrome — it lives on
+                long-press (touch) and ⌘⌫ / Ctrl⌫ (keyboard). The
+                always-present corner shows either:
+                  - "In Tasks" label (already promoted), OR
+                  - the icon-only "Send to Tasks" send arrow (zero-extract).
+                Equal-weight "Send as-is" / "Shape & send" siblings live
+                inline below the body so they earn the same gravity rather
+                than orbit the corner. */}
             <div className="open-note-head">
               <span>
                 Captured <RelativeTime ts={openNote.createdAt} />
               </span>
               <div className="open-note-head-controls">
-                <button
-                  type="button"
-                  className="btn-delete"
-                  onClick={() => remove(openNote.id)}
-                  aria-label="Delete note"
-                >
-                  Delete
-                </button>
-                {/* E2 — Unified "Send to Tasks" flow.
-                    Already promoted: show "In Tasks" label + open link.
-                    Not yet promoted, no extract drafted:
-                      Primary "Send to Tasks" → direct promote (one click).
-                      Secondary "rename" link → expands the extract input
-                      inline (the old "Draft action" path lives inside
-                      this flow, not beside it).
-                    Extract drafted but not yet sent:
-                      Handled below in the extract-drafted panel.
-                    The ghost button (→ Tasks, pointer) and long-press tray
-                    (touch) remain on each note row as before — those are
-                    the gesture paths, not the open-note panel. */}
                 {openNote.promotedTaskId ? (
                   <span className="open-note-promoted-label">In Tasks</span>
                 ) : !openNote.extractBody && editingExtractFor !== openNote.id ? (
-                  <>
-                    <button
-                      type="button"
-                      className="btn-draft-action"
-                      onClick={() => promoteFromOpenNote(openNote.id)}
-                      aria-label="Send note to Tasks"
+                  <button
+                    type="button"
+                    className="open-note-corner-send"
+                    onClick={() => promoteFromOpenNote(openNote.id)}
+                    aria-label="Send note to Tasks"
+                    title="Send to Tasks"
+                  >
+                    <svg
+                      aria-hidden
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      Send to Tasks
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-rename-before-send"
-                      onClick={() => startEditingExtract(openNote)}
-                      aria-label="Shape the wording before sending to Tasks"
-                    >
-                      shape it first
-                    </button>
-                  </>
+                      <path d="M2 7h9" />
+                      <path d="m7.5 3 4 4-4 4" />
+                    </svg>
+                  </button>
                 ) : null}
               </div>
             </div>
             <p className="open-note-body">{openNote.body}</p>
+
+            {/* Row 13 — equal-weight siblings for the not-yet-extracted path.
+                "Send as-is" mirrors the corner send. "Shape & send" opens
+                the rename input inline. They sit below the body so neither
+                outweighs the other. Hidden once the user has either drafted
+                an extract or promoted the note (the extract-drafted block
+                handles those states below). */}
+            {!openNote.promotedTaskId &&
+              !openNote.extractBody &&
+              editingExtractFor !== openNote.id && (
+                <div
+                  className="open-note-action-pair"
+                  role="group"
+                  aria-label="Send or shape this note"
+                >
+                  <button
+                    type="button"
+                    className="btn-draft-action btn-draft-action--primary"
+                    onClick={() => promoteFromOpenNote(openNote.id)}
+                    aria-label="Send note to Tasks as written"
+                  >
+                    Send as-is
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-draft-action btn-draft-action--equal"
+                    onClick={() => startEditingExtract(openNote)}
+                    aria-label="Shape the wording before sending to Tasks"
+                  >
+                    Shape &amp; send
+                  </button>
+                </div>
+              )}
 
             {/* E2 — in-panel success confirmation shown at the point of
                 attention for ~800ms before the panel closes. Ink-faint
@@ -1313,24 +1377,48 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                     </button>
                   )}
                   {!openNote.promotedTaskId && (
-                    <button
-                      type="button"
-                      className="btn-delete"
-                      onClick={() => startEditingExtract(openNote)}
-                      disabled={sendingExtractFor === openNote.id}
+                    /* Caravaggio walkover row 2: Edit + Remove collapse
+                       behind an overflow control that reveals on hover
+                       (pointer) or focus-within (keyboard). The summary
+                       is a 16x16 ellipsis button — keyboard-reachable,
+                       screen-reader labelled, and never raises rest
+                       weight. Touch users open it via tap-toggle. */
+                    <div
+                      className="extract-overflow"
+                      data-state={
+                        sendingExtractFor === openNote.id ? "disabled" : "ready"
+                      }
                     >
-                      Edit
-                    </button>
-                  )}
-                  {!openNote.promotedTaskId && (
-                    <button
-                      type="button"
-                      className="btn-delete"
-                      onClick={() => removeExtract(openNote.id)}
-                      disabled={sendingExtractFor === openNote.id}
-                    >
-                      Remove
-                    </button>
+                      <button
+                        type="button"
+                        className="extract-overflow-trigger"
+                        aria-label="More actions for drafted extract"
+                        aria-haspopup="menu"
+                        disabled={sendingExtractFor === openNote.id}
+                      >
+                        <span aria-hidden>···</span>
+                      </button>
+                      <div className="extract-overflow-menu" role="menu">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="btn-delete"
+                          onClick={() => startEditingExtract(openNote)}
+                          disabled={sendingExtractFor === openNote.id}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="btn-delete"
+                          onClick={() => removeExtract(openNote.id)}
+                          disabled={sendingExtractFor === openNote.id}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

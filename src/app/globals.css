@@ -747,6 +747,129 @@ button, input, textarea { font: inherit; }
   border-radius: 3px;
 }
 
+/* Caravaggio walkover row 2 — corner-only send icon button.
+   Replaces the full-text "Send to Tasks" / "shape it first" pair at
+   the top of the open-note panel. Square hit target, indigo on hover,
+   visible focus ring. The action lives in the corner — the panel
+   body breathes. */
+.open-note-corner-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-out),
+              color var(--motion-fast) var(--ease-out),
+              background var(--motion-fast) var(--ease-out);
+}
+.open-note-corner-send:hover {
+  border-color: var(--color-signal);
+  color: var(--color-signal);
+}
+.open-note-corner-send:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+/* Caravaggio walkover row 13 — equal-weight Send as-is / Shape & send.
+   Two sibling primaries inside the open-note panel. They sit beneath
+   the body and share gravity. The primary variant is indigo-filled;
+   the equal variant is bordered with the same geometry so neither
+   reads as a fallback. */
+.open-note-action-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.btn-draft-action--primary {
+  background: var(--color-signal);
+  border-color: var(--color-signal);
+  color: #ffffff;
+}
+.btn-draft-action--primary:hover {
+  background: #4338ca;
+  border-color: #4338ca;
+  color: #ffffff;
+}
+.btn-draft-action--equal {
+  /* Inherits the bordered .btn-draft-action geometry — same padding,
+     same radius, same font scale — so it reads as a sibling, not a
+     subordinate. */
+}
+
+/* Caravaggio walkover row 2 — overflow menu for Edit / Remove on a
+   drafted extract. Trigger is a faint ··· that gains weight on hover
+   or focus-within; menu is absolutely positioned and revealed by the
+   parent's hover / focus-within / data-open states. Keyboard reachable
+   via the trigger button — no JS-only state required for the common
+   pointer path. */
+.extract-overflow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.extract-overflow-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-ink-faint);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--ease-out),
+              background var(--motion-fast) var(--ease-out);
+}
+.extract-overflow-trigger:hover,
+.extract-overflow:focus-within .extract-overflow-trigger {
+  color: var(--color-ink);
+  background: rgba(17, 17, 17, 0.04);
+}
+.extract-overflow-trigger:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+}
+.extract-overflow-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 120px;
+  padding: 4px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(20, 21, 26, 0.08);
+  z-index: 5;
+}
+.extract-overflow:hover .extract-overflow-menu,
+.extract-overflow:focus-within .extract-overflow-menu {
+  display: flex;
+}
+.extract-overflow-menu .btn-delete {
+  text-align: left;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+.extract-overflow-menu .btn-delete:hover {
+  background: rgba(17, 17, 17, 0.04);
+}
+
 /* First-use hint shown beside the Draft action button when the stream
    is empty or contains a single note. Quiet — does not compete. */
 .draft-action-hint {
