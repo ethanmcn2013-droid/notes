@@ -160,13 +160,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const notesRef = useRef<NoteRead[]>(initialNotes);
 
   // Caravaggio walkover row 3: the persistent "Long-press any note…" nudge
-  // is removed — the product that refuses tutorials ships no tutorial. The
+  // was removed — the product that refuses tutorials ships no tutorial. The
   // ghost `→ Tasks` button on hover (fine pointers) plus long-press tray
-  // (coarse pointers) are the affordance. A single quiet session-scoped
-  // toast surfaces *only* on the first misfired promote attempt: when a
-  // user opens a note (clicks the row) instead of promoting it. Stored in
-  // sessionStorage so it never repeats within the tab session.
-  const MISFIRE_TOAST_KEY = "notes-misfire-toast-shown";
+  // (coarse pointers) are the affordance. The session-scoped misfire toast
+  // that briefly piggy-backed on this surface was also retired — it named
+  // a keystroke (⌘↵) the product did not bind, and a tutorial-as-toast is
+  // still a tutorial.
 
   const [, startTransition] = useTransition();
   const captureRef = useRef<HTMLTextAreaElement | null>(null);
@@ -188,20 +187,6 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const longPressConfirmTimerRef = useRef<Map<string, number>>(new Map());
   // Touch start coords for move-threshold check
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-
-  // Misfire toast: fire once per session when a user opens a note instead
-  // of promoting it. Quiet by design — uses the existing promoteToast
-  // surface so we don't grow another UI primitive.
-  function maybeShowMisfireToast() {
-    try {
-      if (sessionStorage.getItem(MISFIRE_TOAST_KEY) === "1") return;
-      sessionStorage.setItem(MISFIRE_TOAST_KEY, "1");
-    } catch { /* private browsing */ }
-    showPromoteToast({
-      kind: "success",
-      message: "long-press or use \u2318\u21B5 to send to tasks",
-    });
-  }
 
   // P3-1: Deterministic first-paint focus — cursor ready, nothing highlighted.
   useEffect(() => {
@@ -406,6 +391,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
   // ── Promote toast helpers ────────────────────────────────────────
 
+  // The bottom promote toast is now error-only — success cases use the
+  // row's own fade-to-"In Tasks" gesture (row-level paths) or the in-panel
+  // receipt (open-note paths), with the SR announcer below carrying the
+  // screen-reader confirmation. Silence-by-default per PRODUCT.md §9.
   function showPromoteToast(toast: PromoteToast) {
     if (promoteToastTimerRef.current !== null) {
       window.clearTimeout(promoteToastTimerRef.current);
@@ -415,6 +404,15 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       promoteToastTimerRef.current = null;
       setPromoteToast(null);
     }, PROMOTE_TOAST_DISMISS_MS);
+  }
+
+  // Drive the polite SR-only announcer for non-open-note promote success.
+  // The visible row gesture is the receipt for sighted users; this string
+  // carries the change to NVDA/TalkBack/VoiceOver. Cleared after the
+  // announcement window so a later promote re-announces cleanly.
+  function announceSrSuccess(message: string) {
+    setSrConfirm(message);
+    window.setTimeout(() => setSrConfirm(""), 800);
   }
 
   // ── Core promote action (shared by touch + pointer paths) ────────
@@ -454,7 +452,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             next.set(noteId, result);
             return next;
           });
-          showPromoteToast({ kind: "success", message: "Added to Tasks" });
+          // Silence-by-default for success: the row's own fade-to-"In
+          // Tasks" gesture is the visible receipt; the in-panel receipt
+          // (openNoteConfirmId) carries the open-note path. The bottom
+          // success toast was duplicate signal and is retired. The SR-only
+          // announcer still fires so screen-reader users hear the change.
+          announceSrSuccess("Added to Tasks.");
         } catch (err) {
           // Cancel the pending removal so the note never disappears, then
           // restore it from the pre-mutation snapshot if the grace timer
@@ -858,7 +861,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             const without = prev.filter((n) => n.id !== noteId);
             return [updated, ...without];
           });
-          showPromoteToast({ kind: "success", message: "Added to Tasks" });
+          // No bottom toast — the in-panel receipt (beginOpenNoteConfirm)
+          // is the single visible confirmation, and it carries the SR
+          // announce too. Silence-by-default per PRODUCT.md §9.
           // Keep the note in the active stream so the open-note panel (and
           // its in-panel receipt) stays mounted for the 800ms confirm
           // window; remove it from the active stream as the panel closes.
@@ -1043,13 +1048,6 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                         e.stopPropagation();
                         return;
                       }
-                      // Row 3: opening (not promoting) a note that isn't
-                      // already in Tasks is a "misfire" relative to the
-                      // promote affordance — surface the quiet one-time
-                      // session toast pointing at long-press / ⌘↵.
-                      if (!isOpen && !note.promotedTaskId && !isPromoting) {
-                        maybeShowMisfireToast();
-                      }
                       setOpenId(isOpen ? null : note.id);
                       setActiveTrayId(null);
                     }}
@@ -1141,14 +1139,17 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           })}
         </ol>
 
+        {/* Always-mounted polite announcer — empty until success so the
+            screen reader reliably announces the change (NVDA/TalkBack
+            ignore live regions that mount already-populated). Lives at
+            the section root so row-level promotes (no open note) still
+            announce — the bottom success toast was retired as the visible
+            confirmation, this carries the SR signal in its place. */}
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {srConfirm}
+        </span>
         {openNote && (
           <article className="open-note" aria-label="Open note" id={`note-panel-${openNote.id}`}>
-            {/* Always-mounted polite announcer — empty until success so the
-                screen reader reliably announces the change (NVDA/TalkBack
-                ignore live regions that mount already-populated). */}
-            <span className="sr-only" aria-live="polite" aria-atomic="true">
-              {srConfirm}
-            </span>
             {/* Caravaggio walkover row 2 + row 13:
                 Open-note panel reduces to body + one corner action.
                 Delete is no longer always-visible chrome — it lives on
@@ -1459,7 +1460,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
         </div>
       )}
 
-      {/* ── Promote toast ───────────────────────────────────────── */}
+      {/* ── Promote toast (error path only) ──────────────────────────
+          Success cases are silent at this surface — the row gesture and
+          the in-panel receipt are the visible confirmations, srConfirm
+          carries the SR announce. This toast remains for error-with-Retry,
+          where the in-panel receipt does not fire and a dead-end would
+          otherwise occur. */}
       {promoteToast && (
         <div
           className={`promote-toast promote-toast--${promoteToast.kind}`}
