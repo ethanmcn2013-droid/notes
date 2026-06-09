@@ -43,6 +43,22 @@ export const notes = sqliteTable(
     extractBody: text("extract_body"),
     promotedTaskId: text("promoted_task_id"),
     archivedAt: integer("archived_at", { mode: "number" }),
+    /**
+     * N·24 (Pattern 4) — calendar-spawned note provenance.
+     *   NULL       = ordinary capture (textarea, paste, email, clipper…)
+     *   "calendar" = spawned 5 minutes pre-event by the calendar worker.
+     *
+     * One nullable column, no enum table: the only values we care about
+     * are "calendar" and "absent". The stream row reads this to decide
+     * whether to render the `from calendar` provenance pill, gated by
+     * `updatedAt === createdAt` so the pill disappears the moment the
+     * user edits.
+     *
+     * Refusal anchor (PRODUCT.md §8): a note with source="calendar" is
+     * a *scaffold* only — title + attendees. No auto-detected action
+     * items, no summaries, no meeting body. The line stays clean.
+     */
+    source: text("source"),
   },
   (table) => ({
     userCreated: index("notes_user_created_idx").on(
@@ -54,6 +70,99 @@ export const notes = sqliteTable(
 
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+
+/**
+ * N·24 (Pattern 4) — calendar OAuth connection.
+ *
+ * One row per (user, provider, calendar) triple. v1 carries Google
+ * only; `provider` exists so Microsoft can land later without a
+ * second table. Tokens stored here are OAuth refresh tokens — long
+ * lived; access tokens are minted at use-time and never persisted.
+ *
+ * Encryption at rest: PRODUCT.md §11 (3) flags server-side encryption
+ * beyond standard Turso encryption as a Plan 4 follow-up. v1 stores
+ * refresh tokens unencrypted-at-application-layer, relying on Turso
+ * at-rest encryption + tight server-only access. Documented as a
+ * Pattern-4 follow-up; do not block the cycle on it.
+ *
+ * Webhook channel: Google supports both polling and push (watch
+ * channels). v1 ships a 5-minute polling cron (Vercel cron) — the
+ * spawn window is +/- 5 min so push fidelity is not load-bearing.
+ *
+ * Spawn idempotency keys on (userId, calendarEventId) via the
+ * `spawned_calendar_events` table below — never re-spawn the same
+ * event occurrence, even across cron runs or multi-device races.
+ */
+export const calendarConnections = sqliteTable(
+  "calendar_connections",
+  {
+    userId: text("user_id").notNull(),
+    provider: text("provider").notNull(), // "google" in v1
+    calendarId: text("calendar_id").notNull(), // Google calendar id ("primary" usually)
+    refreshToken: text("refresh_token").notNull(),
+    /**
+     * Last time the worker polled this connection successfully.
+     * Used to bound the polling window and to surface "last sync"
+     * if account UI wants it later.
+     */
+    lastSyncedAt: integer("last_synced_at", { mode: "number" }),
+    createdAt: integer("created_at", { mode: "number" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updated_at", { mode: "number" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (table) => ({
+    userProviderCal: index("calendar_connections_user_idx").on(
+      table.userId,
+      table.provider,
+      table.calendarId
+    ),
+  })
+);
+
+export type CalendarConnection = typeof calendarConnections.$inferSelect;
+export type NewCalendarConnection = typeof calendarConnections.$inferInsert;
+
+/**
+ * N·24 (Pattern 4) — idempotency ledger for calendar-spawned notes.
+ *
+ * One row per (user, provider, calendarEventId, occurrenceStart). The
+ * occurrence start is included so recurring events spawn once per
+ * occurrence, not once per series. Two devices racing to spawn the
+ * same event → one wins on UNIQUE, the other no-ops.
+ *
+ * `note_id` references the spawned note. If the user deletes the
+ * note the ledger row stays — that is the signal "this event was
+ * already handled; don't re-spawn".
+ */
+export const spawnedCalendarEvents = sqliteTable(
+  "spawned_calendar_events",
+  {
+    userId: text("user_id").notNull(),
+    provider: text("provider").notNull(),
+    calendarEventId: text("calendar_event_id").notNull(),
+    occurrenceStart: integer("occurrence_start", { mode: "number" }).notNull(),
+    noteId: text("note_id").notNull(),
+    createdAt: integer("created_at", { mode: "number" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (table) => ({
+    userEventOccurrenceIdx: index(
+      "spawned_calendar_events_user_event_occurrence_idx"
+    ).on(
+      table.userId,
+      table.provider,
+      table.calendarEventId,
+      table.occurrenceStart
+    ),
+  })
+);
+
+export type SpawnedCalendarEvent = typeof spawnedCalendarEvents.$inferSelect;
+export type NewSpawnedCalendarEvent = typeof spawnedCalendarEvents.$inferInsert;
 
 /**
  * Per-user preferences. v1 holds only the email-to-capture slug
