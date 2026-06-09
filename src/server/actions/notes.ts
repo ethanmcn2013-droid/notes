@@ -20,6 +20,7 @@ export type NoteRead = Pick<
   | "extractBody"
   | "promotedTaskId"
   | "archivedAt"
+  | "source"
 >;
 
 /**
@@ -72,6 +73,7 @@ export async function createNote(body: string): Promise<NoteRead> {
     extractBody: null,
     promotedTaskId: null,
     archivedAt: null,
+    source: null,
   };
 }
 
@@ -98,6 +100,7 @@ export async function listNotes(): Promise<NoteRead[]> {
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     })
     .from(notes)
     .where(and(eq(notes.userId, userId), isNull(notes.archivedAt)))
@@ -158,8 +161,9 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
     extract_body: string | null;
     promoted_task_id: string | null;
     archived_at: number | null;
+    source: string | null;
   }>(sql`
-    SELECT n.id, n.body, n.created_at, n.updated_at, n.extract_body, n.promoted_task_id, n.archived_at
+    SELECT n.id, n.body, n.created_at, n.updated_at, n.extract_body, n.promoted_task_id, n.archived_at, n.source
     FROM notes_fts fts
     JOIN notes n ON n.rowid = fts.rowid
     WHERE fts.user_id = ${userId}
@@ -177,6 +181,7 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
     extractBody: r.extract_body,
     promotedTaskId: r.promoted_task_id,
     archivedAt: r.archived_at,
+    source: r.source,
   }));
 }
 
@@ -229,6 +234,7 @@ export async function setNoteExtract(
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     });
 
   const row = result[0];
@@ -261,6 +267,7 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     });
 
   const row = result[0];
@@ -398,6 +405,7 @@ export async function sendExtractToTasks(
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     });
 
   const noteRow = updated[0];
@@ -466,6 +474,7 @@ export async function promoteNoteToTasks(
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     })
     .from(notes)
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
@@ -555,6 +564,7 @@ export async function promoteNoteToTasks(
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     });
 
   const noteRow = updated[0];
@@ -591,6 +601,7 @@ export async function listArchivedNotes(): Promise<NoteRead[]> {
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     })
     .from(notes)
     .where(
@@ -639,6 +650,7 @@ export async function unPromoteNote(noteId: string): Promise<NoteRead> {
       extractBody: notes.extractBody,
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
+      source: notes.source,
     });
 
   const row = result[0];

@@ -615,6 +615,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       extractBody: null,
       promotedTaskId: null,
       archivedAt: null,
+      source: null,
     };
     setNotes((prev) => [optimistic, ...prev]);
     setFreshIds((prev) => new Set(prev).add(tempId));
