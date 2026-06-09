@@ -952,7 +952,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           <textarea
             id="capture"
             ref={captureRef}
-            rows={3}
+            rows={6}
             placeholder="Capture a thought…"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
