@@ -1151,15 +1151,15 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
         {openNote && (
           <article className="open-note" aria-label="Open note" id={`note-panel-${openNote.id}`}>
             {/* Caravaggio walkover row 2 + row 13:
-                Open-note panel reduces to body + one corner action.
+                Open-note panel reduces to body + a single corner indicator.
                 Delete is no longer always-visible chrome — it lives on
-                long-press (touch) and ⌘⌫ / Ctrl⌫ (keyboard). The
-                always-present corner shows either:
-                  - "In Tasks" label (already promoted), OR
-                  - the icon-only "Send to Tasks" send arrow (zero-extract).
-                Equal-weight "Send as-is" / "Shape & send" siblings live
-                inline below the body so they earn the same gravity rather
-                than orbit the corner. */}
+                long-press (touch) and ⌘⌫ / Ctrl⌫ (keyboard). The corner
+                now shows the "In Tasks" label when relevant and nothing
+                otherwise — the icon-only "Send to Tasks" arrow was cut so
+                "Send as-is" / "Shape & send" below the body are the single
+                canonical shape (not the third sibling on the open note).
+                Equal-weight siblings live inline below the body so they
+                earn the same gravity. */}
             <div className="open-note-head">
               <span>
                 Captured <RelativeTime ts={openNote.createdAt} />
@@ -1167,40 +1167,17 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
               <div className="open-note-head-controls">
                 {openNote.promotedTaskId ? (
                   <span className="open-note-promoted-label">In Tasks</span>
-                ) : !openNote.extractBody && editingExtractFor !== openNote.id ? (
-                  <button
-                    type="button"
-                    className="open-note-corner-send"
-                    onClick={() => promoteFromOpenNote(openNote.id)}
-                    aria-label="Send note to Tasks"
-                    title="Send to Tasks"
-                  >
-                    <svg
-                      aria-hidden
-                      width="14"
-                      height="14"
-                      viewBox="0 0 14 14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M2 7h9" />
-                      <path d="m7.5 3 4 4-4 4" />
-                    </svg>
-                  </button>
                 ) : null}
               </div>
             </div>
             <p className="open-note-body">{openNote.body}</p>
 
             {/* Row 13 — equal-weight siblings for the not-yet-extracted path.
-                "Send as-is" mirrors the corner send. "Shape & send" opens
-                the rename input inline. They sit below the body so neither
-                outweighs the other. Hidden once the user has either drafted
-                an extract or promoted the note (the extract-drafted block
-                handles those states below). */}
+                "Send as-is" is the canonical promote action; "Shape & send"
+                opens the rename input inline. They sit below the body so
+                neither outweighs the other. Hidden once the user has either
+                drafted an extract or promoted the note (the extract-drafted
+                block handles those states below). */}
             {!openNote.promotedTaskId &&
               !openNote.extractBody &&
               editingExtractFor !== openNote.id && (
