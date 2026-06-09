@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { PrivateNotesEmptyState } from "@/app/app/PrivateNotesEmptyState";
+import { NoteProvenanceChip } from "@/components/NoteProvenanceChip";
 import {
   clearNoteExtract,
   createNote,
@@ -1078,6 +1079,17 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                       {!isPromoting && note.extractBody && !note.promotedTaskId && (
                         <span aria-label="Extract drafted — not yet in Tasks" className="note-dot" />
                       )}
+                      {/* N·24 (Pattern 4) — calendar provenance pill.
+                          Renders only while the spawned note is untouched
+                          (updatedAt === createdAt). The moment the user
+                          types into the note, updatedAt drifts and the
+                          pill disappears — the disappear-on-interaction
+                          rule from handoff §2 Pattern 4. */}
+                      {!isPromoting &&
+                        note.source === "calendar" &&
+                        note.updatedAt === note.createdAt && (
+                          <NoteProvenanceChip kind="calendar" />
+                        )}
                       {!isPromoting && (
                         <span>
                           <RelativeTime ts={note.createdAt} />

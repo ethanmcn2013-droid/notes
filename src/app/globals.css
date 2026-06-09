@@ -1372,6 +1372,40 @@ button, input, textarea { font: inherit; }
   text-transform: uppercase;
 }
 
+/* N·24 (Pattern 4) — cross-cutting provenance chip used by
+   calendar-spawned notes and (Cycle 3) OCR image-match search hits.
+   10px monospace, ink-faint by default; the inline color style on
+   the chip carries the kind-specific accent (green or mustard).
+
+   Sits inside .note-meta beside the timestamp — no icon, text only.
+   The chip wholly disappears once the note is edited (caller
+   removes it from the DOM); we don't animate the exit. */
+.note-provenance-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  opacity: 0.9;
+  /* Soft fade-in when the row first paints — matches the calm
+     register of the rest of the stream. 200ms ease-out, same shape
+     as Pattern 1's resume strip per handoff §4. */
+  animation: provenance-chip-fade var(--motion-base, 200ms)
+    var(--ease-out, ease-out) both;
+}
+@keyframes provenance-chip-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-provenance-chip {
+    animation: none;
+  }
+}
+
 /* Inline tray (touch long-press confirm) — 44px tall, slides up from
    below the note row. Two text buttons: primary ink, cancel faint. */
 .note-promote-tray {
