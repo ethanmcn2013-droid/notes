@@ -16,6 +16,11 @@ const clerkHosts =
   "https://*.signalstudio.ie https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com";
 const turnstile = "https://challenges.cloudflare.com";
 
+// N·24 (Pattern 4) — Google OAuth handshake hosts. The /connect route
+// 302s to accounts.google.com; CSP form-action must allow it or the
+// browser blocks the redirect on strict UAs.
+const googleOauth = "https://accounts.google.com";
+
 const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com ${clerkHosts} ${turnstile}`,
@@ -27,7 +32,7 @@ const csp = [
   `worker-src 'self' blob:`,
   `frame-ancestors 'none'`,
   `base-uri 'self'`,
-  `form-action 'self'`,
+  `form-action 'self' ${googleOauth}`,
   `object-src 'none'`,
   `upgrade-insecure-requests`,
 ].join("; ");

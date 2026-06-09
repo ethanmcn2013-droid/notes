@@ -62,6 +62,12 @@ const isPublicRoute = createRouteMatcher([
   // session. They must bypass clerkMiddleware or Resend's POST gets
   // 307-redirected to /sign-in and the mail loop silently fails.
   "/api/capture/email",
+  // N·24 (Pattern 4) — calendar OAuth callback arrives from Google
+  // with no Clerk cookie; userId is recovered from a state-HMAC.
+  // Cron is bearer-authed by Vercel. /connect and /disconnect stay
+  // session-gated (the user must be signed in to opt in).
+  "/api/calendar/google/callback",
+  "/api/calendar/cron",
 ]);
 
 const clerkConfigured = Boolean(
