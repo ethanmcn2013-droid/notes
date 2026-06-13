@@ -3,9 +3,9 @@
 import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import {
-  ANALYTICS_URL,
+  SIGNAL_URL,
   NOTES_URL,
-  ROADMAP_URL,
+  TIMELINE_URL,
   TASKS_URL,
 } from "@/lib/product-urls";
 
@@ -20,15 +20,15 @@ type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
  *
  * Retired variants (do not restore):
  *   "Open the workspace" → "Open tasks"
- *   "Open the roadmap"   → "Open roadmap"
+ *   "Open the roadmap"   → "Open timeline"
  *   "Open the notebook"  → "Open notes"
- *   "Open the briefing"  → "Open analytics"
+ *   "Open the briefing"  → "Open signal"
  */
 const PRODUCTS: { slug: ProductSlug; label: string; url: string }[] = [
   { slug: "notes",     label: "Open notes",      url: `${NOTES_URL}/app` },
   { slug: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
-  { slug: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
-  { slug: "analytics", label: "Open analytics",  url: `${ANALYTICS_URL}/app` },
+  { slug: "roadmap",   label: "Open timeline",    url: `${TIMELINE_URL}/app` },
+  { slug: "analytics", label: "Open signal",  url: `${SIGNAL_URL}/app` },
 ];
 
 /** Cookie name per DESIGN.md §14 escape hatch spec. */

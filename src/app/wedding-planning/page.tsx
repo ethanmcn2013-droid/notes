@@ -241,7 +241,7 @@ export default function WeddingPlanningNotePage() {
             }}
           >
             One note becomes three items. The wedding workspace in Tasks holds the items.
-            The shared roadmap is what the couple sees. The morning briefing surfaces
+            The shared timeline is what the couple sees. The morning briefing surfaces
             what still needs an answer. Four layers, one job.
           </p>
           <ul
@@ -274,7 +274,7 @@ export default function WeddingPlanningNotePage() {
             </li>
             <li>
               <a
-                href="https://roadmap.signalstudio.ie/the-wedding"
+                href="https://timeline.signalstudio.ie/the-wedding"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -284,7 +284,7 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Signal Roadmap &rarr;
+                Signal Timeline &rarr;
               </a>
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
                 A shared view for the couple. They see progress. You keep the detail.
@@ -292,7 +292,7 @@ export default function WeddingPlanningNotePage() {
             </li>
             <li>
               <a
-                href="https://analytics.signalstudio.ie/wedding-planning"
+                href="https://signal.signalstudio.ie/wedding-planning"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -302,7 +302,7 @@ export default function WeddingPlanningNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Signal Analytics &rarr;
+                Signal &rarr;
               </a>
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
                 A morning briefing that surfaces what still needs an answer before the day starts.

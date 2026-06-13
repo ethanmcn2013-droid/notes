@@ -237,7 +237,7 @@ export default function FreelanceStudioNotePage() {
             }}
           >
             One evening note becomes three tasks. The studio workspace in
-            Tasks holds them. The shared roadmap is what each client sees
+            Tasks holds them. The shared timeline is what each client sees
             without an email. The Monday briefing surfaces the invoice you
             keep not sending. Four layers, one job.
           </p>
@@ -269,7 +269,7 @@ export default function FreelanceStudioNotePage() {
             </li>
             <li>
               <a
-                href="https://roadmap.signalstudio.ie"
+                href="https://timeline.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -277,7 +277,7 @@ export default function FreelanceStudioNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Signal Roadmap &rarr;
+                Signal Timeline &rarr;
               </a>
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
                 A shared view for each client. They see where their project stands without another email.
@@ -285,7 +285,7 @@ export default function FreelanceStudioNotePage() {
             </li>
             <li>
               <a
-                href="https://analytics.signalstudio.ie"
+                href="https://signal.signalstudio.ie"
                 style={{
                   color: "var(--color-ink, #14151a)",
                   textDecoration: "underline",
@@ -293,7 +293,7 @@ export default function FreelanceStudioNotePage() {
                   textUnderlineOffset: 4,
                 }}
               >
-                Signal Analytics &rarr;
+                Signal &rarr;
               </a>
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
                 A morning briefing that surfaces the invoice you keep not sending before the day fills up.

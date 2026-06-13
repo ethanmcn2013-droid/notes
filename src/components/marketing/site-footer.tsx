@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
-  ANALYTICS_URL,
+  SIGNAL_URL,
   NOTES_URL,
-  ROADMAP_URL,
+  TIMELINE_URL,
   STUDIO_URL,
   TASKS_URL,
 } from "@/lib/product-urls";
@@ -55,8 +55,8 @@ const SOCIALS = [
 const SUITE = [
   { name: "Signal Notes", url: NOTES_URL },
   { name: "Signal Tasks", url: TASKS_URL },
-  { name: "Signal Roadmap", url: ROADMAP_URL },
-  { name: "Signal Analytics", url: ANALYTICS_URL },
+  { name: "Signal Timeline", url: TIMELINE_URL },
+  { name: "Signal", url: SIGNAL_URL },
 ] as const;
 
 /* ── Component ── */

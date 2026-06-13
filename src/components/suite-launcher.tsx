@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  ANALYTICS_URL,
+  SIGNAL_URL,
   NOTES_URL,
-  ROADMAP_URL,
+  TIMELINE_URL,
   STUDIO_URL,
   TASKS_URL,
 } from "@/lib/product-urls";
@@ -25,9 +25,9 @@ type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
  *
  * Authed labels — canonical (IA_COHERENCE.md §1C). Retired variants:
  *   "Open the workspace" → "Open tasks"
- *   "Open the roadmap"   → "Open roadmap"
+ *   "Open the roadmap"   → "Open timeline"
  *   "Open the notebook"  → "Open notes"
- *   "Open the briefing"  → "Open analytics"
+ *   "Open the briefing"  → "Open signal"
  */
 const PRODUCTS_UNAUTHED: {
   slug: ProductSlug;
@@ -37,8 +37,8 @@ const PRODUCTS_UNAUTHED: {
 }[] = [
   { slug: "notes",     word: "notes",     tagline: "Capture clarity",   url: NOTES_URL },
   { slug: "tasks",     word: "tasks",     tagline: "Execution clarity", url: TASKS_URL },
-  { slug: "roadmap",   word: "roadmap",   tagline: "Direction clarity", url: ROADMAP_URL },
-  { slug: "analytics", word: "analytics", tagline: "Attention clarity", url: ANALYTICS_URL },
+  { slug: "roadmap",   word: "timeline",   tagline: "Direction clarity", url: TIMELINE_URL },
+  { slug: "analytics", word: "signal", tagline: "Attention clarity", url: SIGNAL_URL },
 ];
 
 const PRODUCTS_AUTHED: {
@@ -49,13 +49,13 @@ const PRODUCTS_AUTHED: {
 }[] = [
   { slug: "notes",     word: "notes",     label: "Open notes",      url: `${NOTES_URL}/app` },
   { slug: "tasks",     word: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
-  { slug: "roadmap",   word: "roadmap",   label: "Open roadmap",    url: `${ROADMAP_URL}/app` },
-  { slug: "analytics", word: "analytics", label: "Open analytics",  url: `${ANALYTICS_URL}/app` },
+  { slug: "roadmap",   word: "timeline",   label: "Open timeline",    url: `${TIMELINE_URL}/app` },
+  { slug: "analytics", word: "signal", label: "Open signal",  url: `${SIGNAL_URL}/app` },
 ];
 
 const INDIGO = "#4f46e5";
 
-const PRODUCT_ORIGINS = [NOTES_URL, TASKS_URL, ROADMAP_URL, ANALYTICS_URL];
+const PRODUCT_ORIGINS = [NOTES_URL, TASKS_URL, TIMELINE_URL, SIGNAL_URL];
 
 /**
  * Phase 3 (instant-jump): warm a sibling product on hover/focus so the
