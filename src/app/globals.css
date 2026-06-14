@@ -900,6 +900,45 @@ button, input, textarea { font: inherit; }
 .extract-input input::placeholder {
   color: var(--color-ink-faint);
 }
+.extract-line-picker {
+  margin: 0 0 12px;
+}
+.extract-line-picker-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin-bottom: 6px;
+}
+.extract-line-picker-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.extract-line-chip {
+  text-align: left;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: inherit;
+  background: color-mix(in srgb, var(--color-paper) 94%, var(--color-signal) 6%);
+  border: 1px solid color-mix(in srgb, var(--color-signal) 14%, transparent);
+  border-radius: 6px;
+  padding: 6px 9px;
+  cursor: pointer;
+  white-space: normal;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.extract-line-chip:hover {
+  background: color-mix(in srgb, var(--color-paper) 88%, var(--color-signal) 12%);
+  border-color: color-mix(in srgb, var(--color-signal) 40%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .extract-line-chip {
+    transition: none;
+  }
+}
 .extract-input-controls {
   display: flex;
   align-items: center;
