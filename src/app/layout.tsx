@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DevBanner } from "@/components/dev-banner";
+import { clerkPublishableKey } from "@/lib/access-mode";
 import "./globals.css";
 
 const inter = Inter({
@@ -52,6 +53,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider
+      publishableKey={clerkPublishableKey()}
       appearance={{
         variables: {
           colorPrimary: "#4f46e5",

@@ -76,17 +76,19 @@ const clerkConfigured = Boolean(
     process.env.CLERK_SECRET_KEY
 );
 
-export default clerkMiddleware(async (auth, req) => {
-  // Demo/Review mode: the whole app — including /app/* — is publicly
-  // reachable. No Clerk session exists; the server auth layer resolves to the
-  // synthetic demo user bound to in-memory seed data (see lib/access-mode.ts
-  // and server/demo/notes-demo.ts). Flip SIGNAL_ACCESS_MODE back to
-  // production to restore this exact gate untouched.
-  if (isDemoMode()) return;
+export default clerkMiddleware(
+  async (auth, req) => {
+    // Demo/Review mode: the whole app — including /app/* — is publicly
+    // reachable. No Clerk session exists; the server auth layer resolves to
+    // the synthetic demo user bound to in-memory seed data. We still let
+    // clerkMiddleware run (so auth() stays callable on public pages), but we
+    // never gate. Flip SIGNAL_ACCESS_MODE back to production to restore the
+    // exact gate below.
+    if (isDemoMode()) return;
 
-  if (!clerkConfigured) return;
+    if (!clerkConfigured) return;
 
-  const { pathname, searchParams } = req.nextUrl;
+    const { pathname, searchParams } = req.nextUrl;
 
   // ── Layer 2: M → /app redirect ──────────────────────────────────
   // Only fires on M routes. A/C/X routes are never touched.
@@ -110,13 +112,14 @@ export default clerkMiddleware(async (auth, req) => {
   }
   // ── End Layer 2 ─────────────────────────────────────────────────
 
-  // Clerk auth protection: non-public routes require a session.
-  if (!isPublicRoute(req)) {
-    await auth.protect({
-      unauthenticatedUrl: new URL("/sign-in", req.url).toString(),
-    });
-  }
-});
+    // Clerk auth protection: non-public routes require a session.
+    if (!isPublicRoute(req)) {
+      await auth.protect({
+        unauthenticatedUrl: new URL("/sign-in", req.url).toString(),
+      });
+    }
+  },
+);
 
 export const config = {
   matcher: [

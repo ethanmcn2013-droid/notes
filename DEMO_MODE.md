@@ -39,7 +39,8 @@ npm run dev
 ```
 
 Preview deployment (Vercel): set both env vars to `demo` (or `review`) on the
-preview environment. No Clerk or Turso keys are required for the app to render.
+preview environment. Keep the Clerk keys present (Clerk's middleware needs
+them); demo requires no valid session and no Turso DB.
 
 ## Disable it / restore production auth
 
