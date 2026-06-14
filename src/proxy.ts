@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { isDemoMode } from "@/lib/access-mode";
 
 /**
  * Next.js 16 renamed middleware → proxy. File lives at src/proxy.ts
@@ -76,6 +77,13 @@ const clerkConfigured = Boolean(
 );
 
 export default clerkMiddleware(async (auth, req) => {
+  // Demo/Review mode: the whole app — including /app/* — is publicly
+  // reachable. No Clerk session exists; the server auth layer resolves to the
+  // synthetic demo user bound to in-memory seed data (see lib/access-mode.ts
+  // and server/demo/notes-demo.ts). Flip SIGNAL_ACCESS_MODE back to
+  // production to restore this exact gate untouched.
+  if (isDemoMode()) return;
+
   if (!clerkConfigured) return;
 
   const { pathname, searchParams } = req.nextUrl;

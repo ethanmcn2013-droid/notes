@@ -1,0 +1,142 @@
+import "server-only";
+
+import type { NoteRead } from "@/server/actions/notes";
+
+/**
+ * In-memory demo dataset for Signal Notes.
+ *
+ * Used only when access-mode is demo/review (see lib/access-mode.ts). The
+ * real Turso DB is never touched in that mode, so this is the *entire* world
+ * a reviewer sees. It must feel like a real, lived-in notebook — calm
+ * coordination for normal people — not a lorem-ipsum placeholder.
+ *
+ * The cast of one person: a wedding-venue duty manager who also helps run a
+ * small studio and is finishing a night course. Notes are written the way
+ * people actually capture in three seconds: fragments, half-thoughts, the odd
+ * extract pulled out toward Tasks.
+ *
+ * No real person's data appears here. Timestamps are computed relative to
+ * "now" at read time so the notebook always looks freshly used.
+ */
+
+export const DEMO_USER_ID = "demo-user";
+
+const MIN = 60_000;
+const HOUR = 60 * MIN;
+const DAY = 24 * HOUR;
+
+type Seed = {
+  id: string;
+  body: string;
+  ago: number; // ms before now
+  extractBody?: string;
+  promotedTaskId?: string;
+  archived?: boolean;
+  source?: string;
+};
+
+const ACTIVE: Seed[] = [
+  {
+    id: "demo_n_01",
+    body: "Saturday wedding — Maria + James. Ceremony 2pm in the orchard, drinks on the terrace if it stays dry. Confirm marquee sides with the hire company by Thursday.",
+    ago: 35 * MIN,
+    extractBody: "Confirm marquee sides with hire company before Thursday",
+    promotedTaskId: "demo_task_marquee",
+  },
+  {
+    id: "demo_n_02",
+    body: "Florist can do the arch but wants final stem count Monday. Maria leaning toward the looser, wilder look — fewer roses, more foliage.",
+    ago: 2 * HOUR,
+  },
+  {
+    id: "demo_n_03",
+    body: "Idea for the studio newsletter: short piece on “what a calm Saturday actually looks like behind the bar”. People love the backstage angle.",
+    ago: 5 * HOUR,
+    source: "notebook",
+  },
+  {
+    id: "demo_n_04",
+    body: "Course reading for Thursday: chapters 4–5 on cash-flow forecasting. Bring the worked example, the lecturer always opens with it.",
+    ago: 9 * HOUR,
+    extractBody: "Read cash-flow chapters 4–5 before Thursday class",
+  },
+  {
+    id: "demo_n_05",
+    body: "Walk-in couple this morning — June 2027, ~80 guests, budget-conscious but lovely. Sent them the midweek rate. Follow up Friday if no reply.",
+    ago: 1 * DAY + 3 * HOUR,
+  },
+  {
+    id: "demo_n_06",
+    body: "Bar restock: tonic running low, order two extra cases before the weekend. Also the good olives — last delivery was short.",
+    ago: 1 * DAY + 6 * HOUR,
+    extractBody: "Order 2 cases tonic + olives before weekend",
+    promotedTaskId: "demo_task_restock",
+  },
+  {
+    id: "demo_n_07",
+    body: "Photographer recommendation from the Hendersons: Aoife @ northlight. Natural light, doesn’t herd people. Keep her card for the recommended-suppliers list.",
+    ago: 2 * DAY,
+  },
+  {
+    id: "demo_n_08",
+    body: "Small thing but it matters: the welcome sign by the gate is faded. Reprint before the open day, first impression is the whole car-park walk.",
+    ago: 2 * DAY + 4 * HOUR,
+  },
+  {
+    id: "demo_n_09",
+    body: "Quote from today that I want to keep: “we don’t want a big production, we just want it to feel like us.” That’s the whole pitch, really.",
+    ago: 3 * DAY,
+    source: "notebook",
+  },
+  {
+    id: "demo_n_10",
+    body: "Heating: orchard room takes ~40 min to warm in October. Switch on before guests arrive, not when. Note for the winter brochure couples.",
+    ago: 4 * DAY,
+  },
+];
+
+const ARCHIVED: Seed[] = [
+  {
+    id: "demo_n_a1",
+    body: "Open day went well — nine couples through, three asked for dates. Tea urn was the hero. Do it again the same way in spring.",
+    ago: 9 * DAY,
+    archived: true,
+  },
+  {
+    id: "demo_n_a2",
+    body: "Old idea: loyalty rate for returning anniversary dinners. Parked — revisit after the wedding season settles.",
+    ago: 16 * DAY,
+    archived: true,
+  },
+];
+
+function toNote(s: Seed, now: number): NoteRead {
+  const createdAt = now - s.ago;
+  return {
+    id: s.id,
+    body: s.body,
+    createdAt,
+    // A faint "edited" pill only where it reads as genuinely touched.
+    updatedAt: s.extractBody ? createdAt + 4 * MIN : createdAt,
+    extractBody: s.extractBody ?? null,
+    promotedTaskId: s.promotedTaskId ?? null,
+    archivedAt: s.archived ? now - Math.round(s.ago * 0.6) : null,
+    source: s.source ?? null,
+  };
+}
+
+export function demoNotes(): NoteRead[] {
+  const now = Date.now();
+  return ACTIVE.map((s) => toNote(s, now));
+}
+
+export function demoArchivedNotes(): NoteRead[] {
+  const now = Date.now();
+  return ARCHIVED.map((s) => toNote(s, now));
+}
+
+export function demoSearchNotes(query: string): NoteRead[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return demoNotes().filter((n) => n.body.toLowerCase().includes(q));
+}

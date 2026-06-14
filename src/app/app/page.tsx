@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { isDemoMode } from "@/lib/access-mode";
 import { listArchivedNotes, listNotes } from "@/server/actions/notes";
 import { getCaptureEmail } from "@/server/actions/capture-email";
 import { Notebook } from "./Notebook";
@@ -23,9 +24,13 @@ export default async function NotebookPage() {
   // guard an unauthenticated hit renders an unhandled 500 instead of
   // the sign-in screen. Belt-and-braces: correct even when the
   // middleware is doing its job.
-  const { userId } = await auth();
-  if (!userId) {
-    redirect("/sign-in");
+  // Demo/Review mode skips the sign-in gate entirely — the notebook renders
+  // from the in-memory seed (listNotes/listArchivedNotes short-circuit).
+  if (!isDemoMode()) {
+    const { userId } = await auth();
+    if (!userId) {
+      redirect("/sign-in");
+    }
   }
 
   const [initialNotes, initialArchivedNotes, captureEmail] = await Promise.all([

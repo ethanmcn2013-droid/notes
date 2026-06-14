@@ -6,6 +6,7 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db/client";
 import { userPreferences } from "@/server/db/schema";
 import { notesProEnabled } from "@/server/entitlements";
+import { isDemoMode } from "@/lib/access-mode";
 
 // Server-only config — not NEXT_PUBLIC because this value is only ever
 // used inside server actions and never needs to appear in client bundles.
@@ -43,6 +44,10 @@ export type CaptureEmailResult =
  * this feature AND can use it.
  */
 export async function getCaptureEmail(): Promise<CaptureEmailResult> {
+  // Demo/Review: show the free-tier upgrade nudge rather than a live inbound
+  // address. Keeps the notebook visually complete without touching the DB.
+  if (isDemoMode()) return { ok: false, reason: "free-tier-not-enabled" };
+
   const userId = await requireUser();
   if (!(await notesProEnabled(userId))) {
     return { ok: false, reason: "free-tier-not-enabled" };

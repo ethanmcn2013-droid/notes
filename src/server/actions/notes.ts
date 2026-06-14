@@ -6,6 +6,12 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db/client";
 import { notes, type Note } from "@/server/db/schema";
+import { isDemoMode } from "@/lib/access-mode";
+import {
+  demoArchivedNotes,
+  demoNotes,
+  demoSearchNotes,
+} from "@/server/demo/notes-demo";
 
 function makeId() {
   return `n_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -89,6 +95,9 @@ export async function createNote(body: string): Promise<NoteRead> {
  * crosses 500 notes.
  */
 export async function listNotes(): Promise<NoteRead[]> {
+  // Demo/Review: serve the in-memory seed; never reach the real DB.
+  if (isDemoMode()) return demoNotes();
+
   const userId = await requireUser();
 
   const rows = await db
@@ -134,6 +143,8 @@ export async function listNotes(): Promise<NoteRead[]> {
  * paging beyond that is unnecessary.
  */
 export async function searchNotes(query: string): Promise<NoteRead[]> {
+  if (isDemoMode()) return demoSearchNotes(query);
+
   const userId = await requireUser();
   const trimmed = query.trim();
   if (!trimmed) return [];
@@ -590,6 +601,8 @@ export async function promoteNoteToTasks(
  * can find below the active stream, always — never hidden in a dump.
  */
 export async function listArchivedNotes(): Promise<NoteRead[]> {
+  if (isDemoMode()) return demoArchivedNotes();
+
   const userId = await requireUser();
 
   const rows = await db

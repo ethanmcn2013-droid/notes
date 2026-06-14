@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { DevBanner } from "@/components/dev-banner";
 import "./globals.css";
 
 const inter = Inter({
@@ -90,7 +91,10 @@ export default function RootLayout({
           {/* Belt-and-braces: inline style fires before linked stylesheet. */}
           <style dangerouslySetInnerHTML={{ __html: "html{background:#fff}" }} />
         </head>
-        <body className="min-h-full" style={{ background: "#fff" }}>{children}</body>
+        <body className="min-h-full" style={{ background: "#fff" }}>
+          {children}
+          <DevBanner />
+        </body>
       </html>
     </ClerkProvider>
   );
