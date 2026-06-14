@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 
 import { searchNotes } from "@/server/actions/notes";
 
@@ -128,4 +134,157 @@ function useStateInternal(query: string): [NoteRead[] | null, never] {
   // This helper is intentionally a thin shim — see callsite for usage.
   // Implementation handled in caller via direct useEffect; this just types the tuple.
   return [ref.current, undefined as never];
+}
+
+// ── Voice capture ──────────────────────────────────────────────────
+//
+// Lets the user speak a note hands-free (on a roof, at a venue) using
+// the browser's built-in speech recognition. The spoken words land in
+// the same capture field and save through the same path as typing —
+// no separate note kind, no upload. If the browser has no speech
+// engine (Firefox today), `supported` is false and the caller hides
+// the affordance. Permission refusals surface as a quiet inline note,
+// never an alert.
+
+export type VoiceCaptureMessage =
+  | { kind: "denied" }
+  | { kind: "no-speech" }
+  | { kind: "error" };
+
+interface UseVoiceCaptureArgs {
+  // Append finalized words to the live draft. Receives the previous
+  // draft so it can join cleanly without clobbering typed text.
+  appendTranscript: (chunk: string) => void;
+  // Re-focus the text field when dictation stops, so the user can keep
+  // typing or hit Enter without a tap. Never steals focus on mount.
+  onStop?: () => void;
+}
+
+interface UseVoiceCaptureResult {
+  supported: boolean;
+  listening: boolean;
+  message: VoiceCaptureMessage | null;
+  toggle: () => void;
+  clearMessage: () => void;
+}
+
+function getSpeechRecognition(): SpeechRecognitionConstructor | null {
+  if (typeof window === "undefined") return null;
+  return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
+}
+
+export function useVoiceCapture({
+  appendTranscript,
+  onStop,
+}: UseVoiceCaptureArgs): UseVoiceCaptureResult {
+  // Resolved once on mount (client only) so first paint / SSR never
+  // touches window — keeps the field painting before the mic resolves.
+  const [supported, setSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [message, setMessage] = useState<VoiceCaptureMessage | null>(null);
+
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  // Keep latest callbacks in a ref so the recognition instance's
+  // handlers never close over stale draft state.
+  const appendRef = useRef(appendTranscript);
+  const onStopRef = useRef(onStop);
+  appendRef.current = appendTranscript;
+  onStopRef.current = onStop;
+
+  useEffect(() => {
+    setSupported(getSpeechRecognition() !== null);
+  }, []);
+
+  // Tear down any live recognition when the component unmounts.
+  useEffect(() => {
+    return () => {
+      const rec = recognitionRef.current;
+      if (rec) {
+        rec.onresult = null;
+        rec.onerror = null;
+        rec.onend = null;
+        try {
+          rec.abort();
+        } catch {
+          // abort() throws if it never started — safe to ignore.
+        }
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
+
+  const stop = useCallback(() => {
+    const rec = recognitionRef.current;
+    if (rec) {
+      try {
+        rec.stop();
+      } catch {
+        // ignore — onend will still settle the listening flag.
+      }
+    }
+  }, []);
+
+  const start = useCallback(() => {
+    const Ctor = getSpeechRecognition();
+    if (!Ctor) return;
+
+    setMessage(null);
+    const rec = new Ctor();
+    rec.lang =
+      (typeof navigator !== "undefined" && navigator.language) || "en-IE";
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+
+    rec.onresult = (event) => {
+      let finalChunk = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalChunk += result[0].transcript;
+        }
+      }
+      const trimmed = finalChunk.trim();
+      if (trimmed) appendRef.current(trimmed);
+    };
+
+    rec.onerror = (event) => {
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        setMessage({ kind: "denied" });
+      } else if (event.error === "no-speech") {
+        setMessage({ kind: "no-speech" });
+      } else if (event.error !== "aborted") {
+        setMessage({ kind: "error" });
+      }
+    };
+
+    rec.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+      onStopRef.current?.();
+    };
+
+    recognitionRef.current = rec;
+    try {
+      rec.start();
+      setListening(true);
+    } catch {
+      // start() throws if already running — reset to a known state.
+      recognitionRef.current = null;
+      setListening(false);
+      setMessage({ kind: "error" });
+    }
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (listening) {
+      stop();
+    } else {
+      start();
+    }
+  }, [listening, start, stop]);
+
+  const clearMessage = useCallback(() => setMessage(null), []);
+
+  return { supported, listening, message, toggle, clearMessage };
 }

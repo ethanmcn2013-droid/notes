@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { PrivateNotesEmptyState } from "@/app/app/PrivateNotesEmptyState";
+import { useVoiceCapture } from "@/app/app/notebook/hooks";
 import { NoteProvenanceChip } from "@/components/NoteProvenanceChip";
 import {
   clearNoteExtract,
@@ -914,6 +915,26 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     []
   );
 
+  // ── Voice capture ──────────────────────────────────────────────────
+  // Spoken words append to the live draft and save through the same
+  // path as typing. The mic resolves after first paint and never grabs
+  // focus, so the 3-second capture budget is untouched.
+  const appendSpoken = useCallback((chunk: string) => {
+    setDraft((prev) => {
+      const sep =
+        prev.length === 0 || /\s$/.test(prev) ? "" : prev.endsWith("\n") ? "" : " ";
+      const next = `${prev}${sep}${chunk}`;
+      return next.length > MAX_NOTE_BODY_CHARS
+        ? next.slice(0, MAX_NOTE_BODY_CHARS)
+        : next;
+    });
+  }, []);
+
+  const voice = useVoiceCapture({
+    appendTranscript: appendSpoken,
+    onStop: () => captureRef.current?.focus({ preventScroll: true }),
+  });
+
   // Open-note promote (button in the open-note panel controls).
   // E2: show in-panel confirmation for ~800ms at the point of attention
   // before closing the panel — the bottom toast was missed because the
@@ -968,6 +989,39 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             spellCheck
           />
           <PrivateNotesEmptyState visible={draftIsEmpty} noteCount={notes.length + archivedNotes.length} />
+          {voice.supported && (
+            <button
+              type="button"
+              className={`capture-mic${voice.listening ? " is-listening" : ""}`}
+              onClick={voice.toggle}
+              aria-pressed={voice.listening}
+              aria-label={voice.listening ? "Stop voice" : "Speak a note"}
+              title={voice.listening ? "Stop voice" : "Speak a note"}
+            >
+              <span className="capture-mic__glyph" aria-hidden>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="3" width="6" height="11" rx="3" />
+                  <path d="M5 11a7 7 0 0 0 14 0" />
+                  <line x1="12" y1="18" x2="12" y2="21" />
+                </svg>
+              </span>
+              {voice.listening && <span className="capture-mic__pulse" aria-hidden />}
+            </button>
+          )}
+          {voice.listening && (
+            <p className="capture-voice-status" role="status">
+              Listening… speak your note
+            </p>
+          )}
+          {voice.message && (
+            <p className="capture-hint capture-voice-msg" role="status">
+              {voice.message.kind === "denied"
+                ? "Voice needs microphone access. Allow it in your browser, or just type."
+                : voice.message.kind === "no-speech"
+                  ? "Didn’t catch that — tap the mic and try again, or type."
+                  : "Voice isn’t available right now — type your note instead."}
+            </p>
+          )}
           <p className="capture-hint">
             <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
           </p>
