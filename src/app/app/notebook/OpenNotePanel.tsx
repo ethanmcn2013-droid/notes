@@ -127,6 +127,44 @@ export function OpenNotePanel({
 
       {editingExtractFor === openNote.id && (
         <div className="extract-input" role="group" aria-label="Draft action">
+          {(() => {
+            // Offer the note's own lines as one-tap prefills — pick which
+            // line becomes the task instead of retyping it. Only when there
+            // is more than one distinct line worth choosing between.
+            const pickable = Array.from(
+              new Set(
+                openNote.body
+                  .split("\n")
+                  .map((l) => l.trim())
+                  .filter(Boolean),
+              ),
+            ).slice(0, 6);
+            if (pickable.length < 2) return null;
+            return (
+              <div
+                className="extract-line-picker"
+                role="group"
+                aria-label="Pick a line from the note"
+              >
+                <span className="extract-line-picker-label">Pick a line</span>
+                <div className="extract-line-picker-options">
+                  {pickable.map((line, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="extract-line-chip"
+                      onClick={() => {
+                        setDraftAction(line);
+                        extractInputRef.current?.focus();
+                      }}
+                    >
+                      {line}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           <label className="sr-only" htmlFor="extract-input-field">
             Action wording
           </label>
@@ -160,7 +198,8 @@ export function OpenNotePanel({
             </button>
           </div>
           <p className="extract-hint">
-            <kbd>Enter</kbd> saves · <kbd>Esc</kbd> cancels
+            A date or #tag carries into Tasks. <kbd>Enter</kbd> saves ·{" "}
+            <kbd>Esc</kbd> cancels
           </p>
         </div>
       )}

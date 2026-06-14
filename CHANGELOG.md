@@ -3,6 +3,10 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-06-14 · N·26 · ships · pick the line that becomes the task
+
+**Shaping a note into a task now starts from the note's own words — pick a line instead of retyping it.** When you shape an extract, the note's distinct lines appear as one-tap prefills; choose the one that should become the action. And because the receiver now parses the wording, a date or `#tag` in it carries straight into Tasks as a due date and project — so the whole promote gesture sets structure inline without Notes ever growing a date or tag picker. The capture surface stays calm; the structure lives downstream. Branch-pending via PR.
+
 ## 2026-06-14 · N·25 · ships · speak a note when your hands are full
 
 **Capture happens in life, not at a desk — now you can say a note out loud and it saves like any other.** A small mic affordance dictates into the existing capture field via the browser's voice API; it hides where unsupported, degrades quietly on a denied permission, and respects reduced motion. No new note type, no model framing — just voice into the same three-second capture. Branch-pending via PR #5.
