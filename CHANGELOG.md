@@ -3,6 +3,10 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-06-14 · N·25 · ships · speak a note when your hands are full
+
+**Capture happens in life, not at a desk — now you can say a note out loud and it saves like any other.** A small mic affordance dictates into the existing capture field via the browser's voice API; it hides where unsupported, degrades quietly on a denied permission, and respects reduced motion. No new note type, no model framing — just voice into the same three-second capture. Branch-pending via PR #5.
+
 ## 2026-05-28 · N·21 · ships · the homepage speaks before you do
 
 **The Notes marketing hero now types three product phrases in a loop below the wordmark — the dot rolls in, letters rise, the mark morphs into a caret, and a second voice types "Write it here first." / "Before it fades." / "Not everything needs a task." before deleting and beginning again.** The previous hero was the entry sequence only — the animated wordmark established the brand gesture and held, which proved the caret but said nothing about what the notebook is for. The new second act keeps the wordmark caret blinking throughout (brand anchor) while a larger Inter phrase types below the hairline rule; both carets are live simultaneously, which reads as the notebook already composing. The caption cross-fades from "a held thought, awaiting input" to "capture clarity." when the third phrase lands and holds for ten seconds. Three bugs fixed in the prototype pass that also corrected the existing hero: the hairline rule now runs full-bleed both sides (old approach stopped 310 px short of the right edge), impact ripples and ghost trails are anchored to the mark's resting position (they were firing at the composer's left edge due to `position:absolute` ignoring `align-self` in a flex container), and the voice caret hides between phrases so no orphaned cursor blinks in empty whitespace during inter-phrase pauses. `prefers-reduced-motion` skips to phrase three as the static final state — caret visible, caption resolved, no animation.
