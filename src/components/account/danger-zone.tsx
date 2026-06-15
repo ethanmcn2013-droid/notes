@@ -69,8 +69,8 @@ export function DangerZone({ email }: { email: string }) {
         Delete account
       </h2>
       <p className="mt-1.5 max-w-[560px] text-[12.5px] leading-[1.6] text-rose-800/80">
-        Closes your Signal account across every product — Tasks, Notes,
-        Roadmap, Analytics. Every note you've written is removed. There's
+        Closes your Signal account across every product — Notes, Tasks,
+        Timeline, Signal. Every note you've written is removed. There's
         no undo.
       </p>
 

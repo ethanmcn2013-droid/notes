@@ -308,6 +308,66 @@ button, input, textarea { font: inherit; }
 }
 .notes-signin:hover { color: var(--color-ink); }
 
+/* Hospitality line under the auth widgets — the privacy promise at the
+   trust-critical moment. Sotto voce: warm faint ink, a single green dot. */
+.notes-auth-reassure {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  color: var(--color-ink-faint);
+}
+.notes-auth-reassure-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  flex: 0 0 auto;
+}
+
+/* Account → "Manage sign-in & profile" — a quiet hosted path into the Clerk
+   portal, in the Notes green register with the suite's crafted chevron. */
+.notes-manage-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 12px;
+  padding: 9px 14px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 10px;
+  background: var(--color-paper);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-ink-soft);
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out);
+}
+.notes-manage-identity:hover {
+  color: var(--color-ink);
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 4%, var(--color-paper));
+}
+.notes-manage-identity-arrow {
+  flex: 0 0 auto;
+  color: var(--color-accent);
+  transition: transform var(--motion-base) var(--ease-standard);
+}
+.notes-manage-identity:hover .notes-manage-identity-arrow,
+.notes-manage-identity:focus-visible .notes-manage-identity-arrow {
+  transform: translateX(2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .notes-manage-identity-arrow { transition: none; }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

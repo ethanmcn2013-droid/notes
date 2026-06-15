@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 import { SuiteLauncher } from "@/components/suite-launcher";
+import { notesClerkAppearance } from "@/lib/clerk-appearance";
 
 export const metadata = {
   title: "Sign in — Signal Notes",
@@ -34,7 +35,7 @@ export default function SignInPage() {
             className="text-[15px]"
             style={{ color: "var(--color-ink-soft, #4a4a44)", letterSpacing: "-0.01em" }}
           >
-            Sign in to your notebook
+            Welcome back to your notebook.
           </p>
           <SignIn
             path="/sign-in"
@@ -42,7 +43,12 @@ export default function SignInPage() {
             signUpUrl="/sign-up"
             forceRedirectUrl="/app"
             signUpForceRedirectUrl="/app"
+            appearance={notesClerkAppearance}
           />
+          <p className="notes-auth-reassure">
+            <span className="notes-auth-reassure-dot" aria-hidden />
+            Private by default — your notes are only ever yours.
+          </p>
         </div>
       </main>
     </>
