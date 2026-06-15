@@ -95,17 +95,32 @@ const ACTIVE: Seed[] = [
   },
 ];
 
+// Notes that crossed the one-way edge into Tasks. Each kept its private body
+// here; the creator-authored extract is the action that now lives in Tasks.
+// This is the surface that shows how Notes behaves in the ecosystem.
 const ARCHIVED: Seed[] = [
   {
     id: "demo_n_a1",
-    body: "Open day went well — nine couples through, three asked for dates. Tea urn was the hero. Do it again the same way in spring.",
-    ago: 9 * DAY,
+    body: "Maria asked about a late checkout for the bridal suite — Sunday 11am instead of 9. Said yes in principle, just needs to clear housekeeping.",
+    ago: 1 * DAY + 8 * HOUR,
+    extractBody: "Clear Sunday 11am late checkout with housekeeping",
+    promotedTaskId: "demo_task_checkout",
     archived: true,
   },
   {
     id: "demo_n_a2",
-    body: "Old idea: loyalty rate for returning anniversary dinners. Parked — revisit after the wedding season settles.",
-    ago: 16 * DAY,
+    body: "Linen supplier rang — the order now ships Tuesday, not Friday. Fine for Saturday, but tight if anything slips.",
+    ago: 2 * DAY + 5 * HOUR,
+    extractBody: "Chase linen order — now shipping Tuesday",
+    promotedTaskId: "demo_task_linen",
+    archived: true,
+  },
+  {
+    id: "demo_n_a3",
+    body: "Registrar confirmed she can do 2pm but wants the final paperwork a fortnight out. Don't leave it late this time.",
+    ago: 4 * DAY,
+    extractBody: "Send registrar paperwork two weeks before the date",
+    promotedTaskId: "demo_task_registrar",
     archived: true,
   },
 ];

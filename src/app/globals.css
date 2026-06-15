@@ -1527,10 +1527,6 @@ button, input, textarea { font: inherit; }
   border: 0;
   cursor: pointer;
   color: var(--color-ink-faint);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   text-align: left;
   transition: color var(--motion-fast) var(--ease-out);
   font-family: inherit;
@@ -1539,15 +1535,43 @@ button, input, textarea { font: inherit; }
   color: var(--color-ink-soft);
 }
 
+.in-tasks-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Count chip rendered in the cross-product signal (indigo) — a quiet tally
+   of how many thoughts have crossed into the suite. */
+.in-tasks-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-signal) 11%, transparent);
+  color: var(--color-signal);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
 .in-tasks-chevron {
   display: inline-block;
-  transition: transform var(--motion-fast) var(--ease-out);
-  transform: rotate(-90deg);
-  font-style: normal;
-  font-size: 10px;
+  flex: 0 0 auto;
+  transition: transform var(--motion-base) var(--ease-standard);
+  transform: rotate(0deg);
 }
 .in-tasks-chevron.is-open {
-  transform: rotate(0deg);
+  transform: rotate(90deg);
 }
 @media (prefers-reduced-motion: reduce) {
   .in-tasks-chevron { transition: none; }
@@ -1564,12 +1588,27 @@ button, input, textarea { font: inherit; }
 }
 
 .in-tasks-row {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 12px;
-  padding: 12px clamp(20px, 4vw, 42px);
+  gap: 16px;
+  padding: 13px clamp(20px, 4vw, 42px);
   border-bottom: 1px solid var(--color-line);
+  transition: background var(--motion-fast) var(--ease-out);
+}
+.in-tasks-row:hover {
+  background: color-mix(in srgb, var(--color-accent) 4%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .in-tasks-row { transition: none; }
+}
+
+.in-tasks-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .in-tasks-title {
@@ -1581,42 +1620,87 @@ button, input, textarea { font: inherit; }
   font-weight: 560;
 }
 
-.in-tasks-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
 .in-tasks-extract {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--color-ink-faint);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 160px;
+  line-height: 1.35;
 }
 
+/* The one-way edge made visible: indigo (the suite's cross-product signal)
+   with a chevron that nudges toward Tasks on intent. Always present, so the
+   hop is never a dead end. */
 .in-tasks-link {
-  font-size: 11px;
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
-  text-underline-offset: 2px;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  color: var(--color-signal);
+  text-decoration: none;
+  white-space: nowrap;
 }
-.in-tasks-link:hover {
-  text-decoration-color: var(--color-accent);
+.in-tasks-link-arrow {
+  transition: transform var(--motion-base) var(--ease-standard);
+}
+.in-tasks-link:hover .in-tasks-link-arrow,
+.in-tasks-link:focus-visible .in-tasks-link-arrow {
+  transform: translateX(2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .in-tasks-link-arrow { transition: none; }
 }
 
-/* Footer note in the "In Tasks" section — "Note returned here.
-   The task stays in Tasks." Displayed as the last list item. */
+/* Reversibility without anxiety: a quiet text affordance, never destructive
+   red. Calm by default; on hover-capable devices it stays out of the way
+   until the row is engaged. */
+.in-tasks-remove {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  margin-right: -8px;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-ink-faint);
+  transition: color var(--motion-fast) var(--ease-out),
+    opacity var(--motion-base) var(--ease-out);
+}
+.in-tasks-remove:hover {
+  color: var(--color-ink-soft);
+}
+.in-tasks-remove:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+@media (hover: hover) {
+  .in-tasks-remove {
+    opacity: 0;
+  }
+  .in-tasks-row:hover .in-tasks-remove,
+  .in-tasks-row:focus-within .in-tasks-remove {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .in-tasks-remove { transition: color var(--motion-fast) var(--ease-out); }
+}
+
+/* Footer note in the "In Tasks" section — clarifies what Remove does so the
+   affordance reads as reversible, not destructive. */
 .in-tasks-footer {
-  padding: 10px clamp(20px, 4vw, 42px);
+  padding: 11px clamp(20px, 4vw, 42px);
   font-size: 11px;
   color: var(--color-ink-faint);
   letter-spacing: 0.01em;
+  line-height: 1.45;
   border-bottom: 1px solid var(--color-line);
 }
 

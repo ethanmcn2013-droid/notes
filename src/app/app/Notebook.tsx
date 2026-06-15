@@ -25,6 +25,28 @@ import {
   type ExtractSendResult,
   type NoteRead,
 } from "@/server/actions/notes";
+import { TASKS_URL } from "@/lib/product-urls";
+
+// The Tasks app entry — the destination of the one-way edge. Used as the
+// always-available "Open in Tasks" target for promoted notes whose precise
+// task URL isn't in this session's sentResults (e.g. after a reload), so the
+// ecosystem hop is never a dead end.
+const TASKS_APP_URL = `${TASKS_URL.replace(/\/+$/, "")}/app`;
+
+/**
+ * Warm the cross-subdomain hop on intent (hover/focus) so moving from the
+ * notebook into Tasks feels instant — the suite-arrows pattern, applied to
+ * the "Open in Tasks" edge. Idempotent; safe to call repeatedly.
+ */
+function prefetchHop(url: string) {
+  if (typeof document === "undefined") return;
+  if (document.head.querySelector(`link[data-notes-hop="${url}"]`)) return;
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.href = url;
+  link.setAttribute("data-notes-hop", url);
+  document.head.appendChild(link);
+}
 
 // Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts — kept in
 // sync by hand because a "use server" module can't export a const.
@@ -1439,49 +1461,86 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
               aria-expanded={archivedOpen}
               onClick={() => setArchivedOpen((v) => !v)}
             >
-              <span>In Tasks ({archivedNotes.length})</span>
-              <span className={`in-tasks-chevron${archivedOpen ? " is-open" : ""}`} aria-hidden>
-                ▾
+              <span className="in-tasks-toggle-label">
+                In Tasks
+                <span className="in-tasks-count" aria-hidden>
+                  {archivedNotes.length}
+                </span>
               </span>
+              <svg
+                className={`in-tasks-chevron${archivedOpen ? " is-open" : ""}`}
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M9 6l6 6-6 6" />
+              </svg>
             </button>
 
             {archivedOpen && (
-              <ol className="in-tasks-list" aria-label="Promoted notes in Tasks">
+              <ol className="in-tasks-list" aria-label="Notes that crossed into Tasks">
                 {archivedNotes.map((note) => {
                   const sent = sentResults.get(note.id);
+                  // Persistent hop: the precise task URL when this session sent
+                  // it, otherwise the Tasks app entry — so the edge is never a
+                  // dead end after a reload.
+                  const hopUrl = sent?.taskUrl ?? TASKS_APP_URL;
                   const isUnpromoting = unpromotingIds.has(note.id);
+                  const title = firstLine(note.body);
                   return (
                     <li key={note.id} className="in-tasks-row">
-                      <span className="in-tasks-title">{firstLine(note.body)}</span>
-                      <span className="in-tasks-meta">
+                      <div className="in-tasks-main">
+                        <span className="in-tasks-title">{title}</span>
                         {note.extractBody && (
                           <span className="in-tasks-extract">{note.extractBody}</span>
                         )}
-                        {sent?.taskUrl && (
-                          <a
-                            href={sent.taskUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="in-tasks-link"
-                          >
-                            Open in Tasks
-                          </a>
-                        )}
-                      </span>
+                      </div>
+                      <a
+                        href={hopUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="in-tasks-link"
+                        aria-label={`Open in Tasks: ${title}`}
+                        onMouseEnter={() => prefetchHop(hopUrl)}
+                        onFocus={() => prefetchHop(hopUrl)}
+                      >
+                        Open in Tasks
+                        <svg
+                          className="in-tasks-link-arrow"
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                        >
+                          <path d="M9 6l6 6-6 6" />
+                        </svg>
+                      </a>
                       <button
                         type="button"
-                        className="btn-delete"
+                        className="in-tasks-remove"
                         onClick={() => handleUnpromote(note.id)}
                         disabled={isUnpromoting}
-                        aria-label={`Remove from Tasks: ${firstLine(note.body)}`}
+                        aria-label={`Remove from Tasks: ${title}`}
                       >
-                        {isUnpromoting ? "Removing…" : "Remove from Tasks"}
+                        {isUnpromoting ? "Removing…" : "Remove"}
                       </button>
                     </li>
                   );
                 })}
                 <li className="in-tasks-footer">
-                  Note returned here. The task stays in Tasks.
+                  Sent one way into Tasks. Remove brings the note back here —
+                  the task stays.
                 </li>
               </ol>
             )}
