@@ -10,10 +10,17 @@
  * Driven by the `variables` API (the stable, documented surface) so it stays
  * resilient across Clerk versions; `elements` overrides are kept light and
  * additive.
+ *
+ * Colour system: Notes runs two tiers — indigo (`--color-signal`) is the
+ * primary-action signal (the wordmark dot, the loader dot, the "Open the
+ * notebook" CTA), and green (`--color-accent`) is the warm register +
+ * secondary accents. So the auth widget keeps the *warm Notes register*
+ * (paper, ink, Inter) but its primary button stays indigo — consistent with
+ * the homepage CTA the user just came from.
  */
 export const notesClerkAppearance = {
   variables: {
-    colorPrimary: "#335f54", // --color-accent (Notes green)
+    colorPrimary: "#4f46e5", // --color-signal (primary-action indigo)
     colorText: "#161815", // --color-ink
     colorTextSecondary: "#4c5148", // --color-ink-soft
     colorBackground: "#fffefa", // --color-paper (warm white)
@@ -38,7 +45,7 @@ export const notesClerkAppearance = {
       letterSpacing: "-0.01em",
     },
     footerActionLink: {
-      color: "#335f54",
+      color: "#4f46e5",
       fontWeight: 500,
     },
   },
