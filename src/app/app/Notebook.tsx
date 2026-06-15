@@ -10,6 +10,12 @@ import {
 } from "react";
 
 import { PrivateNotesEmptyState } from "@/app/app/PrivateNotesEmptyState";
+import {
+  FirstCaptureMoment,
+  FIRST_CAPTURE_ENABLED,
+  hasSeenFirstCapture,
+  markFirstCaptureSeen,
+} from "@/app/app/FirstCaptureMoment";
 import { useVoiceCapture } from "@/app/app/notebook/hooks";
 import { NoteProvenanceChip } from "@/components/NoteProvenanceChip";
 import {
@@ -146,6 +152,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
+  // The one signature moment — fires once, ever, on the first note a
+  // brand-new notebook receives (see FirstCaptureMoment).
+  const [firstCapture, setFirstCapture] = useState(false);
   const [editingExtractFor, setEditingExtractFor] = useState<string | null>(null);
   const [draftAction, setDraftAction] = useState("");
   const [extractError, setExtractError] = useState<string | null>(null);
@@ -623,11 +632,32 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     []
   );
 
+  // Preview hook so the once-ever first-capture moment is reviewable on a
+  // seeded demo (it otherwise only fires on a genuinely empty notebook):
+  // visit /app?firstcapture=preview.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("firstcapture") === "preview") setFirstCapture(true);
+  }, []);
+
   // ── Existing note actions ────────────────────────────────────────
 
   const commit = useCallback(() => {
     const body = draft.trim();
     if (!body) return;
+
+    // First-capture signature moment: an empty notebook receiving its very
+    // first note, once ever (localStorage-guarded). Detected before the
+    // optimistic prepend so the count reflects the pre-save state.
+    if (
+      FIRST_CAPTURE_ENABLED &&
+      notesRef.current.length === 0 &&
+      !hasSeenFirstCapture()
+    ) {
+      markFirstCaptureSeen();
+      setFirstCapture(true);
+    }
 
     const tempId = makeOptimisticId();
     const now = Date.now();
@@ -1561,6 +1591,11 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           </div>
         )}
       </section>
+
+      {/* ── First-capture signature moment (once, ever) ─────────── */}
+      {firstCapture && (
+        <FirstCaptureMoment onDone={() => setFirstCapture(false)} />
+      )}
 
       {/* ── Undo toast ──────────────────────────────────────────── */}
       {undoTarget && (
