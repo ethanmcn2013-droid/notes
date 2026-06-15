@@ -1189,7 +1189,21 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                       title={`Will add: ${firstLine(note.body).slice(0, 40)}${firstLine(note.body).length > 40 ? "…" : ""}`}
                       aria-label={`Send to Tasks: ${firstLine(note.body)}`}
                     >
-                      → Tasks
+                      Tasks
+                      <svg
+                        className="note-ghost-arrow"
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <path d="M9 6l6 6-6 6" />
+                      </svg>
                     </button>
                   )}
                 </div>

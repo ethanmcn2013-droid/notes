@@ -1340,10 +1340,14 @@ button, input, textarea { font: inherit; }
   right: clamp(20px, 4vw, 42px);
   top: 50%;
   transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   background: transparent;
   border: 0;
   padding: 4px 0 4px 8px;
   font-size: 11.5px;
+  font-weight: 500;
   color: var(--color-ink-faint);
   cursor: pointer;
   white-space: nowrap;
@@ -1355,6 +1359,19 @@ button, input, textarea { font: inherit; }
   font-family: inherit;
   line-height: 1;
   z-index: 2;
+}
+/* The directional chevron — same crafted mark as the "In Tasks" section and
+   suite-arrows. Nudges toward Tasks on intent. */
+.note-ghost-arrow {
+  flex: 0 0 auto;
+  transition: transform var(--motion-base) var(--ease-standard);
+}
+.note-ghost-promote:hover .note-ghost-arrow,
+.note-ghost-promote:focus-visible .note-ghost-arrow {
+  transform: translateX(2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-ghost-arrow { transition: none; }
 }
 /* Only show on pointer devices (not touch) */
 @media (hover: hover) and (pointer: fine) {
