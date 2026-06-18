@@ -164,6 +164,9 @@ export async function runCalendarSpawnSweep(): Promise<{
   const windowStart = now - SPAWN_BACKWARD_TOLERANCE_MS;
   const windowEnd = now + SPAWN_LEAD_MS;
 
+  // isolation-ok: fleet-wide cron (runCalendarSpawnSweep → /api/calendar/cron,
+  // every 5 min) intentionally reads every user connection. All per-user work
+  // below is keyed to conn.userId. Not a tenant-facing query.
   const connections = await db
     .select({
       userId: calendarConnections.userId,
