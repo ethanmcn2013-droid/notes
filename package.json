@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/nextjs": "^7.3.3",
     "@libsql/client": "^0.17.3",
+    "@sentry/nextjs": "^10.58.0",
     "drizzle-orm": "^0.45.2",
     "motion": "^12.38.0",
     "next": "16.2.5",
