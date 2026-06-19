@@ -8,6 +8,13 @@
  * reference setup so observability is identical across the suite.
  */
 export async function register() {
+  // Validate env first — must run even when Sentry is unconfigured, so a
+  // misconfigured production boots loudly here, not with runtime 500s.
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { validateEnv } = await import("@/env");
+    validateEnv();
+  }
+
   if (!process.env.SENTRY_DSN) return;
   const { scrubEvent } = await import("@/lib/sentry-scrub");
   if (process.env.NEXT_RUNTIME === "nodejs") {
