@@ -69,6 +69,8 @@ const isPublicRoute = createRouteMatcher([
   // session-gated (the user must be signed in to opt in).
   "/api/calendar/google/callback",
   "/api/calendar/cron",
+  // Public so the browser can POST CSP violation reports without a session.
+  "/api/csp-report",
 ]);
 
 const clerkConfigured = Boolean(

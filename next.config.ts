@@ -35,10 +35,15 @@ const csp = [
   `form-action 'self' ${googleOauth}`,
   `object-src 'none'`,
   `upgrade-insecure-requests`,
+  // CSP violation reporting — collected at /api/csp-report. Notes ENFORCES
+  // CSP, so this catches real blocks affecting users, not just would-be ones.
+  `report-uri /api/csp-report`,
+  `report-to csp`,
 ].join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
+  { key: "Reporting-Endpoints", value: 'csp="/api/csp-report"' },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
