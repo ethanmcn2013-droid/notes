@@ -325,13 +325,8 @@ export function NotesHeroVoice() {
       aria-label="Signal Notes"
       ref={rootRef}
     >
-      {/* Corner chrome — TL: wordmark context. TR: status counter */}
-      <div className="nhv-chrome nhv-chrome-tl">
-        <span className="nhv-wm">
-          signal studio<span className="nhv-wm-dot" aria-hidden />
-          <span className="nhv-sep" aria-hidden>·</span>notes
-        </span>
-      </div>
+      {/* Corner chrome — TR status counter only. The TL wordmark was removed:
+          the site header already carries the signal studio · notes breadcrumb. */}
       <div className="nhv-chrome nhv-chrome-tr" aria-hidden>
         <span className="nhv-pip" />
         <span className="nhv-status-tr">waiting</span>
@@ -409,21 +404,7 @@ const CSS = `
   color: var(--nhv-stone);
   display: inline-flex; align-items: center; gap: 10px;
 }
-.nhv-chrome-tl { top: 28px; left: 32px; }
 .nhv-chrome-tr { top: 28px; right: 32px; }
-.nhv-wm {
-  display: inline-flex; align-items: baseline;
-  font-family: var(--nhv-font); font-weight: 500;
-  font-size: 14px; letter-spacing: -.025em; line-height: .95;
-  color: var(--nhv-ink); text-transform: none;
-}
-.nhv-wm-dot {
-  width: .16em; height: .16em; border-radius: 50%;
-  background: var(--nhv-indigo); margin-left: .06em;
-  align-self: flex-end; margin-bottom: .06em; flex: 0 0 auto;
-  display: inline-block;
-}
-.nhv-sep { color: var(--nhv-stone); margin: 0 .4em; font-weight: 300; }
 .nhv-pip {
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--nhv-indigo); display: inline-block;
@@ -610,7 +591,6 @@ const CSS = `
 
 /* ─── Responsive chrome ──────────────────────────────────────── */
 @media (max-width: 600px) {
-  .nhv-chrome-tl { top: 18px; left: 20px; }
   .nhv-chrome-tr { top: 18px; right: 20px; font-size: 10px; }
 }
 @media (max-width: 420px) { .nhv-chrome-tr { display: none; } }
