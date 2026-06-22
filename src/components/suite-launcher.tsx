@@ -55,6 +55,18 @@ const PRODUCTS_AUTHED: {
 
 const INDIGO = "#4f46e5";
 
+/* Popover entrance — a quiet rise + settle, reduced-motion-safe. */
+const SL_CSS = `
+.sl-pop { animation: sl-pop-in 170ms cubic-bezier(.22,.7,.2,1); transform-origin: top left; }
+@keyframes sl-pop-in {
+  from { opacity: 0; transform: translateY(-5px) scale(.975); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-pop { animation: none; }
+}
+`;
+
 const PRODUCT_ORIGINS = [NOTES_URL, TASKS_URL, TIMELINE_URL, SIGNAL_URL];
 
 /**
@@ -181,6 +193,9 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
         aria-expanded={open}
         aria-label="Open Signal Studio launcher"
         style={{
+          display: "inline-flex",
+          alignItems: "baseline",
+          gap: 5,
           fontSize: 12,
           color: "var(--color-ink-faint)",
           fontWeight: 400,
@@ -191,11 +206,28 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
           fontFamily: "inherit",
         }}
       >
-        signal studio<span style={{ color: INDIGO }}>.</span>
+        <span>
+          signal studio<span style={{ color: INDIGO }}>.</span>
+        </span>
+        <span
+          aria-hidden
+          style={{
+            fontSize: 8,
+            lineHeight: 1,
+            opacity: 0.45,
+            alignSelf: "center",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 200ms cubic-bezier(.22,.7,.2,1)",
+          }}
+        >
+          ▾
+        </span>
       </button>
+      <style>{SL_CSS}</style>
       {open ? (
         <div
           role="menu"
+          className="sl-pop"
           style={{
             position: "absolute",
             left: 0,
@@ -249,7 +281,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
                       if (isCurrent) return;
                       prefetchProduct(p.url);
                       e.currentTarget.style.background =
-                        "color-mix(in srgb, var(--color-ink) 5%, transparent)";
+                        "color-mix(in srgb, " + INDIGO + " 7%, transparent)";
                     }}
                     onFocus={
                       isCurrent ? undefined : () => prefetchProduct(p.url)
@@ -283,7 +315,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
                         ? "var(--color-ink-faint)"
                         : "var(--color-ink)",
                       background: isCurrent
-                        ? "color-mix(in srgb, var(--color-ink) 4%, transparent)"
+                        ? "color-mix(in srgb, " + INDIGO + " 6%, transparent)"
                         : "transparent",
                       transition: "background 120ms",
                     }}
@@ -320,7 +352,7 @@ export function SuiteLauncher({ current, isAuthed = false }: SuiteLauncherProps)
                           fontWeight: 600,
                           textTransform: "uppercase",
                           letterSpacing: "0.14em",
-                          color: "var(--color-ink-faint)",
+                          color: INDIGO,
                         }}
                       >
                         here
