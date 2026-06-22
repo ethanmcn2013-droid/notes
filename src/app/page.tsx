@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { NotesHeroVoice } from "@/components/marketing/notes-hero-voice";
+import { NotesDemo } from "@/components/marketing/notes-demo";
 import { SuiteLauncher } from "@/components/suite-launcher";
 import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -110,6 +111,10 @@ export default async function HomePage() {
             </Link>
           </div>
         </section>
+
+        {/* Product demo — the capture → promote loop, shown in one calm note.
+            Parity with the other products' homepage demos (review issue 07). */}
+        <NotesDemo />
 
         <SiteFooter />
       </main>
