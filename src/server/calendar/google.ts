@@ -157,6 +157,34 @@ export async function refreshGoogleAccessToken(
 }
 
 /**
+ * Best-effort revoke of a stored OAuth token at Google's revocation
+ * endpoint. Called during account deletion so a deleted user's
+ * long-lived refresh token can no longer mint access tokens against
+ * their calendar — closing the window where a DB purge removes the row
+ * but the credential stays valid at Google.
+ *
+ * Deliberately swallows all failures: the DB row is already (or about
+ * to be) gone, so a revoke failure must never block account deletion.
+ * Google's endpoint needs only the token (no client secret), and 400s
+ * on an already-invalid/expired token — which is a success for our
+ * purposes. Returns true only when Google confirms the revocation.
+ */
+export async function revokeGoogleToken(token: string): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const res = await fetch("https://oauth2.googleapis.com/revoke", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token }),
+      cache: "no-store",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Internal Google event shape — only the fields we care about. The
  * full event object carries description, attachments, hangoutLink,
  * extendedProperties, conferenceData, etc. We intentionally do not

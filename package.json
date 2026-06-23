@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "bash scripts/check-suiteloader-identity.sh && node --test src/server/cross-tenant-isolation.test.mjs"
+    "test": "bash scripts/check-suiteloader-identity.sh && node --test src/server/cross-tenant-isolation.test.mjs && node --import tsx --test src/server/account-erasure.test.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.3",
@@ -26,6 +26,7 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
