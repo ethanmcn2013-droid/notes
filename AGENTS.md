@@ -1,25 +1,36 @@
-# AGENTS.md — Signal Notes
+# AGENTS.md - Signal Notes
 
-This repo is part of the Signal Studio suite. Signal Notes is the context layer.
+This repo is part of the Signal Studio suite. Signal Notes is the capture-clarity
+product.
 
 Before product work, read `docs/PRODUCT.md`.
 
 ## Signal HQ Sync
 
-Signal HQ lives in the Studio repo at `ethanmcn2013-droid/studio` and is the internal source of truth for product, launch, growth, decisions, risks, metrics, and next actions.
+Signal HQ lives in the Studio repo and is the internal source of truth for
+product, launch, growth, decisions, risks, metrics, and next actions.
 
-When a change in Notes affects product state, roadmap, launch readiness, GTM, messaging, campaigns, demos, templates, outreach, pilots, metrics, decisions, risks, or strategic learning, update Signal HQ before the task is complete.
+When a change in Notes affects product state, launch readiness, GTM, messaging,
+campaigns, demos, templates, outreach, pilots, metrics, decisions, risks, or
+strategic learning, update Signal HQ before the task is complete.
 
-Before note extraction, decision, action, risk, sharing, guest-facing, or cross-product work, read `docs/COLLABORATION_LOOP.md`. Notes owns the context-to-work moment in the collaboration loop.
+Before note extraction, decision, action, risk, sharing, guest-facing, or
+cross-product work, read `docs/COLLABORATION_LOOP.md`. Notes owns the
+context-to-work moment in the collaboration loop.
 
-In practice, open or update a Studio PR that changes:
+Open or update a Studio PR that changes the canonical source file:
 
-- `src/lib/hq/data.ts`
-- `src/lib/hq/signals.ts` if derived signal logic changes
-- relevant files under `signal-growth/`
-- `CHANGELOG.md` for meaningful operator-visible changes — write entries in the dispatch shape (Studio BRAND.md §6.5): `## YYYY-MM-DD · N·NN · verb · headline`, then a bold impact-lead sentence, then prose. Verbs are `ships / tightens / cuts / holds / reads`.
+- feature scope, status, or impact: `content/hq/features/<id>.md`
+- risk surfaced or mitigation changed: `content/hq/risks/<id>.md`
+- decision affecting pricing, brand, GTM, or product: `content/hq/decisions/<id>.md`
+- campaign goal, blocker, or progress: `content/hq/campaigns/<id>.md`
+- cross-product flow, data shape, or cron schedule: `content/atlas/<slug>.md`
+- growth learning: relevant files under `signal-growth/`
+- shipped operator-visible change: `CHANGELOG.md`
 
-Also bump `seedHqData.updatedAt` so `/hq` can detect newer repo-backed data.
+Do not update `src/lib/hq/data.ts` unless the live Studio code path still reads
+from it. The markdown and typed source files above are canonical for migrated HQ
+sections.
 
 ## Locked Product Rule
 
