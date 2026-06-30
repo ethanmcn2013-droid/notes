@@ -3,6 +3,10 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-06-30 · N·27 · tightens · Notes' footer now carries the shared suite shape
+
+**The public footer now follows the same Product, Company, Resources, Suite structure as the rest of Signal Studio while keeping Notes' own quiet mark.** Notes keeps notebook and example paths in Product and Resources, the company/legal links route to Studio-owned surfaces, and the Suite column links Signal Studio, Signal Notes, Signal Tasks, Signal Timeline, and Signal in the same order as every other footer. The new `iOS app` link points to Studio's `/ios` status page, making the native app visible without claiming download availability early. Typecheck and production build are clean.
+
 ## 2026-06-14 · N·26 · ships · pick the line that becomes the task
 
 **Shaping a note into a task now starts from the note's own words — pick a line instead of retyping it.** When you shape an extract, the note's distinct lines appear as one-tap prefills; choose the one that should become the action. And because the receiver now parses the wording, a date or `#tag` in it carries straight into Tasks as a due date and project — so the whole promote gesture sets structure inline without Notes ever growing a date or tag picker. The capture surface stays calm; the structure lives downstream. Branch-pending via PR.
