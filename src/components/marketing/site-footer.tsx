@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  IOS_APP_URL,
   SIGNAL_URL,
   NOTES_URL,
   TIMELINE_URL,
@@ -7,7 +8,12 @@ import {
   TASKS_URL,
 } from "@/lib/product-urls";
 
-/* ── Social destinations (order locked: X → YouTube → TikTok → LinkedIn) ── */
+type FooterLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+};
+
 const SOCIALS = [
   {
     label: "X",
@@ -51,102 +57,208 @@ const SOCIALS = [
   },
 ] as const;
 
-/* ── Suite cross-links ── */
-const SUITE = [
-  { name: "Signal Notes", url: NOTES_URL },
-  { name: "Signal Tasks", url: TASKS_URL },
-  { name: "Signal Timeline", url: TIMELINE_URL },
-  { name: "Signal", url: SIGNAL_URL },
-] as const;
-
-/* ── Component ── */
 export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
     <footer
-      className="reveal mt-20 border-t pt-10"
+      className="reveal mt-24 border-t pb-10 pt-14"
       style={{ borderColor: "var(--color-line)" }}
     >
-      {/* Brand line */}
-      <p
-        className="text-[13px]"
-        style={{ color: "var(--color-ink-soft)" }}
-      >
-        A{" "}
-        <a
-          href={STUDIO_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline decoration-dotted underline-offset-3"
-          style={{ color: "var(--color-ink-soft)" }}
-        >
-          Signal Studio
-        </a>{" "}
-        product.
-      </p>
-
-      {/* Suite cross-links */}
-      <nav
-        aria-label="Signal Studio suite"
-        className="mt-6 flex flex-wrap gap-x-6 gap-y-2"
-      >
-        {SUITE.map((product) => (
-          <a
-            key={product.name}
-            href={product.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[12.5px] underline decoration-dotted underline-offset-3 transition-colors"
+      <div className="grid w-full gap-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_repeat(4,1fr)]">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <span className="notes-mark" style={{ fontSize: "1.25rem" }}>
+            <span className="word">notes</span>
+            <span className="dot" aria-hidden />
+          </span>
+          <p
+            className="mt-4 max-w-xs text-[13.5px] leading-relaxed"
+            style={{ color: "var(--color-ink-soft)" }}
+          >
+            Capture clarity for the thought before it becomes work.
+          </p>
+          <p
+            className="mt-4 text-[12px]"
             style={{ color: "var(--color-ink-faint)" }}
           >
-            {product.name}
-          </a>
-        ))}
-      </nav>
+            Made by{" "}
+            <a
+              href={STUDIO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-dotted underline-offset-3"
+            >
+              Signal Studio
+            </a>
+            .
+          </p>
+          <SocialLinks />
+        </div>
 
-      {/* Social row */}
-      <nav
-        aria-label="Signal Notes on social"
-        className="mt-6 flex items-center gap-4"
-      >
-        {SOCIALS.map((s) => (
-          <a
-            key={s.label}
-            href={s.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={s.title}
-            aria-label={s.title}
-            className="transition-opacity"
-            style={{ color: "var(--color-ink-faint)", opacity: 0.7 }}
-          >
-            {s.svg}
-          </a>
-        ))}
-      </nav>
+        <FooterCol
+          heading="Product"
+          links={[
+            { href: "/app", label: "Open notebook" },
+            { href: "/anatomy", label: "Anatomy" },
+            { href: "/wedding-planning", label: "Wedding planning" },
+            { href: "/freelance-studio", label: "Freelance studio" },
+          ]}
+        />
+        <FooterCol
+          heading="Company"
+          links={[
+            { href: "https://signalstudio.ie/pricing", label: "Pricing", external: true },
+            { href: "https://signalstudio.ie/about", label: "About Signal Studio", external: true },
+            { href: "https://signalstudio.ie/dispatch", label: "Dispatch", external: true },
+            { href: "https://signalstudio.ie/contact", label: "Contact", external: true },
+          ]}
+        />
+        <FooterCol
+          heading="Resources"
+          links={[
+            { href: IOS_APP_URL, label: "iOS app", external: true },
+            { href: "/building-project", label: "Building project" },
+            { href: "/teaching-week", label: "Teaching week" },
+            { href: "https://signalstudio.ie/security", label: "Security", external: true },
+          ]}
+        />
+        <FooterCol
+          heading="Suite"
+          links={[
+            { href: STUDIO_URL, label: "Signal Studio", external: true },
+            { href: NOTES_URL, label: "Signal Notes", external: true },
+            { href: TASKS_URL, label: "Signal Tasks", external: true },
+            { href: TIMELINE_URL, label: "Signal Timeline", external: true },
+            { href: SIGNAL_URL, label: "Signal", external: true },
+          ]}
+        />
+      </div>
 
-      {/* Legal + copyright */}
       <div
-        className="mt-8 border-t pt-6 font-mono text-[11px] tracking-wide"
+        className="mt-12 flex flex-col items-start justify-between gap-2 border-t pt-6 text-[12px] md:flex-row md:items-center"
         style={{
           borderColor: "var(--color-line)",
           color: "var(--color-ink-faint)",
         }}
       >
-        <p>
-          &copy; {year} Signal Notes.{" "}
+        <span>&copy; {year} Signal Notes. Made by Signal Studio.</span>
+        <span>Clarity, not configuration.</span>
+      </div>
+      <LegalLinks />
+    </footer>
+  );
+}
+
+function SocialLinks() {
+  return (
+    <nav
+      aria-label="Signal Notes on social"
+      className="-ml-2 mt-3 flex items-center"
+      style={{ color: "var(--color-ink-faint)" }}
+    >
+      {SOCIALS.map(({ label, href, title, svg }) => (
+        <a
+          key={label}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={title}
+          aria-label={title}
+          className="inline-flex h-10 w-10 items-center justify-center transition-opacity hover:opacity-100"
+          style={{ opacity: 0.72 }}
+        >
+          {svg}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+function FooterCol({
+  heading,
+  links,
+}: {
+  heading: string;
+  links: FooterLink[];
+}) {
+  return (
+    <nav aria-label={heading}>
+      <div
+        className="mb-3 font-mono text-[11px] font-semibold uppercase"
+        style={{ color: "var(--color-ink-faint)", letterSpacing: "0.14em" }}
+      >
+        {heading}
+      </div>
+      <ul className="space-y-2 text-[13.5px]" style={{ color: "var(--color-ink-soft)" }}>
+        {links.map((link) => (
+          <li key={`${heading}-${link.href}`}>
+            {link.external ? (
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[32px] items-center transition-colors hover:text-ink"
+              >
+                {link.label}
+                <span
+                  aria-hidden
+                  className="ml-1 text-[11px]"
+                  style={{ color: "var(--color-ink-faint)" }}
+                >
+                  &rarr;
+                </span>
+              </a>
+            ) : (
+              <Link
+                href={link.href}
+                className="inline-flex min-h-[32px] items-center transition-colors hover:text-ink"
+              >
+                {link.label}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function LegalLinks() {
+  const links = [
+    { href: "https://signalstudio.ie/privacy", label: "Privacy" },
+    { href: "https://signalstudio.ie/terms", label: "Terms" },
+    { href: "https://signalstudio.ie/security", label: "Security" },
+    { href: "https://signalstudio.ie/accessibility", label: "Accessibility" },
+  ];
+
+  return (
+    <nav
+      aria-label="Legal"
+      className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-1 font-mono text-[11px] uppercase"
+      style={{
+        color: "var(--color-ink-faint)",
+        letterSpacing: "0.08em",
+        paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
+      }}
+    >
+      {links.map((link, index) => (
+        <span key={link.href} className="inline-flex items-center">
+          {index > 0 && (
+            <span aria-hidden className="px-1 opacity-50">
+              &middot;
+            </span>
+          )}
           <a
-            href={STUDIO_URL}
+            href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline decoration-dotted underline-offset-2"
-            style={{ color: "var(--color-ink-faint)" }}
+            className="inline-flex min-h-[32px] items-center px-2 py-1 transition-opacity hover:opacity-100"
+            style={{ opacity: 0.8 }}
           >
-            A Signal Studio product.
+            {link.label}
           </a>
-        </p>
-      </div>
-    </footer>
+        </span>
+      ))}
+    </nav>
   );
 }

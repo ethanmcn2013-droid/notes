@@ -21,3 +21,6 @@ export const SIGNAL_URL =
 
 export const NOTES_URL =
   process.env.NEXT_PUBLIC_NOTES_URL ?? "https://notes.signalstudio.ie";
+
+export const IOS_APP_URL =
+  process.env.NEXT_PUBLIC_IOS_APP_URL ?? "https://signalstudio.ie/ios";
