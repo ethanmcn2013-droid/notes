@@ -3,6 +3,10 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-07-01 · N·27 · ships · one keystroke and the line you just wrote is a task
+
+**⌘Enter (Ctrl+Enter on Windows) now means one thing everywhere in the notebook: this becomes a task.** In the capture box, the chord saves the line and sends it to Tasks in the same stroke — write, press, done, no dialog. On a note row reached with j/k, the chord promotes that note. With a note open, it promotes the open note. All three paths ride the shipped direct-promote edge: the first line becomes the task title, the raw note body never leaves Notes, and promotion is deliberate by definition — the user pressed the chord (the never-auto-detect refusal holds untouched). The retired misfire toast had already told us readers reach for ⌘Enter; now the product answers. Optimistic temp ids never cross the boundary and in-flight rows can't double-fire. The capture hint teaches the chord in the same quiet line that teaches Enter and Esc, with the modifier label matching the reader's platform. Branch-pending via PR.
+
 ## 2026-06-14 · N·26 · ships · pick the line that becomes the task
 
 **Shaping a note into a task now starts from the note's own words — pick a line instead of retyping it.** When you shape an extract, the note's distinct lines appear as one-tap prefills; choose the one that should become the action. And because the receiver now parses the wording, a date or `#tag` in it carries straight into Tasks as a due date and project — so the whole promote gesture sets structure inline without Notes ever growing a date or tag picker. The capture surface stays calm; the structure lives downstream. Branch-pending via PR.
