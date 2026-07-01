@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { isDemoMode } from "@/lib/access-mode";
 
@@ -78,8 +79,21 @@ const clerkConfigured = Boolean(
     process.env.CLERK_SECRET_KEY
 );
 
-export default clerkMiddleware(
-  async (auth, req) => {
+function proxyWithoutClerk(req: NextRequest) {
+  // Public Notes pages must remain reachable in preview environments where
+  // Clerk keys have not been provisioned. Non-public routes still fail closed.
+  if (isDemoMode()) return;
+
+  if (process.env.NODE_ENV === "production" && !isPublicRoute(req)) {
+    return new NextResponse("Authentication is not configured.", {
+      status: 503,
+    });
+  }
+}
+
+function createProxyWithClerk() {
+  return clerkMiddleware(
+    async (auth, req) => {
     // Demo/Review mode: the whole app — including /app/* — is publicly
     // reachable. No Clerk session exists; the server auth layer resolves to
     // the synthetic demo user bound to in-memory seed data. We still let
@@ -131,8 +145,11 @@ export default clerkMiddleware(
         unauthenticatedUrl: new URL("/sign-in", req.url).toString(),
       });
     }
-  },
-);
+    },
+  );
+}
+
+export default clerkConfigured ? createProxyWithClerk() : proxyWithoutClerk;
 
 export const config = {
   matcher: [
