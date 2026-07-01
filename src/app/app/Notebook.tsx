@@ -422,6 +422,13 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const lastSavedTs = notes[0]?.createdAt ?? null;
   const draftIsEmpty = draft.trim().length === 0;
 
+  // Platform-aware chord label for the capture hint. Set post-hydration
+  // so SSR ("Ctrl") never mismatches a Mac client ("⌘").
+  const [modKey, setModKey] = useState("Ctrl");
+  useEffect(() => {
+    if (/Mac|iP/.test(navigator.platform)) setModKey("⌘");
+  }, []);
+
   // ── Promote toast helpers ────────────────────────────────────────
 
   // The bottom promote toast is now error-only — success cases use the
@@ -643,7 +650,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
   // ── Existing note actions ────────────────────────────────────────
 
-  const commit = useCallback(() => {
+  // `andPromote` — the one-keystroke line→task handoff (⌘/Ctrl+Enter in
+  // the capture box): the draft saves through the normal path, then the
+  // saved note promotes to Tasks in the same stroke. Promotion waits for
+  // the real server id — the optimistic temp id never crosses the
+  // cross-repo boundary.
+  const commit = useCallback((opts?: { andPromote?: boolean }) => {
     const body = draft.trim();
     if (!body) return;
 
@@ -710,12 +722,18 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           );
           return next;
         });
+        if (opts?.andPromote) {
+          // Same stroke, second half: the saved line becomes a task.
+          // executePromote owns its own optimistic state + error path
+          // (the note stays in the notebook if Tasks is unreachable).
+          executePromote(saved.id);
+        }
       } catch (err) {
         setNotes((prev) => prev.filter((n) => n.id !== tempId));
         setError(friendlyError(err, "Could not save"));
       }
     });
-  }, [draft]);
+  }, [draft, executePromote]);
 
   const commitDelete = useCallback((noteToDelete: NoteRead) => {
     startTransition(async () => {
@@ -948,6 +966,14 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
         setDraft("");
         return;
       }
+      // ⌘/Ctrl+Enter — the line you just wrote becomes a task, one
+      // stroke, no dialog. Deliberate by definition: the user pressed
+      // the promote chord (PRODUCT.md §8 — never automatic).
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        commit({ andPromote: true });
+        return;
+      }
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         commit();
@@ -999,6 +1025,46 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     },
     [executePromote, beginOpenNoteConfirm]
   );
+
+  // ⌘/Ctrl+Enter outside the capture box — the same one-keystroke
+  // handoff on a focused note row (j/k navigation) or the open note.
+  // Mirrors the ⌘⌫ delete handler's shape: live DOM read, typing
+  // targets excluded (the capture textarea binds its own chord, the
+  // extract input keeps plain Enter). Optimistic temp ids and rows
+  // already promoting are skipped — the chord never double-fires and
+  // never sends an id the server doesn't know.
+  useEffect(() => {
+    const isTypingTarget = (el: EventTarget | null) => {
+      const n = el as HTMLElement | null;
+      if (!n) return false;
+      return (
+        n.tagName === "INPUT" ||
+        n.tagName === "TEXTAREA" ||
+        n.tagName === "SELECT" ||
+        n.isContentEditable
+      );
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      if (event.key !== "Enter") return;
+      if (isTypingTarget(document.activeElement)) return;
+
+      const active = document.activeElement as HTMLElement | null;
+      const rowId = active?.getAttribute?.("data-note-row") ?? null;
+      const targetId = rowId ?? openIdRef.current;
+      if (!targetId || targetId.startsWith("opt_")) return;
+      if (active?.classList.contains("is-promoted")) return;
+
+      event.preventDefault();
+      if (rowId) {
+        executePromote(rowId);
+      } else {
+        promoteFromOpenNote(targetId);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [executePromote, promoteFromOpenNote]);
 
   const openNote = notes.find((n) => n.id === openId) ?? null;
 
@@ -1075,7 +1141,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             </p>
           )}
           <p className="capture-hint">
-            <kbd>Enter</kbd> saves · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
+            <kbd>Enter</kbd> saves · <kbd>{modKey}</kbd>+<kbd>Enter</kbd> saves and sends to Tasks · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Esc</kbd> clears
           </p>
           {error && (
             <p role="alert" className="capture-hint capture-hint-error">
