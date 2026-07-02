@@ -149,7 +149,6 @@ const CSS = `
 .nhv-wordmark-word span:nth-child(3) { animation-delay: 1.24s; }
 .nhv-wordmark-word span:nth-child(4) { animation-delay: 1.3s; }
 .nhv-wordmark-word span:nth-child(5) { animation-delay: 1.36s; }
-}
 
 .nhv-wordmark-dot {
   width: 0.075em;
