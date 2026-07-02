@@ -2,13 +2,13 @@
 
 **Locked product definition.** This document defines what Signal Notes *is*, who it's for, and — critically — how it stays distinct from Signal Tasks. It is the single source of truth for product decisions in this repo. When this document and the live site disagree, fix this document first if the document is wrong; otherwise fix the site.
 
-Drafted in Plan 1 · Cycle 1.2 (Strategic Foundation). Companion to BRAND.md and analytics/docs/PRODUCT.md (the sibling lock).
+Drafted in Plan 1 · Cycle 1.2 (Strategic Foundation). Companion to BRAND.md and the Signal product definition.
 
 ---
 
 ## 1 · Position
 
-Signal Notes is **capture clarity**. Where Tasks runs the work and Roadmap explains the work and Analytics tells you what to do about the work, Notes catches the work *before it is work*. The half-formed thought. The thing the meeting just decided. The fact that came up in passing. The decision that needs to be remembered but doesn't need to be done.
+Signal Notes is **capture clarity**. Where Tasks runs the work, Timeline explains the work, and Signal tells you what to do about the work, Notes catches the work *before it is work*. The half-formed thought. The thing the meeting just decided. The fact that came up in passing. The decision that needs to be remembered but doesn't need to be done.
 
 It is the fourth product in Signal Studio. Its job is to make capture so fast and frictionless that the user reaches for it instead of a sticky note, a phone draft, or a Slack message to themselves — and to keep that capture clean enough that the *next* thing (a task, a follow-up, a briefing) has something to read.
 
@@ -90,11 +90,11 @@ The product surface is one screen. It is called the **notebook**.
 
 **Notes writes:** to its own database. Notes are stored as `{id, body, created_at, updated_at, extract_body?, promoted_task_id?}`. That is the whole schema in v1. `extract_body` holds the creator-authored action wording (Cycle 9.4b extraction-half, 2026-05-12). `promoted_task_id` is filled in by the cross-repo write to Tasks via `sendExtractToTasks` (Cycle 9.4b second half, 2026-05-12, also today). The cross-repo write hits `POST /api/notes-extract` on `tasks.signalstudio.ie` with the user's clerk userId + the noteId + the extract_body, authed via a shared `NOTES_TO_TASKS_SECRET` bearer. Only `extract_body` ever crosses the boundary. Raw note bodies stay private by design.
 
-**Notes privacy boundary:** raw note bodies are private by default and are intentionally excluded from shared workspaces, roadmap views, task views, analytics summaries, and public collaboration surfaces. Notes can create work from a note only through explicit user approval.
+**Notes privacy boundary:** raw note bodies are private by default and are intentionally excluded from shared workspaces, timeline views, task views, signal summaries, and public collaboration surfaces. Notes can create work from a note only through explicit user approval.
 
 **Notes shares with the suite:**
 - *Notes → Tasks:* one-way extraction. User approves a selected action from the note, that action is sent to Tasks, and Notes stores the resulting task id. The full note body stays private.
-- *Notes → Analytics:* deferred to v2+. Analytics may receive approved, non-sensitive extracts or aggregate signals, but raw note text does not enter briefings by default.
+- *Notes → Signal:* deferred to v2+. Signal may receive approved, non-sensitive extracts or aggregate signals, but raw note text does not enter briefings by default.
 - *Tasks → Notes:* never. A task does not become a note. A task can *reference* a note through an approved extraction edge, but the data flows one way.
 
 **No exports in v1** beyond a single-note copy-to-clipboard. Bulk export, OPML, JSON-dump etc. are deferred to demand.
@@ -109,8 +109,8 @@ These are decisions to *never* build in Notes. They make the product distinct fr
 - **Not a knowledge base.** No taxonomy. No required tagging. No "topic" or "category" abstraction.
 - **Not a second brain.** The brand will not use the phrase. It positions Notes as a self-improvement aid; that's not what this is.
 - **Not journaling.** No daily note. No "today" template. No date-based scaffolding. The user can use Notes for journaling — that's their choice — but the product won't shape itself around it.
-- **Not collaborative.** Notes is single-user in v1. No sharing. No comments. No real-time. Tasks and Roadmaps are where shared work lives.
-- **Not configurable.** No themes. No fonts. No layout options. No "appearance" panel. Same restraint as Tasks and Analytics.
+- **Not collaborative.** Notes is single-user in v1. No sharing. No comments. No real-time. Tasks and Timeline are where shared work lives.
+- **Not configurable.** No themes. No fonts. No layout options. No "appearance" panel. Same restraint as Tasks and Signal.
 - **Not AI-marketed.** No "AI summary". No "AI tagging". No "AI search". The voice rules apply.
 - **Not infinite-canvas.** No spatial canvas. No mind-map. Notes is a stream and a search field.
 
@@ -130,7 +130,7 @@ This is the question Plan 1.2 was created to answer. Notes and Tasks both let th
 | Optional: due date, assignee, project | None of these exist in Notes |
 | Lifecycle: open → done | Lifecycle: written, optionally extracted |
 | Belongs to a project | Belongs to a stream |
-| Surfaces in a briefing (Analytics) | Does not surface in a briefing |
+| Surfaces in a briefing (Signal) | Does not surface in a briefing |
 | Multiplayer | Single-user |
 
 **The mental model:** Notes is the private inbox of thought. Tasks is the commitment ledger. Extraction is the act of choosing what crosses from one to the other.
@@ -160,7 +160,8 @@ A capture product is brand-coherent only if capture is genuinely fast. Below the
 - One screen. No nav header. No sidebar (search rail is collapsible and starts collapsed).
 - Capture field is the largest element by visual weight on first paint.
 - The stream is typography only. No card chrome, no shadows, no rounded panels per-item.
-- The notebook wordmark gesture (per BRAND.md + suite design-system v1): `notes·` with the M·05 *settle* — a slow 3.2s breath, scale 0.92→1.05 with a faint opacity drift on the indigo dot. Runs continuously, the slowest motion in the system. (The prior `underline-writes-itself` gesture was retired with design-system v1.)
+- The notebook wordmark gesture (per BRAND.md + suite design-system): `notes.` with the M·02 caret — a held cursor blink that indicates the capture surface is ready for input. It does not breathe, drift, or loop as ambient decoration.
+- Marketing hero contract: Notebook First. First paint shows a focused capture surface. Within about one second, the note is visible in the stream. Any extraction beat must be explicit approval into Tasks and must end as an indigo approved-action indicator. Reduced motion renders the final notebook state directly.
 
 **Locked voice in the product itself:**
 - The empty capture field shows a quiet private-writing line with a blinking caret. It uses the locked seven-line set from Cycle 9.4b and disappears the moment the user begins typing.
@@ -213,4 +214,4 @@ When this document is wrong, fix it here first. Then the code. Then the marketin
 
 ---
 
-*Locked 2026-05-09 in Plan 1 · Cycle 1.2 (Strategic Foundation). Companion documents: BRAND.md (voice and visual rules), analytics/docs/PRODUCT.md (sibling product definition, locked in Cycle 1.1).*
+*Locked 2026-05-09 in Plan 1 · Cycle 1.2 (Strategic Foundation). Companion documents: BRAND.md (voice and visual rules), Signal product definition (sibling product definition, locked in Cycle 1.1).*
