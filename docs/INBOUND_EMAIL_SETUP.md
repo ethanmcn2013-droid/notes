@@ -9,7 +9,7 @@ call — the data path is live but mail isn't yet flowing.
 
 ## 1 · Provider (recommended: Resend Inbound)
 
-Signal Analytics already uses Resend for outbound; staying on one
+Signal already uses Resend for outbound; staying on one
 provider keeps env management thin.
 
 1. Sign in at <https://resend.com>.

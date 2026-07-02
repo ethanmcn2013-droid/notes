@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextFetchEvent, NextRequest } from "next/server";
 import { isDemoMode } from "@/lib/access-mode";
 
 /**
@@ -78,7 +79,7 @@ const clerkConfigured = Boolean(
     process.env.CLERK_SECRET_KEY
 );
 
-export default clerkMiddleware(
+const productionProxy = clerkMiddleware(
   async (auth, req) => {
     // Demo/Review mode: the whole app — including /app/* — is publicly
     // reachable. No Clerk session exists; the server auth layer resolves to
@@ -133,6 +134,11 @@ export default clerkMiddleware(
     }
   },
 );
+
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (isDemoMode()) return NextResponse.next();
+  return productionProxy(req, event);
+}
 
 export const config = {
   matcher: [

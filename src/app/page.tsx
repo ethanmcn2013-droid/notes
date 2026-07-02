@@ -5,9 +5,10 @@ import { NotesDemo } from "@/components/marketing/notes-demo";
 import { SuiteLauncher } from "@/components/suite-launcher";
 import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { isDemoMode } from "@/lib/access-mode";
 
 export default async function HomePage() {
-  const { userId } = await auth();
+  const { userId } = isDemoMode() ? { userId: null } : await auth();
   const isSignedIn = Boolean(userId);
 
   return (

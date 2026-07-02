@@ -21,11 +21,11 @@
 export const notesClerkAppearance = {
   variables: {
     colorPrimary: "#4f46e5", // --color-signal (primary-action indigo)
-    colorText: "#161815", // --color-ink
-    colorTextSecondary: "#4c5148", // --color-ink-soft
+    colorForeground: "#161815", // --color-ink
+    colorMutedForeground: "#4c5148", // --color-ink-soft
     colorBackground: "#fffefa", // --color-paper (warm white)
-    colorInputBackground: "#ffffff",
-    colorInputText: "#161815",
+    colorInput: "#ffffff",
+    colorInputForeground: "#161815",
     colorDanger: "#b04848", // --color-error
     fontFamily:
       'var(--font-inter), Inter, system-ui, -apple-system, "Segoe UI", sans-serif',
