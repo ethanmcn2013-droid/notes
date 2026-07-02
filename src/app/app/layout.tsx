@@ -6,14 +6,21 @@ export default function AppLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
-      <header className="suitebar" aria-label="Signal Notes notebook chrome">
-        {/* §14 (amended 2026-05-19): umbrella anchor (once) + always-visible
-            4-product pill switcher. The active pill is the
-            product-you-are-in indicator (no separate breadcrumb). */}
-        <div className="suite-breadcrumb">
-          <SuiteSwitcher current="notes" />
+      <header
+        className="suitebar"
+        aria-label="Signal Notes notebook chrome"
+        style={{
+          background: "color-mix(in srgb, var(--color-bg) 88%, transparent)",
+          backdropFilter: "saturate(150%) blur(12px)",
+          WebkitBackdropFilter: "saturate(150%) blur(12px)",
+        }}
+      >
+        <div className="suitebar-inner">
+          <div className="suite-breadcrumb">
+            <SuiteSwitcher current="notes" />
+          </div>
+          <UserButtonWithSuite current="notes" />
         </div>
-        <UserButtonWithSuite current="notes" />
       </header>
       {children}
     </>

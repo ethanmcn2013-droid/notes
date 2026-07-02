@@ -1,26 +1,21 @@
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
-import { SuiteLauncher } from "@/components/suite-launcher";
+import { NotesHeader } from "@/components/marketing/notes-header";
+import { isDemoMode } from "@/lib/access-mode";
 import { notesClerkAppearance } from "@/lib/clerk-appearance";
 
 export const metadata = {
-  title: "Sign in — Signal Notes",
+  title: "Sign in - Signal Notes",
 };
 
 export default function SignInPage() {
+  const showReviewShortcut =
+    isDemoMode() && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
   return (
     <>
-      <header className="suitebar" aria-label="Signal Notes notebook chrome">
-        <div className="suite-breadcrumb">
-          <SuiteLauncher current="notes" />
-          <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
-          <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
-            <span className="word">notes</span>
-            <span className="dot" aria-hidden />
-          </Link>
-        </div>
-      </header>
-      <main className="flex min-h-[calc(100vh-44px)] items-center justify-center px-6 py-16">
+      <NotesHeader showAuth={false} />
+      <main className="flex min-h-[calc(100vh-56px)] items-center justify-center px-6 py-16">
         {/*
           SSR skeleton: Clerk is client-only so <main> is empty before hydration.
           This shell is visible on slow connections / sales calls and prevents a
@@ -37,17 +32,57 @@ export default function SignInPage() {
           >
             Welcome back to your notebook.
           </p>
-          <SignIn
-            path="/sign-in"
-            routing="path"
-            signUpUrl="/sign-up"
-            forceRedirectUrl="/app"
-            signUpForceRedirectUrl="/app"
-            appearance={notesClerkAppearance}
-          />
+          {showReviewShortcut ? (
+            <div
+              className="w-full max-w-[360px] rounded-[8px] border px-6 py-6 text-left"
+              style={{
+                borderColor: "var(--color-line)",
+                background: "var(--color-paper)",
+              }}
+            >
+              <p
+                className="font-mono text-[11px] font-semibold uppercase"
+                style={{
+                  color: "var(--color-ink-faint)",
+                  letterSpacing: "0.12em",
+                }}
+              >
+                Review mode
+              </p>
+              <p
+                className="mt-3 text-[20px] font-medium leading-tight"
+                style={{ color: "var(--color-ink)" }}
+              >
+                Open the review notebook.
+              </p>
+              <p
+                className="mt-3 text-[14px] leading-relaxed"
+                style={{ color: "var(--color-ink-soft)" }}
+              >
+                This preview uses seed data, so there is no real account to
+                sign into.
+              </p>
+              <Link
+                href="/app"
+                className="mt-5 inline-flex min-h-11 items-center rounded-full px-5 text-[14px] font-medium"
+                style={{ background: "var(--color-signal)", color: "#fff" }}
+              >
+                Open the notebook
+              </Link>
+            </div>
+          ) : (
+            <SignIn
+              path="/sign-in"
+              routing="path"
+              signUpUrl="/sign-up"
+              forceRedirectUrl="/app"
+              signUpForceRedirectUrl="/app"
+              appearance={notesClerkAppearance}
+            />
+          )}
           <p className="notes-auth-reassure">
             <span className="notes-auth-reassure-dot" aria-hidden />
-            Private by default — your notes are only ever yours.
+            Private by default. Your notes are only ever yours.
           </p>
         </div>
       </main>
