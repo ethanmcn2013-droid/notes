@@ -18,16 +18,25 @@
  *
  * Reduced motion: letters appear fully, dot lands without scale-bounce,
  * caret stops blinking.
+ *
+ * Loading canon (2026-07-01 review, pitch 7): the mark's dot becomes
+ * the canonical sharp caret — a held cursor, 1.1s steps(1,end) on/off.
+ * No blank notebook line is drawn before the real notebook shell
+ * exists. After a real 5s wait one calm line appears — "Opening the
+ * notebook" — with role="status" aria-live="polite".
  */
+import { LongWaitStatus } from "@/components/system/long-wait-status";
+
 export default function NotesLoading() {
   const word = "notes";
   return (
     <div
-      aria-hidden
       style={{
         position: "fixed",
         inset: 0,
         display: "flex",
+        flexDirection: "column",
+        gap: 18,
         alignItems: "center",
         justifyContent: "center",
         background: "#fffefa",
@@ -35,6 +44,7 @@ export default function NotesLoading() {
       }}
     >
       <span
+        aria-hidden
         style={{
           fontFamily:
             'var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
@@ -61,41 +71,45 @@ export default function NotesLoading() {
         ))}
         <span
           style={{
+            // The canonical Notes caret — a sharp held cursor, not a dot
+            // (BRAND.md §4). Hard px so it cannot balloon pre-hydration.
             display: "inline-block",
-            width: 11,
-            height: 11,
-            maxWidth: 11,
-            maxHeight: 11,
-            borderRadius: "50%",
+            width: 3,
+            height: 22,
+            maxWidth: 3,
+            maxHeight: 22,
+            borderRadius: 1,
             background: "#4f46e5",
             marginLeft: 6,
-            transform: "translateY(-2px)",
+            alignSelf: "center",
+            transform: "translateY(1px)",
             flexShrink: 0,
-            animation: `signal-dot-land 360ms cubic-bezier(0.34,1.56,0.64,1) ${word.length * 60 + 80}ms both, signal-notes-caret 1.1s steps(1,end) ${word.length * 60 + 600}ms infinite`,
+            animation: `signal-caret-land 360ms cubic-bezier(0.34,1.56,0.64,1) ${word.length * 60 + 80}ms both, signal-notes-caret 1.1s steps(1,end) ${word.length * 60 + 600}ms infinite`,
           }}
         />
       </span>
+      <LongWaitStatus line="Opening the notebook" />
       <style>{`
         @keyframes signal-letter-rise {
           from { opacity: 0; transform: translateY(6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes signal-dot-land {
-          0%   { opacity: 0; transform: translateY(-2px) scale(0.4); }
-          60%  { opacity: 1; transform: translateY(-2px) scale(1.18); }
-          100% { opacity: 1; transform: translateY(-2px) scale(1); }
+        @keyframes signal-caret-land {
+          0%   { opacity: 0; transform: translateY(1px) scaleY(0.4); }
+          60%  { opacity: 1; transform: translateY(1px) scaleY(1.12); }
+          100% { opacity: 1; transform: translateY(1px) scaleY(1); }
         }
         @keyframes signal-notes-caret {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0; }
+          0%, 49%  { opacity: 1; }
+          50%, 100% { opacity: 0; }
         }
         @media (prefers-reduced-motion: reduce) {
           @keyframes signal-letter-rise {
             from { opacity: 1; transform: none; }
             to   { opacity: 1; transform: none; }
           }
-          @keyframes signal-dot-land {
-            from, to { opacity: 1; transform: translateY(-2px) scale(1); }
+          @keyframes signal-caret-land {
+            from, to { opacity: 1; transform: translateY(1px) scaleY(1); }
           }
           @keyframes signal-notes-caret {
             from, to { opacity: 1; }
