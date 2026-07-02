@@ -99,11 +99,11 @@ const CSS = `
 }
 .fcm-line {
   margin: 0;
-  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   font-size: clamp(17px, 1rem + 0.6vw, 21px);
   font-weight: 500;
   letter-spacing: -0.02em;
-  color: var(--color-ink, #161815);
+  color: var(--color-ink, #111111);
   opacity: 0;
   animation: fcm-line 700ms cubic-bezier(.22,.7,.2,1) 460ms both;
 }

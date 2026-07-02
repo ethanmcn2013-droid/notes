@@ -393,7 +393,7 @@ const CSS = `
   --nhv-roll: calc(var(--nhv-wm-size) * 8);
   --nhv-voice-size: clamp(20px, 3.1vw, 42px);
   --nhv-font: var(--font-geist, 'Geist', system-ui, sans-serif);
-  --nhv-font-surface: var(--font-inter, 'Inter', system-ui, sans-serif);
+  --nhv-font-surface: var(--font-sans, system-ui, sans-serif);
   --nhv-mono: var(--font-geist-mono, 'Geist Mono', ui-monospace, monospace);
 }
 

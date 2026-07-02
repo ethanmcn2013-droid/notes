@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Geist } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DevBanner } from "@/components/dev-banner";
 import {
@@ -9,15 +9,15 @@ import {
 } from "@/lib/access-mode";
 import "./globals.css";
 
-const inter = Inter({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-geist-sans",
   display: "swap",
 });
 
-const geist = Geist({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-geist",
+  variable: "--font-geist-mono",
   display: "swap",
 });
 
@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Signal Notes - capture clarity",
+  title: "Signal Notes · capture clarity",
   description:
     "A private place for thoughts before they become work. Write it down in three seconds. Decide later what becomes work.",
   metadataBase: new URL(
@@ -37,13 +37,13 @@ export const metadata: Metadata = {
   ),
   manifest: "/manifest.webmanifest",
   openGraph: {
-    title: "Signal Notes - capture clarity",
+    title: "Signal Notes · capture clarity",
     description: "A private place for thoughts before they become work.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Signal Notes - capture clarity",
+    title: "Signal Notes · capture clarity",
     description: "A private place for thoughts before they become work.",
   },
 };
@@ -70,7 +70,7 @@ function AuthShell({ children }: Readonly<{ children: React.ReactNode }>) {
           colorPrimary: "#4f46e5",
           colorBackground: "#ffffff",
           colorForeground: "#111111",
-          fontFamily: "var(--font-inter)",
+          fontFamily: "var(--font-sans)",
           borderRadius: "0.6rem",
         },
         elements: {
@@ -93,7 +93,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geist.variable}`}
+      className={`${geist.variable} ${geistMono.variable}`}
       style={{ background: "#fff", colorScheme: "light" }}
     >
       <head>

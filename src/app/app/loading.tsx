@@ -13,7 +13,7 @@
  *   3. Once landed, the dot enters the canonical Notes caret blink —
  *      same gesture as the notebook header.
  *
- * Notes uses its own paper colour `#fffefa` (warm white) per the
+ * Notes uses its own paper colour `#ffffff` (warm white) per the
  * Notes brand register, not the suite `--paper` token.
  *
  * Reduced motion: letters appear fully, dot lands without scale-bounce,
@@ -39,7 +39,7 @@ export default function NotesLoading() {
         gap: 18,
         alignItems: "center",
         justifyContent: "center",
-        background: "#fffefa",
+        background: "#ffffff",
         zIndex: 9999,
       }}
     >
@@ -52,7 +52,7 @@ export default function NotesLoading() {
           fontSize: 36,
           letterSpacing: "-0.04em",
           lineHeight: 0.96,
-          color: "#161815",
+          color: "#111111",
           display: "inline-flex",
           alignItems: "baseline",
           whiteSpace: "nowrap",

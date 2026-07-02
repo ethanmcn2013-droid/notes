@@ -1,0 +1,122 @@
+{
+  "src/app/anatomy/page.tsx": {
+    "hex": 1,
+    "ease": 0
+  },
+  "src/app/app/error.tsx": {
+    "hex": 1,
+    "ease": 0
+  },
+  "src/app/app/FirstCaptureMoment.tsx": {
+    "hex": 5,
+    "ease": 4
+  },
+  "src/app/app/loading.tsx": {
+    "hex": 4,
+    "ease": 3
+  },
+  "src/app/building-project/page.tsx": {
+    "hex": 23,
+    "ease": 0
+  },
+  "src/app/error.tsx": {
+    "hex": 1,
+    "ease": 0
+  },
+  "src/app/freelance-studio/page.tsx": {
+    "hex": 23,
+    "ease": 0
+  },
+  "src/app/globals.css": {
+    "hex": 11,
+    "ease": 0
+  },
+  "src/app/layout.tsx": {
+    "hex": 9,
+    "ease": 0
+  },
+  "src/app/manifest.ts": {
+    "hex": 5,
+    "ease": 0
+  },
+  "src/app/opengraph-image.tsx": {
+    "hex": 6,
+    "ease": 0
+  },
+  "src/app/page.tsx": {
+    "hex": 1,
+    "ease": 0
+  },
+  "src/app/sign-in/[[...sign-in]]/page.tsx": {
+    "hex": 2,
+    "ease": 0
+  },
+  "src/app/sign-up/[[...sign-up]]/page.tsx": {
+    "hex": 2,
+    "ease": 0
+  },
+  "src/app/teaching-week/page.tsx": {
+    "hex": 23,
+    "ease": 0
+  },
+  "src/app/wedding-planning/page.tsx": {
+    "hex": 24,
+    "ease": 0
+  },
+  "src/components/dev-banner.tsx": {
+    "hex": 10,
+    "ease": 1
+  },
+  "src/components/marketing/note-anatomy.tsx": {
+    "hex": 2,
+    "ease": 0
+  },
+  "src/components/marketing/notes-demo.tsx": {
+    "hex": 5,
+    "ease": 5
+  },
+  "src/components/marketing/notes-hero-voice.tsx": {
+    "hex": 6,
+    "ease": 10
+  },
+  "src/components/showcase/notes-demo.tsx": {
+    "hex": 1,
+    "ease": 2
+  },
+  "src/components/showcase/notes-hero-loader.tsx": {
+    "hex": 5,
+    "ease": 9
+  },
+  "src/components/suite-arrows.tsx": {
+    "hex": 6,
+    "ease": 3
+  },
+  "src/components/suite-switcher-pills.tsx": {
+    "hex": 9,
+    "ease": 2
+  },
+  "src/components/system/long-wait-status.tsx": {
+    "hex": 1,
+    "ease": 1
+  },
+  "src/components/system/SuiteLoader.tsx": {
+    "hex": 6,
+    "ease": 1
+  },
+  "src/components/user-button-with-suite.tsx": {
+    "hex": 3,
+    "ease": 0
+  },
+  "src/components/worked-examples.tsx": {
+    "hex": 3,
+    "ease": 0
+  },
+  "src/lib/brand/suite-mark.tsx": {
+    "hex": 2,
+    "ease": 0
+  },
+  "src/lib/clerk-appearance.ts": {
+    "hex": 9,
+    "ease": 0
+  }
+}

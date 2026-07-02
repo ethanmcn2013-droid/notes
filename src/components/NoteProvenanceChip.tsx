@@ -16,8 +16,8 @@
  *
  * Visual register (per the handoff):
  *   - 10px monospace, ink-faint, no icon
- *   - kind=calendar    → green #6B8E5A  (Notes green register)
- *   - kind=image-match → mustard #C7A24A (Notes accent-2 register)
+ *   - kind=calendar    → quiet ink (SDS 2.0: provenance is metadata, not accent)
+ *   - kind=image-match → quiet ink (SDS 2.0: the second categorical register is neutral)
  *   - one chip per row, inline with the existing .note-meta span
  *
  * The disappear rule (Pattern 4): the calendar chip only renders
@@ -36,8 +36,8 @@ const LABELS: Record<NoteProvenanceKind, string> = {
 const COLORS: Record<NoteProvenanceKind, string> = {
   // Locked palette refs from the handoff spec; not new tokens. If a
   // future cycle introduces palette tokens for these, swap in place.
-  calendar: "#6B8E5A",
-  "image-match": "#C7A24A",
+  calendar: "var(--ink-soft)",
+  "image-match": "var(--ink-soft)",
 };
 
 export function NoteProvenanceChip({ kind }: { kind: NoteProvenanceKind }) {

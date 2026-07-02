@@ -1,28 +1,25 @@
 @import "tailwindcss";
+@import "../ds/tokens.css";
+@import "../ds/tailwind.css";
 
-/* ── Signal Notes · Locked palette (BRAND.md §4 + feedback) ──────── */
-/* Owner reviewed brand-faithful alternatives 2026-05-10 and chose to
-   keep Notes's green/mustard/Inter aesthetic. Don't re-flag as a
-   BRAND.md visual-register violation. */
+/* ── Signal Notes · Signal Design System 2.0 (Wave 4, 2026-07-02) ── */
+/* The green/mustard/Inter era (locked 2026-05-10) ended by operator
+   decision at the design-system mandate's Checkpoint 2: Notes folds
+   into the suite register. Its identity now lives where its siblings'
+   does — the notes. wordmark, the caret gesture, and the capture-first
+   surface — not in colour. System tokens come from the vendored
+   src/ds/tokens.css; this file holds repo-local aliases only. */
 
-/* ── SIGNAL STUDIO MOTION CONTRACT v1 ───────────────────────────── */
+/* ── Motion — system contract lives in src/ds/tokens.css ────────── */
 :root {
-  --motion-instant:   80ms;
-  --motion-fast:     140ms;
-  --motion-base:     220ms;
+  /* Legacy fifth step; maps per-case to base/slow on the burn-down. */
   --motion-moderate: 320ms;
-  --motion-slow:     480ms;
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --ease-out:      cubic-bezier(0, 0, 0.2, 1);
-  --ease-in:       cubic-bezier(0.4, 0, 1, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* ds-allow — legacy exit easing, burn-down */
 }
 @media (prefers-reduced-motion: reduce) {
+  /* System motion tokens are zeroed by src/ds/tokens.css. */
   :root {
-    --motion-instant:   0.01ms;
-    --motion-fast:      0.01ms;
-    --motion-base:      0.01ms;
     --motion-moderate:  0.01ms;
-    --motion-slow:      0.01ms;
   }
   .reveal {
     opacity: 1 !important;
@@ -59,14 +56,14 @@
   --load-pulse-scale-min:  0.72;
   --load-pulse-scale-max:  1.0;
   --load-pulse-duration:   1.8s;
-  --load-pulse-easing:     cubic-bezier(.4, 0, .6, 1);
+  --load-pulse-easing:     cubic-bezier(.4, 0, .6, 1); /* ds-allow — LOADING_SYSTEM.md frozen value */
   --load-z:                9999;
   --load-fade-out:         120ms;
   --load-fade-easing:      ease-out;
   --shell-fade-in:         160ms;
   --shell-fade-easing:     ease-out;
   --content-fade-in:       200ms;
-  --content-fade-easing:   cubic-bezier(.22, .61, .36, 1);
+  --content-fade-easing:   cubic-bezier(.22, .61, .36, 1); /* ds-allow — LOADING_SYSTEM.md frozen value */
   --skeleton-max:          200ms;
   --stagger-content-item:  40ms;
 }
@@ -114,13 +111,13 @@
 @media (prefers-reduced-motion: no-preference) {
   [data-dot-landing="1"] .brand-mark .md,
   [data-dot-landing="1"] .brand-mark .pd {
-    animation: dot-land 320ms cubic-bezier(.2, .9, .2, 1.2) forwards;
+    animation: dot-land 320ms cubic-bezier(.2, .9, .2, 1.2) forwards; /* ds-allow — RW-5 dot-morph canonical block */
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .signal-loading-dot {
-    animation: signal-load-pulse var(--load-pulse-duration, 1.8s) var(--load-pulse-easing, cubic-bezier(.4, 0, .6, 1)) infinite;
+    animation: signal-load-pulse var(--load-pulse-duration, 1.8s) var(--load-pulse-easing, cubic-bezier(.4, 0, .6, 1)) infinite; /* ds-allow — LOADING_SYSTEM.md frozen value */
   }
 }
 
@@ -170,24 +167,30 @@
 }
 /* ── End focus ring ─────────────────────────────────────────────── */
 
+/* Legacy Notes token names, remapped onto the suite register. The
+   names survive as emitted variables (plain @theme, not inline —
+   this file references them with raw var() throughout), so every
+   existing class and var() keeps working; the green, mustard, and
+   warm-tinted values do not. System utilities also come from the
+   vendored src/ds/tailwind.css. */
 @theme {
-  --color-bg: #f7f8f2;
-  --color-paper: #fffefa;
-  --color-ink: #161815;
-  --color-ink-soft: #4c5148;
-  --color-ink-faint: #838b7b;
-  --color-line: #d9ddcf;
-  --color-line-strong: #b7bfaa;
-  --color-field: #f0f3ea;
-  --color-accent: #335f54;
-  --color-accent-2: #b4863f;
-  --color-signal: #4f46e5;
-  --color-error: #b04848;
+  /* Notebook-on-desk depth, now in suite neutrals: soft field, white page. */
+  --color-bg: var(--paper-soft);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--hairline);
+  --color-line-strong: var(--ink-ghost);
+  --color-field: var(--paper-deep);
+  /* Green → the one indigo. Mustard → quiet ink: in a one-indigo
+     system the second categorical register is neutral, not a colour. */
+  --color-accent: var(--accent);
+  --color-accent-2: var(--ink-soft);
+  --color-signal: var(--accent);
+  --color-error: var(--status-blocked);
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
-
-  --shadow-warm: 0 22px 70px rgba(41, 48, 37, 0.12);
+  --shadow-warm: var(--shadow-modal);
 }
 
 * { box-sizing: border-box; }
@@ -223,13 +226,11 @@ button, input, textarea { font: inherit; }
    caret — 1.1s steps(1,end). The dot blinks like a held text cursor:
    full opacity on, then off, hard-cut with no easing. A presence, not a
    breath. (Prior settle/M·05 vocab retired in this pass.) */
-/* The wordmark stack is deliberately Inter-free. Notes's notebook surface
-   uses Inter as the body register (locked by 2026-05-10 feedback). The
-   wordmark belongs to the suite-grammar register (Geist + indigo dot +
-   caret) — if Geist fails to load it must never fall through to Inter,
-   or the cross-product seam breaks. System sans is the correct fallback. */
+/* The wordmark belongs to the suite-grammar register (Geist + indigo dot +
+   caret). Since SDS 2.0 Wave 4 the body register is Geist too; if Geist
+   fails to load, system sans is the correct fallback. */
 .notes-mark {
-  font-family: var(--font-geist), "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight: 500;
   letter-spacing: -0.025em;
   display: inline-flex;
@@ -252,7 +253,7 @@ button, input, textarea { font: inherit; }
   max-width: 10px;
   max-height: 10px;
   border-radius: 50%;
-  background: #4f46e5; /* indigo — suite-locked */
+  background: var(--accent); /* the one indigo */
   display: inline-block;
   margin-left: 0.06em;
   margin-bottom: 0.06em;
@@ -441,7 +442,7 @@ button, input, textarea { font: inherit; }
    the capture field at narrow viewports; the suitebar already carries
    the brand at full weight, no need to repeat it loud in-product. */
 .wordmark {
-  font-family: var(--font-geist), "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight: 500;
   letter-spacing: -0.025em;
   display: inline-flex;
@@ -464,7 +465,7 @@ button, input, textarea { font: inherit; }
   max-width: 10px;
   max-height: 10px;
   border-radius: 50%;
-  background: #4f46e5;
+  background: var(--accent);
   display: inline-block;
   margin-left: 0.06em;
   margin-bottom: 0.06em;
@@ -869,8 +870,8 @@ button, input, textarea { font: inherit; }
   color: #ffffff;
 }
 .btn-draft-action--primary:hover {
-  background: #4338ca;
-  border-color: #4338ca;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
   color: #ffffff;
 }
 .btn-draft-action--equal {
@@ -1154,7 +1155,7 @@ button, input, textarea { font: inherit; }
    the last stat row's border, separated by generous white air. */
 .product-reassurance {
   margin: 24px 0 0;
-  font-family: var(--font-geist), "Geist", ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: var(--font-geist-sans), "Geist", ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 11px;
   letter-spacing: 0.02em;
   line-height: 1.55;
@@ -1251,7 +1252,7 @@ button, input, textarea { font: inherit; }
   line-height: 1;
   padding: 10px 14px 10px 18px;
   border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(22, 24, 21, 0.22);
+  box-shadow: var(--shadow-modal);
   z-index: 200;
   white-space: nowrap;
   animation: undo-in var(--motion-fast) var(--ease-out) both;
@@ -1345,7 +1346,7 @@ button, input, textarea { font: inherit; }
    shows an upgrade nudge. Same paper background as the notebook so
    it reads as part of the surface, not a CTA. */
 /* R9: dropped font-family mono — copy is human-facing, not a code label.
-   Uses body sans (Inter) to match the notebook surface register. */
+   Uses body sans (Geist since SDS 2.0 Wave 4) to match the surface register. */
 .capture-email {
   align-items: center;
   color: color-mix(in srgb, var(--color-ink) 55%, transparent);
@@ -1832,7 +1833,7 @@ button, input, textarea { font: inherit; }
   line-height: 1;
   padding: 10px 14px 10px 18px;
   border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(22, 24, 21, 0.22);
+  box-shadow: var(--shadow-modal);
   z-index: 201;
   white-space: nowrap;
   animation: undo-in var(--motion-fast) var(--ease-out) both;

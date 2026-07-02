@@ -158,7 +158,7 @@ export default function BuildingProjectNotePage() {
             borderRadius: 18,
             padding: "32px clamp(24px, 4vw, 44px)",
             boxShadow: "0 1px 0 rgba(0,0,0,0.02), 0 24px 48px -32px rgba(20,21,26,0.16)",
-            fontFamily: "var(--font-notes, Inter, ui-sans-serif)",
+            fontFamily: "var(--font-sans, ui-sans-serif)",
           }}
         >
           <header

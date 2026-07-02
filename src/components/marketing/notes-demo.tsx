@@ -66,11 +66,11 @@ const CSS = `
   margin: 0 auto;
   max-width: 560px;
   --nd-cycle: 9s;
-  --nd-paper: var(--color-paper, #fffefa);
-  --nd-ink: var(--color-ink, #161815);
-  --nd-ink-faint: var(--color-ink-faint, #838b7b);
-  --nd-line: var(--color-line, #d9ddcf);
-  --nd-accent: var(--color-accent, #335f54);
+  --nd-paper: var(--color-paper, #ffffff);
+  --nd-ink: var(--color-ink, #111111);
+  --nd-ink-faint: var(--color-ink-faint, #71717a);
+  --nd-line: var(--color-line, rgba(17,17,17,0.10));
+  --nd-accent: var(--color-accent, #4f46e5);
   --nd-indigo: var(--color-signal, #4f46e5);
   --nd-mono: var(--font-geist-mono, ui-monospace, 'SF Mono', monospace);
 }

@@ -68,7 +68,7 @@ export default function NotebookError({
           onClick={reset}
           style={{
             background: "var(--color-accent)",
-            color: "#fffefa",
+            color: "#ffffff",
             border: "none",
             borderRadius: "8px",
             padding: "0.6rem 1.1rem",

@@ -83,7 +83,7 @@ const CSS = `
   max-width: calc(100vw - 24px);
   padding: 7px 10px 7px 14px;
   border-radius: 999px;
-  font-family: var(--font-geist), "Geist", system-ui, sans-serif;
+  font-family: var(--font-geist-sans), "Geist", system-ui, sans-serif;
   font-size: 13px;
   font-weight: 500;
   letter-spacing: -0.01em;

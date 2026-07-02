@@ -3,6 +3,10 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-07-02 · N·30 · ships · Notes now dresses like its siblings
+
+**The green era ends: Notes adopts the suite register — white paper, one indigo, Geist — by founder decision at the design-system mandate's Checkpoint 2, executed as SDS 2.0 Wave 4.** The notebook-on-desk depth survives in suite neutrals (soft field, white page, hairlines); the green accent becomes the one indigo; mustard's categorical role goes quiet ink, because in a one-indigo system the second register is neutral, not a colour. Inter leaves the body — Geist carries every register now, with Geist Mono added for the kicker convention. Notes' identity lives where its siblings' does: the `notes.` wordmark, the caret gesture, and the three-second capture. Every legacy token name still works (remapped, not removed), the vendored `src/ds/tokens.css` is the single source of values, and `ds:check` in CI will refuse the green's return. Metadata titles join the middot register.
+
 ## 2026-07-02 · N·29 · tightens · the switcher stays in the new shape
 
 **Notes keeps the suite navigation split cleanly: visible product pills in the signed-in notebook chrome, rich launcher dropdown on the marketing/example surfaces.** A new contract check runs before tests and fails if the app shell goes back to the old hidden dropdown or if the launcher loses its gesture-led product rows.
