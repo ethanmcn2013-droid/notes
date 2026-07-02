@@ -1,530 +1,597 @@
 "use client";
 
 /**
- * Notes hero, notebook first.
+ * Notes hero — "The Voice" (Approach C).
  *
- * First paint is the focused capture surface. The saved note lands in the
- * stream within the first second, then one selected phrase resolves to an
- * approved Tasks draft indicator. Reduced motion renders the settled notebook
- * immediately.
+ * Entry sequence: dot rolls in from off-screen left, letter-rise rAF loop
+ * assembles "notes" as the dot passes each letter center, dot morphs into
+ * a tall caret and blinks. Second act: voice zone fades in below hairline
+ * rule, three product phrases type and delete in a loop. The wordmark caret
+ * and the voice caret blink simultaneously — brand anchor above, live
+ * composition below.
+ *
+ * Phrases (Approach C):
+ *   "Write it here first."
+ *   "Before it fades."
+ *   "Not everything needs a task."
+ *
+ * SAFETY CONTRACT (§13):
+ *   · All CSS fully scoped — every class and @keyframes prefixed `nhv-`.
+ *   · In-flow only — no position:fixed, no inset:0, no high z-index.
+ *   · All timers collected in `timers[]` and cleared on unmount.
+ *   · rAF loop cancelled on unmount; self-cancels when all letters settled.
+ *   · prefers-reduced-motion → skips to phrase 3, final caret state, static.
  */
 
+import { useEffect, useRef } from "react";
+
 export function NotesHeroVoice() {
+  const rootRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    // ── Config ─────────────────────────────────────────────────────────
+    const PHRASES = [
+      "Write it here first.",
+      "Before it fades.",
+      "Not everything needs a task.",
+    ] as const;
+    const CAPTIONS = [
+      "a held thought, awaiting input",
+      "a held thought, awaiting input",
+      "capture clarity.",
+    ] as const;
+    const STATUS_LABELS = ["READY", "1 / 3", "2 / 3", "3 / 3", "CAPTURE CLARITY"] as const;
+
+    // timing (ms)
+    const ENTRY_SETTLE_MS   = 5600;  // wait for roll-in + morph + settle
+    const VOICE_FADE_IN_MS  = 420;   // voice zone opacity 0→1
+    const PRE_TYPE_PAUSE_MS = 380;   // pause before first char of a phrase
+    const CARET_BREATHE_MS  = 700;   // hold with blinking caret before phrase 1
+    const INTER_PHRASE_PAUSE = 260;  // pause after delete before next phrase
+    const HOLD_PHRASE_MS    = 2800;  // hold for phrases 1 & 2
+    const HOLD_FINAL_MS     = 10000; // phrase 3 landing
+    const CAPTION_FADE_MS   = 440;   // caption cross-fade
+    const LOOP_GAP_MS       = 300;   // gap at loop end (caret hidden, so no orphan)
+
+    // typing speed
+    const TYPE_BASE_MS  = 40;
+    const TYPE_VAR_MS   = 14;
+    const TYPE_DOT_MS   = 90;   // pause after . for sentence-end feel
+    const TYPE_COMMA_MS = 60;
+    const TYPE_SPACE_MS = 28;
+    const DELETE_BASE_MS = 22;
+    const DELETE_VAR_MS  = 8;
+
+    // letter rise
+    const RISE_MS   = 280;
+    const RISE_LEAD = 80;  // px ahead of mark center to trigger rise
+
+    // ── Elements ───────────────────────────────────────────────────────
+    const composerEl  = root.querySelector<HTMLElement>(".nhv-composer");
+    const wordEl      = root.querySelector<HTMLElement>(".nhv-word");
+    const markEl      = root.querySelector<HTMLElement>(".nhv-mark");
+    const voiceZoneEl = root.querySelector<HTMLElement>(".nhv-voice-zone");
+    const voiceTextEl = root.querySelector<HTMLElement>(".nhv-voice-text");
+    const voiceCaretEl = root.querySelector<HTMLElement>(".nhv-voice-caret");
+    const captionEl   = root.querySelector<HTMLElement>(".nhv-caption");
+    const statusTREl  = root.querySelector<HTMLElement>(".nhv-status-tr");
+
+    if (
+      !composerEl || !wordEl || !markEl || !voiceZoneEl ||
+      !voiceTextEl || !voiceCaretEl || !captionEl
+    ) return;
+
+    const letterEls = [...wordEl.querySelectorAll<HTMLElement>(".nhv-letter")];
+
+    // ── Reduced motion: skip to final state ────────────────────────────
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      letterEls.forEach((el) => {
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+      });
+      voiceTextEl.textContent = PHRASES[2];
+      voiceZoneEl.style.opacity = "1";
+      voiceCaretEl.className = "nhv-voice-caret active";
+      captionEl.textContent = CAPTIONS[2];
+      captionEl.style.opacity = "1";
+      captionEl.style.animation = "none";
+      if (statusTREl) statusTREl.textContent = STATUS_LABELS[3];
+      return;
+    }
+
+    // ── Cleanup state ──────────────────────────────────────────────────
+    let cancelled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let rafId = 0;
+
+    // ── Helpers ────────────────────────────────────────────────────────
+    const wait = (ms: number): Promise<void> =>
+      new Promise((resolve) => {
+        if (cancelled) { resolve(); return; }
+        const id = setTimeout(() => { if (!cancelled) resolve(); }, ms);
+        timers.push(id);
+      });
+
+    const rand = (base: number, variance: number) =>
+      base + (Math.random() * 2 - 1) * variance;
+
+    // ── Letter rise rAF loop ────────────────────────────────────────────
+    // Ported verbatim from NotesHeroLoader: watches mark's live x-position
+    // and triggers each letter's rise (translateY 115%→0) as the dot passes
+    // within RISE_LEAD px of the letter center.
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const start = performance.now();
+    const risenAt: Array<number | null> = new Array(letterEls.length).fill(null);
+    let centers: number[] = [];
+
+    const measure = () => {
+      const cl = composerEl.getBoundingClientRect().left;
+      centers = letterEls.map((el) => {
+        const r = el.getBoundingClientRect();
+        return r.left + r.width / 2 - cl;
+      });
+    };
+
+    const frame = () => {
+      const elapsed = performance.now() - start;
+      const cl = composerEl.getBoundingClientRect().left;
+      const mr = markEl.getBoundingClientRect();
+      const markX = mr.left + mr.width / 2 - cl;
+      const markOpacity = parseFloat(getComputedStyle(markEl).opacity);
+
+      let allDone = true;
+
+      letterEls.forEach((el, i) => {
+        const lx = centers[i];
+        if (lx === undefined) { allDone = false; return; }
+
+        const distance = lx - markX;
+        if (risenAt[i] === null && markOpacity > 0.2 && distance < RISE_LEAD) {
+          risenAt[i] = elapsed;
+        }
+        if (risenAt[i] === null) {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(115%)";
+          allDone = false;
+          return;
+        }
+
+        const timeSinceRise = elapsed - risenAt[i]!;
+        let p = Math.min(1, Math.max(0, timeSinceRise / RISE_MS));
+        if (p < 1) allDone = false;
+        p = easeOutCubic(p);
+        el.style.opacity = p.toString();
+        el.style.transform = `translateY(${(1 - p) * 115}%)`;
+      });
+
+      if (!allDone) {
+        rafId = requestAnimationFrame(frame);
+      } else {
+        // All letters settled — entry complete
+        if (statusTREl) statusTREl.textContent = STATUS_LABELS[0];
+      }
+    };
+
+    rafId = requestAnimationFrame(() => {
+      measure();
+      rafId = requestAnimationFrame(frame);
+    });
+    window.addEventListener("resize", measure);
+
+    // ── Voice loop helpers ──────────────────────────────────────────────
+    // Status fires on first visible character — not before the pre-type
+    // dead zone, so counter always corresponds to text on screen.
+    const typePhrase = async (text: string, phraseIdx: number) => {
+      voiceTextEl.textContent = "";
+      voiceCaretEl.className = "nhv-voice-caret active";
+      await wait(PRE_TYPE_PAUSE_MS);
+
+      for (let i = 0; i < text.length; i++) {
+        if (cancelled) return;
+        const ch = text[i];
+
+        if (i === 0 && statusTREl) {
+          statusTREl.textContent = STATUS_LABELS[phraseIdx + 1];
+        }
+
+        voiceTextEl.textContent += ch;
+
+        let delay: number;
+        if (ch === ".") {
+          delay = i < text.length - 1 ? TYPE_DOT_MS : 0;
+        } else if (ch === ",") {
+          delay = TYPE_COMMA_MS;
+        } else if (ch === " ") {
+          delay = rand(TYPE_SPACE_MS, 6);
+        } else {
+          delay = rand(TYPE_BASE_MS, TYPE_VAR_MS);
+        }
+        if (delay > 0) await wait(delay);
+      }
+    };
+
+    const deletePhrase = async () => {
+      let text = voiceTextEl.textContent ?? "";
+      await wait(60);
+      while (text.length > 0) {
+        if (cancelled) return;
+        text = text.slice(0, -1);
+        voiceTextEl.textContent = text;
+        await wait(rand(DELETE_BASE_MS, DELETE_VAR_MS));
+      }
+      // Hide caret when text clears — no orphaned blinking cursor during
+      // inter-phrase / loop-gap pauses.
+      voiceCaretEl.className = "nhv-voice-caret";
+    };
+
+    const setCaption = async (newText: string) => {
+      if (captionEl.textContent === newText) return;
+      captionEl.style.transition = `opacity ${CAPTION_FADE_MS / 2}ms ease`;
+      captionEl.style.opacity = "0";
+      await wait(CAPTION_FADE_MS / 2);
+      if (cancelled) return;
+      captionEl.textContent = newText;
+      captionEl.style.opacity = "1";
+      await wait(CAPTION_FADE_MS / 2);
+
+      // "capture clarity." landing: brief color pulse stone→near-ink→stone.
+      // ~750ms total; plays during the hold; barely perceptible, just enough
+      // weight to mark the line's arrival.
+      if (newText === CAPTIONS[2]) {
+        await wait(80);
+        if (cancelled) return;
+        captionEl.style.transition = "color 160ms ease";
+        captionEl.style.color = "#4a4a4a";
+        await wait(200);
+        if (cancelled) return;
+        captionEl.style.transition = "color 560ms ease";
+        captionEl.style.color = "";
+        await wait(580);
+        if (cancelled) return;
+        captionEl.style.transition = "";
+      }
+    };
+
+    // ── Voice loop ──────────────────────────────────────────────────────
+    const voiceLoop = async () => {
+      // Both carets blink simultaneously throughout: wordmark caret above
+      // as brand anchor, voice caret below as live composition.
+      voiceZoneEl.style.transition = `opacity ${VOICE_FADE_IN_MS}ms cubic-bezier(.22,.7,.2,1)`;
+      voiceZoneEl.style.opacity = "1";
+      await wait(VOICE_FADE_IN_MS);
+
+      // Breathing room: caret blinks alone before first phrase types.
+      voiceCaretEl.className = "nhv-voice-caret active";
+      await wait(CARET_BREATHE_MS);
+
+      while (!cancelled) {
+        for (let i = 0; i < PHRASES.length; i++) {
+          if (cancelled) return;
+          const isLast = i === PHRASES.length - 1;
+
+          // Status update fires inside typePhrase on first character.
+          await typePhrase(PHRASES[i], i);
+          if (cancelled) return;
+
+          if (isLast) {
+            await wait(500);
+            await setCaption(CAPTIONS[i]); // → "capture clarity."
+            if (statusTREl) statusTREl.textContent = STATUS_LABELS[4];
+          }
+
+          await wait(isLast ? HOLD_FINAL_MS : HOLD_PHRASE_MS);
+          if (cancelled) return;
+
+          if (isLast) {
+            // Caption resets BEFORE phrase deletes — smoother loop transition.
+            await setCaption(CAPTIONS[0]);
+            await wait(400);
+          }
+
+          await deletePhrase();
+          if (cancelled) return;
+
+          if (!isLast) {
+            await wait(INTER_PHRASE_PAUSE);
+          }
+        }
+        await wait(LOOP_GAP_MS);
+      }
+    };
+
+    // ── Boot ────────────────────────────────────────────────────────────
+    const bootTimer = setTimeout(() => {
+      void voiceLoop();
+    }, ENTRY_SETTLE_MS);
+    timers.push(bootTimer);
+
+    // ── Cleanup ─────────────────────────────────────────────────────────
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
   return (
-    <section className="nhv-section" aria-label="Signal Notes notebook">
-      <div className="nhv-notebook" aria-hidden="true">
-        <div className="nhv-notebook-top">
-          <span className="nhv-wordmark">
-            <span className="nhv-wordmark-word" aria-label="notes">
-              <span>n</span>
-              <span>o</span>
-              <span>t</span>
-              <span>e</span>
-              <span>s</span>
-            </span>
-            <span className="nhv-wordmark-dot" />
+    <section
+      className="nhv-section"
+      aria-label="Signal Notes"
+      ref={rootRef}
+    >
+      {/* Corner chrome — TR status counter only. The TL wordmark was removed:
+          the site header already carries the signal studio · notes breadcrumb. */}
+      <div className="nhv-chrome nhv-chrome-tr" aria-hidden>
+        <span className="nhv-pip" />
+        <span className="nhv-status-tr">waiting</span>
+      </div>
+
+      {/* Stage: animated wordmark */}
+      <div className="nhv-stage" aria-hidden>
+        <div className="nhv-composer">
+          <span className="nhv-word">
+            {"notes".split("").map((ch, i) => (
+              <span key={i} className="nhv-letter">{ch}</span>
+            ))}
           </span>
-          <span className="nhv-state">saved to notebook</span>
-        </div>
-
-        <div className="nhv-capture-shell">
-          <div className="nhv-capture-label">
-            <span className="nhv-focus-dot" />
-            <span>Focused capture</span>
-          </div>
-          <p className="nhv-capture-text">
-            Maeve wants homepage hero copy by Friday. Three options, not one.
-          </p>
-          <p className="nhv-capture-ready">Ready for the next thought.</p>
-        </div>
-
-        <div className="nhv-stream">
-          <div className="nhv-stream-label">Notebook stream</div>
-
-          <article className="nhv-note nhv-new-note">
-            <div className="nhv-note-meta">
-              <span className="nhv-note-dot" />
-              <span>Saved just now</span>
-            </div>
-            <h2>Maeve wants homepage hero copy by Friday.</h2>
-            <p>Three options, not one.</p>
-            <div className="nhv-extract">
-              <span className="nhv-extract-label">Selected phrase</span>
-              <span className="nhv-extract-selection">three hero options</span>
-              <span className="nhv-task-chip">Tasks draft approved</span>
-            </div>
-          </article>
-
-          <article className="nhv-note nhv-existing-note">
-            <div className="nhv-note-meta">
-              <span>Earlier</span>
-            </div>
-            <h2>Venue visit: florist confirms pink, not red.</h2>
-          </article>
-
-          <article className="nhv-note nhv-existing-note">
-            <div className="nhv-note-meta">
-              <span>Earlier</span>
-            </div>
-            <h2>Print export package due Thursday.</h2>
-          </article>
+          {/* Ghost trails — right:0/bottom:.06em anchors to mark resting position */}
+          <span className="nhv-trail nhv-t1" />
+          <span className="nhv-trail nhv-t2" />
+          <span className="nhv-trail nhv-t3" />
+          {/* Impact ripples */}
+          <span className="nhv-ripple-slow" />
+          <span className="nhv-ripple" />
+          {/* The mark: dot → caret */}
+          <span className="nhv-mark" />
         </div>
       </div>
 
-      <p className="nhv-caption">
-        Capture in three seconds. Find it later. Decide what becomes work.
-      </p>
+      {/* Voice zone: fades in below hairline rule, types the product phrases */}
+      <div
+        className="nhv-voice-zone"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span className="nhv-voice-inner">
+          <span className="nhv-voice-text" />{/* zero-width — no whitespace node */
+          }<span className="nhv-voice-caret" />
+        </span>
+      </div>
+
+      {/* Caption */}
+      <p className="nhv-caption">a held thought, awaiting input</p>
 
       <style>{CSS}</style>
     </section>
   );
 }
 
+// ── Scoped styles ──────────────────────────────────────────────────────────
+// Every class and @keyframes is prefixed `nhv-` (notes hero voice).
+// Turbopack CSS-cache gotcha: embedded inline here, not globals.css only.
 const CSS = `
 .nhv-section {
+  position: relative; overflow: hidden; background: #ffffff;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: min(90vh, 920px);
+  padding: clamp(80px,12vh,160px) 24px clamp(64px,10vh,128px);
+
   --nhv-ink: #111111;
-  --nhv-ink-soft: #525252;
-  --nhv-ink-faint: #8c887e;
-  --nhv-line: rgba(17, 17, 17, 0.1);
-  --nhv-line-strong: rgba(17, 17, 17, 0.16);
-  --nhv-paper: #ffffff;
-  --nhv-surface: #fafafa;
   --nhv-indigo: #4f46e5;
-  --nhv-font: var(--font-geist, var(--font-geist-sans, system-ui, sans-serif));
-  --nhv-mono: var(--font-geist-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  --nhv-indigo-300: #a5b4fc;
+  --nhv-stone: #8c887e;
+  --nhv-hairline: rgba(17,17,17,0.06);
+  --nhv-wm-size: clamp(56px, 12vw, 168px);
+  --nhv-roll: calc(var(--nhv-wm-size) * 8);
+  --nhv-voice-size: clamp(20px, 3.8vw, 52px);
+  --nhv-font: var(--font-geist, 'Geist', system-ui, sans-serif);
+  --nhv-font-surface: var(--font-inter, 'Inter', system-ui, sans-serif);
+  --nhv-mono: var(--font-geist-mono, 'Geist Mono', ui-monospace, monospace);
+}
+
+/* ─── Corner chrome ──────────────────────────────────────────── */
+.nhv-chrome {
+  position: absolute;
+  font-family: var(--nhv-mono);
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--nhv-stone);
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.nhv-chrome-tr { top: 28px; right: 32px; }
+.nhv-pip {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--nhv-indigo); display: inline-block;
+  animation: nhv-pip-blink 1.6s cubic-bezier(.45,.05,.55,.95) infinite;
+}
+@keyframes nhv-pip-blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+/* ─── Stage ──────────────────────────────────────────────────── */
+.nhv-stage {
+  display: flex; align-items: center; justify-content: center; width: 100%;
+}
+.nhv-composer {
+  position: relative; display: inline-flex; align-items: baseline;
+  font-family: var(--nhv-font); font-weight: 500;
+  font-size: var(--nhv-wm-size); line-height: .95;
+  letter-spacing: -.03em; color: var(--nhv-ink);
+  padding-bottom: calc(var(--nhv-wm-size) * .25);
+}
+/* Hairline rule — full-bleed both sides via -100vw. */
+.nhv-composer::before {
+  content: ''; position: absolute;
+  left: -100vw; right: -100vw;
+  bottom: calc(var(--nhv-wm-size) * .15);
+  height: 1px; background: var(--nhv-hairline);
+}
+.nhv-word { display: inline-flex; gap: 0; position: relative; z-index: 1; }
+.nhv-letter {
+  display: inline-block; opacity: 0; transform: translateY(115%);
+  color: var(--nhv-ink); will-change: opacity, transform;
+}
+
+/* ─── The mark: dot → caret ──────────────────────────────────── */
+.nhv-mark {
   position: relative;
-  overflow: hidden;
-  min-height: min(88svh, 900px);
-  padding: clamp(72px, 10vh, 132px) 24px clamp(56px, 8vh, 96px);
-  background: var(--nhv-paper);
-  color: var(--nhv-ink);
-  font-family: var(--nhv-font);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-}
-
-.nhv-notebook {
-  width: min(100%, 920px);
-  border: 1px solid var(--nhv-line);
-  background: var(--nhv-paper);
-  box-shadow: 0 28px 80px rgba(17, 17, 17, 0.06);
-}
-
-.nhv-notebook-top {
-  min-height: 58px;
-  padding: 0 22px;
-  border-bottom: 1px solid var(--nhv-line);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-}
-
-.nhv-wordmark {
-  display: inline-flex;
-  align-items: flex-end;
-  color: var(--nhv-ink);
-  font-size: 18px;
-  font-weight: 560;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  overflow: visible;
-}
-
-.nhv-wordmark-word {
-  display: inline-flex;
-  overflow: hidden;
-}
-
-.nhv-wordmark-word span {
-  display: inline-block;
-  transform: translateY(112%);
-  animation: nhv-word-letter-rise 420ms cubic-bezier(0.22, 0.7, 0.2, 1) 1.12s 1 forwards;
-}
-
-.nhv-wordmark-word span:nth-child(2) { animation-delay: 1.18s; }
-.nhv-wordmark-word span:nth-child(3) { animation-delay: 1.24s; }
-.nhv-wordmark-word span:nth-child(4) { animation-delay: 1.3s; }
-.nhv-wordmark-word span:nth-child(5) { animation-delay: 1.36s; }
-
-.nhv-wordmark-dot {
-  width: 0.075em;
-  height: 0.78em;
-  margin-left: 0.06em;
-  margin-bottom: 0;
-  border-radius: 1px;
+  width: .16em; height: .16em; border-radius: 50%;
   background: var(--nhv-indigo);
-  opacity: 0;
-  transform-origin: center bottom;
+  margin-left: .06em; align-self: flex-end; margin-bottom: .06em;
+  transform-origin: center bottom; z-index: 3;
   animation:
-    nhv-dot-to-caret 980ms cubic-bezier(0.22, 0.7, 0.2, 1) 1.05s 1 forwards,
-    nhv-caret-blink 1.05s steps(1, end) 2.26s infinite;
+    nhv-roll   5s    cubic-bezier(.34,1.56,.64,1) 0s   1        forwards,
+    nhv-morph  .6s   cubic-bezier(.22,.7,.2,1)    3.9s 1        forwards,
+    nhv-blink  1.06s linear                       4.5s infinite;
+}
+@keyframes nhv-roll {
+  0%  { transform: translate(calc(-1 * var(--nhv-roll)), 0) scale(1,1); opacity: 0; }
+  4%  { transform: translate(calc(-1 * var(--nhv-roll)), 0) scale(1,1); opacity: 1; }
+  33% { transform: translate(calc(-.03 * var(--nhv-wm-size)), 0) scale(1,1); opacity: 1; }
+  35% { transform: translate(0,0) scale(1,1); opacity: 1; }
+  38% { transform: translate(0,0) scale(1.55,.55); opacity: 1; }
+  41% { transform: translate(0,0) scale(1.96,.4); opacity: 1; }
+  43% { transform: translate(0,0) scale(1.88,.43); opacity: 1; }
+  48% { transform: translate(0, calc(-.075 * var(--nhv-wm-size))) scale(.74,1.34); opacity: 1; }
+  53% { transform: translate(0,0) scale(1.24,.82); opacity: 1; }
+  57% { transform: translate(0,0) scale(.96,1.05); opacity: 1; }
+  60% { transform: translate(0,0) scale(1,1); opacity: 1; }
+  68% { transform: translate(0,0) scale(.86,.86); opacity: .86; }
+  77%,100% { transform: translate(0,0) scale(1,1); opacity: 1; }
+}
+@keyframes nhv-morph {
+  0%   { width: .16em; height: .16em; border-radius: 50%; }
+  100% { width: .075em; height: .78em; border-radius: .02em; }
+}
+@keyframes nhv-blink {
+  0%,50%     { opacity: 1; }
+  50.01%,100%{ opacity: 0; }
 }
 
-.nhv-state,
-.nhv-stream-label,
-.nhv-capture-label,
-.nhv-note-meta,
-.nhv-extract-label,
-.nhv-task-chip {
-  font-family: var(--nhv-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+/* ─── Ghost trails ───────────────────────────────────────────── */
+/* right:0/bottom:.06em co-locates with mark's natural resting position.
+   position:absolute + align-self has no effect on abs children in flex. */
+.nhv-trail {
+  position: absolute; right: 0; bottom: .06em; margin: 0;
+  width: .16em; height: .16em; border-radius: 50%;
+  background: var(--nhv-indigo); opacity: 0; z-index: 2;
+}
+.nhv-t1 { animation: nhv-ghost1 5s cubic-bezier(.34,1.56,.64,1) 0s 1 forwards; }
+.nhv-t2 { animation: nhv-ghost2 5s cubic-bezier(.34,1.56,.64,1) 0s 1 forwards; }
+.nhv-t3 { animation: nhv-ghost3 5s cubic-bezier(.34,1.56,.64,1) 0s 1 forwards; }
+@keyframes nhv-ghost1 {
+  0%,5%  { transform: translate(calc(-1 * var(--nhv-roll)), 0); opacity: 0; }
+  14%    { transform: translate(calc(-.85 * var(--nhv-roll)), 0); opacity: .5; }
+  26%    { transform: translate(calc(-.2 * var(--nhv-roll)), 0); opacity: .26; }
+  33%,100%{ transform: translate(calc(-.1 * var(--nhv-roll)), 0); opacity: 0; }
+}
+@keyframes nhv-ghost2 {
+  0%,7%  { transform: translate(calc(-1 * var(--nhv-roll)), 0); opacity: 0; }
+  16%    { transform: translate(calc(-.78 * var(--nhv-roll)), 0); opacity: .36; }
+  26%    { transform: translate(calc(-.28 * var(--nhv-roll)), 0); opacity: .18; }
+  33%,100%{ transform: translate(calc(-.16 * var(--nhv-roll)), 0); opacity: 0; }
+}
+@keyframes nhv-ghost3 {
+  0%,9%  { transform: translate(calc(-1 * var(--nhv-roll)), 0); opacity: 0; }
+  18%    { transform: translate(calc(-.7 * var(--nhv-roll)), 0); opacity: .24; }
+  26%    { transform: translate(calc(-.35 * var(--nhv-roll)), 0); opacity: .11; }
+  33%,100%{ transform: translate(calc(-.24 * var(--nhv-roll)), 0); opacity: 0; }
 }
 
-.nhv-state {
-  color: var(--nhv-ink-faint);
+/* ─── Impact ripples ─────────────────────────────────────────── */
+/* Same right:0/bottom:.06em anchor as trails. */
+.nhv-ripple, .nhv-ripple-slow {
+  position: absolute; right: 0; bottom: .06em; margin: 0;
+  width: .16em; height: .16em; border-radius: 50%;
+  background: transparent; opacity: 0; transform: scale(1); z-index: 1;
+}
+.nhv-ripple {
+  border: 1px solid var(--nhv-indigo);
+  animation: nhv-rip-fast 5s cubic-bezier(.22,.7,.2,1) 0s 1 forwards;
+}
+.nhv-ripple-slow {
+  border: 1px solid var(--nhv-indigo-300);
+  animation: nhv-rip-slow 5s cubic-bezier(.22,.7,.2,1) 0s 1 forwards;
+}
+@keyframes nhv-rip-fast {
+  0%,39%{ transform: scale(1); opacity: 0; }
+  41%   { transform: scale(1); opacity: .7; }
+  60%   { transform: scale(11); opacity: 0; }
+  100%  { transform: scale(11); opacity: 0; }
+}
+@keyframes nhv-rip-slow {
+  0%,39%{ transform: scale(1); opacity: 0; }
+  41%   { transform: scale(1); opacity: .45; }
+  74%   { transform: scale(22); opacity: 0; }
+  100%  { transform: scale(22); opacity: 0; }
 }
 
-.nhv-capture-shell {
-  position: relative;
-  min-height: 190px;
-  padding: clamp(24px, 4vw, 42px);
-  border-bottom: 1px solid var(--nhv-line);
-  background: linear-gradient(180deg, var(--nhv-surface), var(--nhv-paper));
-  box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0);
-  animation: nhv-focus-settle 900ms cubic-bezier(0.16, 1, 0.3, 1) 0ms 1 forwards;
-}
-
-.nhv-capture-shell::before {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  border: 1px solid rgba(79, 70, 229, 0.22);
-  pointer-events: none;
-  animation: nhv-focus-ring 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0ms 1 forwards;
-}
-
-.nhv-capture-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--nhv-ink-faint);
-}
-
-.nhv-focus-dot,
-.nhv-note-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--nhv-indigo);
-  flex: 0 0 auto;
-}
-
-.nhv-capture-text,
-.nhv-capture-ready {
-  max-width: 18ch;
-  margin: 24px 0 0;
-  font-size: clamp(30px, 5.2vw, 58px);
-  font-weight: 590;
-  letter-spacing: -0.055em;
-  line-height: 0.98;
-  color: var(--nhv-ink);
-}
-
-.nhv-capture-text {
-  animation: nhv-capture-clears 360ms ease 780ms 1 forwards;
-}
-
-.nhv-capture-ready {
-  position: absolute;
-  left: clamp(24px, 4vw, 42px);
-  right: clamp(24px, 4vw, 42px);
-  bottom: clamp(24px, 4vw, 42px);
-  max-width: none;
+/* ─── Voice zone ─────────────────────────────────────────────── */
+.nhv-voice-zone {
+  display: flex; align-items: center; justify-content: center; width: 100%;
+  min-height: calc(var(--nhv-voice-size) * 1.6);
+  margin-top: calc(var(--nhv-wm-size) * .56);
   opacity: 0;
-  color: var(--nhv-ink-faint);
-  animation: nhv-capture-ready 420ms cubic-bezier(0.16, 1, 0.3, 1) 1.1s 1 forwards;
 }
-
-.nhv-capture-text::after,
-.nhv-capture-ready::after {
-  content: "";
+.nhv-voice-inner {
+  display: inline-flex; align-items: center;
+  font-family: var(--nhv-font-surface); font-weight: 500;
+  font-size: var(--nhv-voice-size);
+  letter-spacing: -.028em; line-height: 1.1;
+  color: var(--nhv-ink); white-space: nowrap;
+}
+/* Typing caret in voice zone */
+.nhv-voice-caret {
   display: inline-block;
-  width: 0.075em;
-  height: 0.78em;
-  margin-left: 0.08em;
-  border-radius: 1px;
+  width: 2px; height: .82em; border-radius: 1px;
   background: var(--nhv-indigo);
-  transform: translateY(0.1em);
-  animation: nhv-caret-blink 1.05s linear infinite;
+  margin-left: 2px; opacity: 0;
+  vertical-align: middle; position: relative; top: -.03em;
+}
+.nhv-voice-caret.active {
+  opacity: 1;
+  animation: nhv-voice-blink 1.06s linear infinite;
+}
+@keyframes nhv-voice-blink {
+  0%,49% { opacity: 1; }
+  50%,100%{ opacity: 0; }
 }
 
-.nhv-stream {
-  padding: 26px clamp(24px, 4vw, 42px) 34px;
-}
-
-.nhv-stream-label {
-  margin-bottom: 16px;
-  color: var(--nhv-ink-faint);
-}
-
-.nhv-note {
-  padding: 18px 0;
-  border-top: 1px solid var(--nhv-line);
-}
-
-.nhv-note h2 {
-  max-width: 38rem;
-  margin: 8px 0 0;
-  font-size: clamp(22px, 3vw, 34px);
-  font-weight: 570;
-  letter-spacing: -0.04em;
-  line-height: 1.08;
-}
-
-.nhv-note p {
-  max-width: 42rem;
-  margin: 8px 0 0;
-  color: var(--nhv-ink-soft);
-  font-size: 15px;
-  line-height: 1.55;
-}
-
-.nhv-note-meta {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--nhv-ink-faint);
-}
-
-.nhv-new-note {
-  opacity: 0;
-  transform: translateY(-12px);
-  animation: nhv-note-save 420ms cubic-bezier(0.16, 1, 0.3, 1) 820ms 1 forwards;
-}
-
-.nhv-existing-note {
-  opacity: 0.52;
-}
-
-.nhv-extract {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 9px;
-  margin-top: 16px;
-}
-
-.nhv-extract-label {
-  color: var(--nhv-ink-faint);
-}
-
-.nhv-extract-selection {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 3px 8px;
-  border: 1px solid rgba(79, 70, 229, 0.22);
-  color: var(--nhv-ink);
-  background: rgba(79, 70, 229, 0);
-  font-size: 14px;
-  line-height: 1.35;
-  opacity: 0;
-  transform: translateY(4px);
-  animation: nhv-selection 380ms cubic-bezier(0.16, 1, 0.3, 1) 1.36s 1 forwards;
-}
-
-.nhv-task-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 4px 10px;
-  border: 1px solid rgba(79, 70, 229, 0.26);
-  color: var(--nhv-indigo);
-  opacity: 0;
-  transform: translateY(4px);
-  animation: nhv-task-approved 360ms cubic-bezier(0.16, 1, 0.3, 1) 1.68s 1 forwards;
-}
-
+/* ─── Caption ────────────────────────────────────────────────── */
 .nhv-caption {
-  max-width: 64ch;
-  margin: 0;
-  color: var(--nhv-ink-faint);
   font-family: var(--nhv-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  line-height: 1.5;
-  text-align: center;
-  text-transform: uppercase;
+  font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--nhv-stone);
+  opacity: 0; margin-top: 48px; text-align: center;
+  animation: nhv-cap-in .8s cubic-bezier(.22,.7,.2,1) 4.1s 1 forwards;
 }
-
-@keyframes nhv-focus-settle {
-  0% { box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.16); }
-  100% { box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0); }
-}
-
-@keyframes nhv-focus-ring {
-  0%, 58% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0.34; transform: scale(0.997); }
-}
-
-@keyframes nhv-word-letter-rise {
-  0% { transform: translateY(112%); }
-  100% { transform: translateY(0); }
-}
-
-@keyframes nhv-dot-to-caret {
-  0% {
-    opacity: 0;
-    width: 0.16em;
-    height: 0.16em;
-    border-radius: 999px;
-    transform: translateX(-4.7em) translateY(-0.04em) scale(0.72);
-  }
-  18% {
-    opacity: 1;
-    width: 0.16em;
-    height: 0.16em;
-    border-radius: 999px;
-    transform: translateX(-4.05em) translateY(-0.04em) scale(1);
-  }
-  66% {
-    opacity: 1;
-    width: 0.16em;
-    height: 0.16em;
-    border-radius: 999px;
-    transform: translateX(-0.08em) translateY(-0.04em) scale(1);
-  }
-  82% {
-    opacity: 1;
-    width: 0.075em;
-    height: 0.78em;
-    border-radius: 1px;
-    transform: translateX(0) translateY(0) scale(1);
-  }
-  100% {
-    opacity: 1;
-    width: 0.075em;
-    height: 0.78em;
-    border-radius: 1px;
-    transform: translateX(0) translateY(0) scale(1);
-  }
-}
-
-@keyframes nhv-capture-clears {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-8px); }
-}
-
-@keyframes nhv-capture-ready {
-  0% { opacity: 0; transform: translateY(8px); }
+@keyframes nhv-cap-in {
+  0%   { opacity: 0; transform: translateY(4px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes nhv-note-save {
-  0% { opacity: 0; transform: translateY(-12px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes nhv-selection {
-  0% {
-    opacity: 0;
-    transform: translateY(4px);
-    background: rgba(79, 70, 229, 0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    background: rgba(79, 70, 229, 0.08);
-  }
-}
-
-@keyframes nhv-task-approved {
-  0% { opacity: 0; transform: translateY(4px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes nhv-caret-blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
+/* ─── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .nhv-section *,
-  .nhv-section *::before,
-  .nhv-section *::after {
-    animation-duration: 1ms !important;
-    animation-delay: 0ms !important;
-    transition-duration: 1ms !important;
+  .nhv-mark {
+    animation: none;
+    width: .075em; height: .78em; border-radius: .02em;
+    opacity: 1; transform: none;
   }
-
-  .nhv-capture-shell {
-    box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0);
-  }
-
-  .nhv-capture-shell::before {
-    opacity: 0.34;
-    transform: scale(0.997);
-  }
-
-  .nhv-capture-text {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-
-  .nhv-capture-ready,
-  .nhv-new-note,
-  .nhv-extract-selection,
-  .nhv-task-chip {
-    opacity: 1;
-    transform: none;
-  }
-
-  .nhv-capture-text::after,
-  .nhv-capture-ready::after {
-    animation: none !important;
-    opacity: 1;
-  }
-
-  .nhv-wordmark-word span {
-    transform: none;
-  }
-
-  .nhv-wordmark-dot {
-    width: 0.075em;
-    height: 0.78em;
-    border-radius: 1px;
-    opacity: 1;
-    transform: none;
-  }
+  .nhv-trail, .nhv-ripple, .nhv-ripple-slow { display: none; }
+  .nhv-caption { animation: none; opacity: 1; }
+  .nhv-pip { animation: none; opacity: 1; }
+  .nhv-letter { opacity: 1; transform: none; }
+  .nhv-voice-zone { opacity: 1; }
+  .nhv-voice-caret.active { animation: none; opacity: 1; }
 }
 
-@media (max-width: 720px) {
-  .nhv-section {
-    min-height: auto;
-    padding: 88px 18px 52px;
-  }
-
-  .nhv-notebook-top {
-    min-height: 54px;
-    padding: 0 16px;
-  }
-
-  .nhv-state {
-    display: none;
-  }
-
-  .nhv-capture-shell {
-    min-height: 210px;
-  }
-
-  .nhv-capture-shell::before {
-    inset: 14px;
-  }
-
-  .nhv-capture-text,
-  .nhv-capture-ready {
-    font-size: clamp(30px, 12vw, 44px);
-    letter-spacing: -0.048em;
-  }
-
-  .nhv-note h2 {
-    font-size: clamp(21px, 7vw, 28px);
-  }
+/* ─── Responsive chrome ──────────────────────────────────────── */
+@media (max-width: 600px) {
+  .nhv-chrome-tr { top: 18px; right: 20px; font-size: 10px; }
 }
+@media (max-width: 420px) { .nhv-chrome-tr { display: none; } }
 `;
