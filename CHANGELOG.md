@@ -3,6 +3,10 @@
 Convention: BRAND.md §6.5. Entries before 2026-05-14 keep their
 original shape; the new shape starts at the next cycle.
 
+## 2026-07-02 · N·29 · tightens · the switcher stays in the new shape
+
+**Notes keeps the suite navigation split cleanly: visible product pills in the signed-in notebook chrome, rich launcher dropdown on the marketing/example surfaces.** A new contract check runs before tests and fails if the app shell goes back to the old hidden dropdown or if the launcher loses its gesture-led product rows.
+
 ## 2026-07-02 · N·28 · tightens · Notes keeps its notebook, and the chrome holds still
 
 **Notes' accepted footer and product-header chrome now sit on current main.** The footer follows the same suite frame and points to Studio's iOS status page, while the public, sign-in, sign-up, anatomy, and app shells use one Notes header component with the shared 56px sticky geometry. Notes keeps its notebook register inside that shell; the suite chrome no longer forks by page.
