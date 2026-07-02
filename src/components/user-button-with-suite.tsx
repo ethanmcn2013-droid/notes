@@ -8,6 +8,7 @@ import {
   TIMELINE_URL,
   TASKS_URL,
 } from "@/lib/product-urls";
+import { isDemoMode, isUxAssuranceMode } from "@/lib/access-mode";
 
 type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
 
@@ -17,18 +18,12 @@ type ProductSlug = "tasks" | "roadmap" | "notes" | "analytics";
  *
  * Product order (operator-directed 2026-05-18): notes → tasks → roadmap → analytics.
  * Current product is excluded at render.
- *
- * Retired variants (do not restore):
- *   "Open the workspace" → "Open tasks"
- *   "Open the roadmap"   → "Open timeline"
- *   "Open the notebook"  → "Open notes"
- *   "Open the briefing"  → "Open signal"
  */
 const PRODUCTS: { slug: ProductSlug; label: string; url: string }[] = [
-  { slug: "notes",     label: "Open notes",      url: `${NOTES_URL}/app` },
-  { slug: "tasks",     label: "Open tasks",      url: `${TASKS_URL}/app` },
-  { slug: "roadmap",   label: "Open timeline",    url: `${TIMELINE_URL}/app` },
-  { slug: "analytics", label: "Open signal",  url: `${SIGNAL_URL}/app` },
+  { slug: "notes",     label: "Open the notebook",  url: `${NOTES_URL}/app` },
+  { slug: "tasks",     label: "Open the workspace", url: `${TASKS_URL}/app` },
+  { slug: "roadmap",   label: "Open the timeline",  url: `${TIMELINE_URL}/app` },
+  { slug: "analytics", label: "Open the briefing",  url: `${SIGNAL_URL}/app` },
 ];
 
 /** Cookie name per DESIGN.md §14 escape hatch spec. */
@@ -138,6 +133,10 @@ function CameraIcon() {
  * not alter auth state or expose private data.
  */
 export function UserButtonWithSuite({ current }: { current: ProductSlug }) {
+  if (isUxAssuranceMode() || isDemoMode()) {
+    return <DemoAccountButton current={current} />;
+  }
+
   const [isPreview, setIsPreview] = useState(false);
   // Item 4: detect whether user has uploaded a custom avatar.
   // Clerk API: useUser() → user.hasImage; useClerk() → openUserProfile().
@@ -228,5 +227,27 @@ export function UserButtonWithSuite({ current }: { current: ProductSlug }) {
         )}
       </UserButton.MenuItems>
     </UserButton>
+  );
+}
+
+function DemoAccountButton({ current }: { current: ProductSlug }) {
+  return (
+    <button
+      type="button"
+      aria-label={`Demo account for ${current}`}
+      title="Demo account"
+      style={{
+        minWidth: 28,
+        height: 28,
+        borderRadius: 999,
+        border: "1px solid var(--color-line, #e7e5df)",
+        background: "var(--color-paper, #fffdf7)",
+        color: "var(--color-ink-faint, #73726c)",
+        fontSize: 10,
+        fontWeight: 700,
+      }}
+    >
+      UX
+    </button>
   );
 }

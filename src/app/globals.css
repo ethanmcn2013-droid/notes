@@ -54,7 +54,7 @@
 :root {
   --load-bg:               var(--paper, #ffffff);
   --load-dot-color:        var(--indigo, #4f46e5);
-  --load-dot-size:         12px;   /* D8: 10px→12px — perceptibility floor fix */
+  --load-dot-size:         10px;   /* Hard px. DESIGN.md S13.3 authority; supersedes D8 12px (loading-review 2026-07-01: one boundary dot, 10px, matches wordmark ceiling min(0.16em, 10px)). */
   --load-dot-radius:       50%;
   --load-pulse-scale-min:  0.72;
   --load-pulse-scale-max:  1.0;
@@ -271,9 +271,16 @@ button, input, textarea { font: inherit; }
 /* ── Suitebar (notebook chrome) ─────────────────────────────────── */
 .suitebar {
   display: flex;
-  min-height: 44px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: 56px;
+  min-height: 56px;
   padding: 0;
   border-bottom: 1px solid rgba(217, 221, 207, 0.75);
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  backdrop-filter: saturate(150%) blur(12px);
+  -webkit-backdrop-filter: saturate(150%) blur(12px);
   color: var(--color-ink-soft);
   font-size: 12px;
 }
@@ -295,15 +302,23 @@ button, input, textarea { font: inherit; }
   display: flex;
   align-items: baseline;
   gap: 12px;
+  min-width: 0;
+  white-space: nowrap;
 }
 .suite-breadcrumb > a:first-child { transition: color var(--motion-instant) var(--ease-out); }
 .suite-breadcrumb > a:first-child:hover { color: var(--color-ink); }
+.notes-section-breadcrumb {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+}
 
 /* Sign-in affordance — calm, in notes' own register (not the suite pill). */
 .notes-signin {
   font-size: 13px;
   color: var(--color-ink-soft);
   text-decoration: none;
+  white-space: nowrap;
   transition: color var(--motion-instant) var(--ease-out);
 }
 .notes-signin:hover { color: var(--color-ink); }
@@ -1182,12 +1197,19 @@ button, input, textarea { font: inherit; }
 
 @media (max-width: 860px) {
   .suitebar-inner {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-    padding: 14px 20px;
+    align-items: center;
+    flex-direction: row;
+    gap: 16px;
+    padding: 0 20px;
   }
-  .suitebar nav { flex-wrap: wrap; gap: 12px 16px; }
+  .suite-breadcrumb,
+  .notes-section-breadcrumb {
+    gap: 10px;
+  }
+  .suitebar nav {
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
   .shell {
     grid-template-columns: 1fr;
     width: min(100% - 24px, 640px);
@@ -1198,6 +1220,19 @@ button, input, textarea { font: inherit; }
     padding-top: 0;
   }
   .product-h1 { max-width: none; }
+}
+
+@media (max-width: 380px) {
+  .suitebar-inner {
+    gap: 12px;
+    padding: 0 16px;
+  }
+  .suite-breadcrumb {
+    gap: 8px;
+  }
+  .notes-section-breadcrumb {
+    display: none;
+  }
 }
 
 /* ── Undo toast ──────────────────────────────────────────────────── */

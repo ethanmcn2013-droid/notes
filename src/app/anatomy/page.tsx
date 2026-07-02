@@ -1,64 +1,26 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { NoteAnatomy } from "@/components/marketing/note-anatomy";
-import { SuiteLauncher } from "@/components/suite-launcher";
-import { UserButtonWithSuite } from "@/components/user-button-with-suite";
+import { NotesHeader } from "@/components/marketing/notes-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
+import { isDemoMode, isUxAssuranceMode } from "@/lib/access-mode";
 
 /**
- * /anatomy — deep-link route for the animated Note Anatomy decomposition.
+ * /anatomy - deep-link route for the animated Note Anatomy decomposition.
  *
  * Caravaggio walkover row 1: NoteAnatomy was moved off the marketing home
- * to keep the home hero a clean three-beat (wordmark → sentence → CTA).
+ * to keep the home hero a clean three-beat (wordmark -> sentence -> CTA).
  * The anatomy remains a reachable artefact for marketing deep-links,
- * spec references, and onboarding moments — same component, quieter route.
+ * spec references, and onboarding moments. Same component, quieter route.
  */
 export default async function AnatomyPage() {
-  const { userId } = await auth();
+  const { userId } =
+    isUxAssuranceMode() || isDemoMode() ? { userId: null } : await auth();
   const isSignedIn = Boolean(userId);
 
   return (
     <>
-      <header className="suitebar" aria-label="Signal Notes notebook chrome">
-        <div className="suitebar-inner">
-          <div className="suite-breadcrumb">
-            <SuiteLauncher current="notes" isAuthed={isSignedIn} />
-            <span
-              aria-hidden
-              className="text-[12px]"
-              style={{ color: "var(--color-ink-faint)" }}
-            >
-              /
-            </span>
-            <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
-              <span className="word">notes</span>
-              <span className="dot" aria-hidden />
-            </Link>
-            <span
-              aria-hidden
-              className="text-[12px]"
-              style={{ color: "var(--color-ink-faint)" }}
-            >
-              /
-            </span>
-            <span
-              className="text-[15px]"
-              style={{ color: "var(--color-ink-soft)" }}
-            >
-              anatomy
-            </span>
-          </div>
-          {isSignedIn ? (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <UserButtonWithSuite current="notes" />
-            </div>
-          ) : (
-            <Link href="/sign-in" className="notes-signin">
-              Sign in
-            </Link>
-          )}
-        </div>
-      </header>
+      <NotesHeader isSignedIn={isSignedIn} sectionLabel="anatomy" />
 
       <main className="mx-auto max-w-[860px] px-7 pt-14 pb-32 sm:pt-16">
         <p
@@ -140,5 +102,5 @@ export default async function AnatomyPage() {
 export const metadata = {
   title: "Anatomy of a note · Signal Notes",
   description:
-    "Five honest slots — title, preview, stamp, pip, draft. The decomposition behind the three-second capture promise.",
+    "Five honest slots: title, preview, stamp, pip, draft. The decomposition behind the three-second capture promise.",
 };

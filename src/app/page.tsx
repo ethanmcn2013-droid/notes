@@ -2,48 +2,24 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { NotesHeroVoice } from "@/components/marketing/notes-hero-voice";
 import { NotesDemo } from "@/components/marketing/notes-demo";
-import { SuiteLauncher } from "@/components/suite-launcher";
-import { UserButtonWithSuite } from "@/components/user-button-with-suite";
+import { NotesHeader } from "@/components/marketing/notes-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
-import { isDemoMode } from "@/lib/access-mode";
+import { isDemoMode, isUxAssuranceMode } from "@/lib/access-mode";
 
 export default async function HomePage() {
-  const { userId } = isDemoMode() ? { userId: null } : await auth();
+  const { userId } =
+    isUxAssuranceMode() || isDemoMode() ? { userId: null } : await auth();
   const isSignedIn = Boolean(userId);
 
   return (
     <>
-      <header className="suitebar" aria-label="Signal Notes notebook chrome">
-        {/* Centered 1240 container — matches the suite product-header geometry
-            (DESIGN.md §14). Notes keeps its own warm hairline + register. */}
-        <div className="suitebar-inner">
-          <div className="suite-breadcrumb">
-            <SuiteLauncher current="notes" isAuthed={isSignedIn} />
-            <span aria-hidden className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>/</span>
-            <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
-              <span className="word">notes</span>
-              <span className="dot" aria-hidden />
-            </Link>
-          </div>
-          {isSignedIn ? (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <UserButtonWithSuite current="notes" />
-            </div>
-          ) : (
-            /* Sign in is a visible affordance, never a gate — public scanning
-               stays open (canonical product header, DESIGN.md §14). */
-            <Link href="/sign-in" className="notes-signin">
-              Sign in
-            </Link>
-          )}
-        </div>
-      </header>
+      <NotesHeader isSignedIn={isSignedIn} />
 
       {/*
-        Page order (Caravaggio walkover, row 1): animated wordmark hero →
-        one-sentence promise → "Open the notebook". The second hero
+        Page order (Caravaggio walkover, row 1): animated wordmark hero ->
+        one-sentence promise -> "Open the notebook". The second hero
         (live notebook demo) and the animated NoteAnatomy were cut from
-        the home — NoteAnatomy now lives at /anatomy as a deep-link.
+        the home. NoteAnatomy now lives at /anatomy as a deep-link.
       */}
       <NotesHeroVoice />
 
@@ -113,7 +89,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Product demo — the capture → promote loop, shown in one calm note.
+        {/* Product demo - the capture -> promote loop, shown in one calm note.
             Parity with the other products' homepage demos (review issue 07). */}
         <NotesDemo />
 

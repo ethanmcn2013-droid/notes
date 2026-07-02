@@ -2,7 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DevBanner } from "@/components/dev-banner";
-import { clerkPublishableKey, isDemoMode } from "@/lib/access-mode";
+import {
+  clerkPublishableKey,
+  isDemoMode,
+  isUxAssuranceMode,
+} from "@/lib/access-mode";
 import "./globals.css";
 
 const inter = Inter({
@@ -54,7 +58,7 @@ function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 function AuthShell({ children }: Readonly<{ children: React.ReactNode }>) {
-  if (isDemoMode()) {
+  if (isUxAssuranceMode() || isDemoMode()) {
     return <AppShell>{children}</AppShell>;
   }
 
