@@ -15,7 +15,13 @@ export function NotesHeroVoice() {
       <div className="nhv-notebook" aria-hidden="true">
         <div className="nhv-notebook-top">
           <span className="nhv-wordmark">
-            <span>notes</span>
+            <span className="nhv-wordmark-word" aria-label="notes">
+              <span>n</span>
+              <span>o</span>
+              <span>t</span>
+              <span>e</span>
+              <span>s</span>
+            </span>
             <span className="nhv-wordmark-dot" />
           </span>
           <span className="nhv-state">saved to notebook</span>
@@ -119,21 +125,44 @@ const CSS = `
 
 .nhv-wordmark {
   display: inline-flex;
-  align-items: baseline;
+  align-items: flex-end;
   color: var(--nhv-ink);
   font-size: 18px;
   font-weight: 560;
   letter-spacing: -0.03em;
   line-height: 1;
+  overflow: visible;
+}
+
+.nhv-wordmark-word {
+  display: inline-flex;
+  overflow: hidden;
+}
+
+.nhv-wordmark-word span {
+  display: inline-block;
+  transform: translateY(112%);
+  animation: nhv-word-letter-rise 420ms cubic-bezier(0.22, 0.7, 0.2, 1) 1.12s 1 forwards;
+}
+
+.nhv-wordmark-word span:nth-child(2) { animation-delay: 1.18s; }
+.nhv-wordmark-word span:nth-child(3) { animation-delay: 1.24s; }
+.nhv-wordmark-word span:nth-child(4) { animation-delay: 1.3s; }
+.nhv-wordmark-word span:nth-child(5) { animation-delay: 1.36s; }
 }
 
 .nhv-wordmark-dot {
-  width: 0.16em;
-  height: 0.16em;
+  width: 0.075em;
+  height: 0.78em;
   margin-left: 0.06em;
-  margin-bottom: 0.08em;
-  border-radius: 999px;
+  margin-bottom: 0;
+  border-radius: 1px;
   background: var(--nhv-indigo);
+  opacity: 0;
+  transform-origin: center bottom;
+  animation:
+    nhv-dot-to-caret 980ms cubic-bezier(0.22, 0.7, 0.2, 1) 1.05s 1 forwards,
+    nhv-caret-blink 1.05s steps(1, end) 2.26s infinite;
 }
 
 .nhv-state,
@@ -335,6 +364,49 @@ const CSS = `
   100% { opacity: 0.34; transform: scale(0.997); }
 }
 
+@keyframes nhv-word-letter-rise {
+  0% { transform: translateY(112%); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes nhv-dot-to-caret {
+  0% {
+    opacity: 0;
+    width: 0.16em;
+    height: 0.16em;
+    border-radius: 999px;
+    transform: translateX(-4.7em) translateY(-0.04em) scale(0.72);
+  }
+  18% {
+    opacity: 1;
+    width: 0.16em;
+    height: 0.16em;
+    border-radius: 999px;
+    transform: translateX(-4.05em) translateY(-0.04em) scale(1);
+  }
+  66% {
+    opacity: 1;
+    width: 0.16em;
+    height: 0.16em;
+    border-radius: 999px;
+    transform: translateX(-0.08em) translateY(-0.04em) scale(1);
+  }
+  82% {
+    opacity: 1;
+    width: 0.075em;
+    height: 0.78em;
+    border-radius: 1px;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 1;
+    width: 0.075em;
+    height: 0.78em;
+    border-radius: 1px;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
 @keyframes nhv-capture-clears {
   0% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-8px); }
@@ -408,6 +480,18 @@ const CSS = `
   .nhv-capture-ready::after {
     animation: none !important;
     opacity: 1;
+  }
+
+  .nhv-wordmark-word span {
+    transform: none;
+  }
+
+  .nhv-wordmark-dot {
+    width: 0.075em;
+    height: 0.78em;
+    border-radius: 1px;
+    opacity: 1;
+    transform: none;
   }
 }
 
