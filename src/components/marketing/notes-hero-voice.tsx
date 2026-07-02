@@ -380,17 +380,18 @@ const CSS = `
   position: relative; overflow: hidden; background: #ffffff;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  min-height: min(90vh, 920px);
-  padding: clamp(80px,12vh,160px) 24px clamp(64px,10vh,128px);
+  min-height: clamp(520px, 64svh, 720px);
+  padding: clamp(72px,10svh,112px) 24px clamp(44px,7svh,72px);
+  border-bottom: 1px solid var(--nhv-hairline);
 
   --nhv-ink: #111111;
   --nhv-indigo: #4f46e5;
   --nhv-indigo-300: #a5b4fc;
   --nhv-stone: #8c887e;
   --nhv-hairline: rgba(17,17,17,0.06);
-  --nhv-wm-size: clamp(56px, 12vw, 168px);
+  --nhv-wm-size: clamp(56px, 10.5vw, 142px);
   --nhv-roll: calc(var(--nhv-wm-size) * 8);
-  --nhv-voice-size: clamp(20px, 3.8vw, 52px);
+  --nhv-voice-size: clamp(20px, 3.1vw, 42px);
   --nhv-font: var(--font-geist, 'Geist', system-ui, sans-serif);
   --nhv-font-surface: var(--font-inter, 'Inter', system-ui, sans-serif);
   --nhv-mono: var(--font-geist-mono, 'Geist Mono', ui-monospace, monospace);
@@ -415,6 +416,7 @@ const CSS = `
 /* ─── Stage ──────────────────────────────────────────────────── */
 .nhv-stage {
   display: flex; align-items: center; justify-content: center; width: 100%;
+  transform: translateY(-10px);
 }
 .nhv-composer {
   position: relative; display: inline-flex; align-items: baseline;
@@ -534,7 +536,7 @@ const CSS = `
 .nhv-voice-zone {
   display: flex; align-items: center; justify-content: center; width: 100%;
   min-height: calc(var(--nhv-voice-size) * 1.6);
-  margin-top: calc(var(--nhv-wm-size) * .56);
+  margin-top: calc(var(--nhv-wm-size) * .42);
   opacity: 0;
 }
 .nhv-voice-inner {
@@ -566,7 +568,7 @@ const CSS = `
   font-family: var(--nhv-mono);
   font-size: 11px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--nhv-stone);
-  opacity: 0; margin-top: 48px; text-align: center;
+  opacity: 0; margin-top: 36px; text-align: center;
   animation: nhv-cap-in .8s cubic-bezier(.22,.7,.2,1) 4.1s 1 forwards;
 }
 @keyframes nhv-cap-in {
@@ -592,6 +594,17 @@ const CSS = `
 /* ─── Responsive chrome ──────────────────────────────────────── */
 @media (max-width: 600px) {
   .nhv-chrome-tr { top: 18px; right: 20px; font-size: 10px; }
+}
+@media (max-width: 760px) {
+  .nhv-section {
+    min-height: 58svh;
+    padding: 58px 20px 44px;
+    --nhv-wm-size: clamp(52px, 15vw, 78px);
+    --nhv-voice-size: clamp(20px, 6vw, 28px);
+  }
+  .nhv-stage { transform: translateY(-4px); }
+  .nhv-voice-zone { margin-top: 34px; }
+  .nhv-caption { margin-top: 30px; }
 }
 @media (max-width: 420px) { .nhv-chrome-tr { display: none; } }
 `;

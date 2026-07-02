@@ -23,9 +23,9 @@ export default async function HomePage() {
       */}
       <NotesHeroVoice />
 
-      <main className="mx-auto max-w-[860px] px-7 pt-14 pb-32 sm:pt-16">
+      <main className="mx-auto max-w-[860px] px-7 pt-0 pb-32">
         <section
-          className="reveal mt-4 py-20 sm:py-24"
+          className="reveal mt-0 py-14 sm:py-20"
         >
           <p
             className="font-mono"
