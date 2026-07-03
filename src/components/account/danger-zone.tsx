@@ -14,14 +14,14 @@ function humaniseError(message: string | undefined, status: number): string {
 /**
  * App Store 5.1.1(v) compliant account deletion for Signal Notes.
  *
- * Same flow as the rest of the suite — typed-email confirm → POST
+ * Same flow as the rest of the suite, typed-email confirm → POST
  * /api/account/delete → Clerk.signOut() → redirect home. Server-side
  * purge clears the user's notes + capture-slug preferences from
  * Notes' Turso DB before the Clerk delete.
  *
  * Notes is intentionally outside the suite visual register
- * (green/mustard/Inter — DESIGN.md §11). The danger surface still
- * uses the universal rose semantics — destruction reads identical
+ * (green/mustard/Inter, DESIGN.md §11). The danger surface still
+ * uses the universal rose semantics, destruction reads identical
  * to every other product so Apple's reviewer sees the same shape
  * across the four apps.
  *
@@ -69,7 +69,7 @@ export function DangerZone({ email }: { email: string }) {
         Delete account
       </h2>
       <p className="mt-1.5 max-w-[560px] text-[12.5px] leading-[1.6] text-rose-800/80">
-        Closes your Signal account across every product — Notes, Tasks,
+        Closes your Signal account across every product, Notes, Tasks,
         Timeline, Signal. Every note you've written is removed. There's
         no undo.
       </p>

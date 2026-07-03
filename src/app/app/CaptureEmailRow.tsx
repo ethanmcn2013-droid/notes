@@ -11,7 +11,7 @@ const PRICING_URL = "https://signalstudio.ie/pricing";
 /**
  * Inline footer-row beneath the stream surface. Reveals the user's
  * capture-by-email address (workspace+ tier) or the upgrade pitch
- * (free tier). Deliberately quiet — capture-by-email is a power-
+ * (free tier). Deliberately quiet, capture-by-email is a power-
  * user surface and shouldn't compete with the capture field.
  *
  * Click-to-copy mirrors the PRODUCT.md §5 budget: power users
@@ -46,7 +46,7 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
         }, 0);
       });
     } else {
-      // Clipboard API unavailable — reveal a selectable readonly input.
+      // Clipboard API unavailable, reveal a selectable readonly input.
       setShowFallback(true);
       window.setTimeout(() => {
         fallbackRef.current?.select();
@@ -64,7 +64,7 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
           type="text"
           readOnly
           value={address}
-          aria-label="Capture email address — select to copy"
+          aria-label="Capture email address, select to copy"
           className="capture-email__fallback-input"
           onBlur={() => setShowFallback(false)}
         />

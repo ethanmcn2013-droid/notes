@@ -15,7 +15,7 @@ import {
 } from "@/server/calendar/google";
 
 /**
- * N·24 (Pattern 4) — calendar spawn pipeline.
+ * N·24 (Pattern 4), calendar spawn pipeline.
  *
  * This module owns the *server-side* spawn act: for each connected
  * calendar, find events starting in the next ~5 minutes, and create
@@ -58,7 +58,7 @@ import {
 // event before the 5-minute mark.
 const SPAWN_LEAD_MS = 6 * 60 * 1000;
 // Don't backfill: never look at events more than this old (covers
-// cron drift). Effectively "now" — anything older than this is past.
+// cron drift). Effectively "now", anything older than this is past.
 const SPAWN_BACKWARD_TOLERANCE_MS = 60 * 1000;
 
 function makeNoteId() {
@@ -127,7 +127,7 @@ export async function spawnCalendarNote(args: {
     return { created: false, noteId: null };
   }
 
-  // We won the claim — write the note. The body is composed from
+  // We won the claim, write the note. The body is composed from
   // title + attendees ONLY. createdAt === updatedAt so the read side
   // can detect "untouched" and render the provenance pill.
   const body = composeCalendarNoteBody(event);
@@ -272,7 +272,7 @@ export async function saveCalendarConnection(args: {
 
 /**
  * Disconnect: remove the connection. Spawned notes stay (the spec
- * is explicit on this — they belong to the user once written).
+ * is explicit on this, they belong to the user once written).
  */
 export async function deleteCalendarConnection(args: {
   userId: string;

@@ -1,6 +1,6 @@
 /**
  * Next.js 16 instrumentation hook. Runs once at server boot. We use
- * it to wire Sentry — server-side and edge — without imposing a
+ * it to wire Sentry, server-side and edge, without imposing a
  * top-level import on every entry point.
  *
  * When `SENTRY_DSN` is unset (dev/preview), this short-circuits so
@@ -8,7 +8,7 @@
  * reference setup so observability is identical across the suite.
  */
 export async function register() {
-  // Validate env first — must run even when Sentry is unconfigured, so a
+  // Validate env first, must run even when Sentry is unconfigured, so a
   // misconfigured production boots loudly here, not with runtime 500s.
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { validateEnv } = await import("@/env");

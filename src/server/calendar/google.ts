@@ -1,7 +1,7 @@
 import "server-only";
 
 /**
- * N·24 (Pattern 4) — Google Calendar OAuth + read helpers.
+ * N·24 (Pattern 4), Google Calendar OAuth + read helpers.
  *
  * This module is the *only* place that talks to Google. Everything
  * else in the spawn pipeline reads a normalised CalendarEvent shape
@@ -16,7 +16,7 @@ import "server-only";
  *
  * Refusal anchor (PRODUCT.md §8): nothing in this file extracts
  * action items from event descriptions. The event body is not even
- * fetched into the spawn — only `summary` (title) and `attendees`
+ * fetched into the spawn, only `summary` (title) and `attendees`
  * cross into the spawned note.
  *
  * Required env vars (operator owes these):
@@ -36,7 +36,7 @@ export const GOOGLE_OAUTH_SCOPES = [
 export type CalendarEvent = {
   id: string;
   title: string;
-  /** Display strings only — never the raw attendee object. */
+  /** Display strings only, never the raw attendee object. */
   attendees: string[];
   /** Epoch ms; the start of *this occurrence* for recurring events. */
   start: number;
@@ -120,7 +120,7 @@ export async function exchangeGoogleCode(code: string): Promise<{
   if (!data.refresh_token) {
     // No refresh_token can happen if the user has previously consented
     // without prompt=consent. We forced prompt=consent in the URL, so
-    // this is genuinely unexpected — surface clearly.
+    // this is genuinely unexpected, surface clearly.
     throw new Error("Google did not return a refresh_token");
   }
   return {
@@ -160,13 +160,13 @@ export async function refreshGoogleAccessToken(
  * Best-effort revoke of a stored OAuth token at Google's revocation
  * endpoint. Called during account deletion so a deleted user's
  * long-lived refresh token can no longer mint access tokens against
- * their calendar — closing the window where a DB purge removes the row
+ * their calendar, closing the window where a DB purge removes the row
  * but the credential stays valid at Google.
  *
  * Deliberately swallows all failures: the DB row is already (or about
  * to be) gone, so a revoke failure must never block account deletion.
  * Google's endpoint needs only the token (no client secret), and 400s
- * on an already-invalid/expired token — which is a success for our
+ * on an already-invalid/expired token, which is a success for our
  * purposes. Returns true only when Google confirms the revocation.
  */
 export async function revokeGoogleToken(token: string): Promise<boolean> {
@@ -185,7 +185,7 @@ export async function revokeGoogleToken(token: string): Promise<boolean> {
 }
 
 /**
- * Internal Google event shape — only the fields we care about. The
+ * Internal Google event shape, only the fields we care about. The
  * full event object carries description, attachments, hangoutLink,
  * extendedProperties, conferenceData, etc. We intentionally do not
  * read those. PRODUCT.md §8: title + attendees, that is the entire
@@ -207,7 +207,7 @@ type GoogleEvent = {
 /**
  * Fetch upcoming events between `from` and `to` (epoch ms) for a
  * calendar. Single-instance expansion for recurring events
- * (singleEvents=true), ordered by start time. We cap at 50 — five
+ * (singleEvents=true), ordered by start time. We cap at 50, five
  * minutes of meetings rarely exceeds that.
  */
 export async function listGoogleEvents(

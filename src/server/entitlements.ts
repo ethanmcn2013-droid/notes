@@ -6,7 +6,7 @@ import type { EntitlementTier } from "@/lib/entitlements-shared/schema";
 /**
  * Notes tier policy (E-6, 2026-05-14).
  *
- * Notes ships no Pro-worthy gate at v1 — the deliberate
+ * Notes ships no Pro-worthy gate at v1, the deliberate
  * three-second-capture promise applies equally to every user. This
  * module is a deliberate forward-compat anchor: when a Pro feature
  * lands (email-to-capture in N-1, FTS5 in N-2, >500-note caps later)
@@ -15,7 +15,7 @@ import type { EntitlementTier } from "@/lib/entitlements-shared/schema";
  * Call sites: capture-by-email allocation + slug rotation
  * (server/actions/capture-email.ts) and inbound delivery
  * (app/api/capture/email/route.ts). New gates flow through
- * requireTier() or a feature predicate exported below — never via
+ * requireTier() or a feature predicate exported below, never via
  * inline resolveEntitlement calls scattered across server actions.
  */
 export async function getNotesTier(
@@ -27,7 +27,7 @@ export async function getNotesTier(
 
 /**
  * Forward-compat predicate. When Pro features land in Notes they
- * call this — not resolveEntitlement directly — so the gate axis
+ * call this, not resolveEntitlement directly, so the gate axis
  * stays unified across surfaces.
  */
 export async function notesProEnabled(userClerkId: string): Promise<boolean> {

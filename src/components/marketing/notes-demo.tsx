@@ -1,15 +1,15 @@
 /**
- * Notes demo — "capture, then promote."
+ * Notes demo, "capture, then promote."
  *
  * A single warm note writes itself line by line, then quietly crosses into
- * Tasks — the Signal Notes loop (capture fast, promote only when it's ready)
+ * Tasks, the Signal Notes loop (capture fast, promote only when it's ready)
  * shown as one calm card. Every other product carries a homepage demo; this
  * is the Notes one, in the Notes register (review issue 07).
  *
  * SAFETY CONTRACT (loader canon §13):
- *   · Pure CSS animation on a single shared ~9s cycle — no JS, no timers.
- *   · Fully scoped — every class + @keyframes prefixed `nd-`.
- *   · In-flow only — no position:fixed, no inset:0, no high z-index.
+ *   · Pure CSS animation on a single shared ~9s cycle, no JS, no timers.
+ *   · Fully scoped, every class + @keyframes prefixed `nd-`.
+ *   · In-flow only, no position:fixed, no inset:0, no high z-index.
  *   · prefers-reduced-motion → settled state (full note + "In Tasks"),
  *     no animation. The static state is legible on its own.
  */

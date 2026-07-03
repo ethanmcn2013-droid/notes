@@ -121,7 +121,7 @@ function CameraIcon() {
 }
 
 /**
- * Notes-flavoured Clerk UserButton — h-7 avatar (matching the smaller
+ * Notes-flavoured Clerk UserButton, h-7 avatar (matching the smaller
  * Notes suitebar register) plus:
  *   - "Open [Sibling]" links to each product's /app entry (§14 authed spec)
  *   - "View public site" / "Exit preview" escape hatch (§14 operator feature)
@@ -129,7 +129,7 @@ function CameraIcon() {
  * The escape hatch sets/clears a short-lived cookie that suppresses the
  * M→app redirect, enabling the operator to demo the marketing surface
  * while signed in (venue sales motion, screen recordings).
- * Security note: this only suppresses a convenience redirect — it does
+ * Security note: this only suppresses a convenience redirect, it does
  * not alter auth state or expose private data.
  */
 export function UserButtonWithSuite({ current }: { current: ProductSlug }) {
@@ -200,7 +200,7 @@ export function UserButtonWithSuite({ current }: { current: ProductSlug }) {
             </svg>
           }
         />
-        {/* Sibling product links — deep-link to /app entry, not marketing */}
+        {/* Sibling product links, deep-link to /app entry, not marketing */}
         {PRODUCTS.filter((p) => p.slug !== current).map((p) => (
           <UserButton.Link
             key={p.slug}

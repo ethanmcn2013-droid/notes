@@ -11,7 +11,7 @@ import * as schema from "./db/schema";
 export type ExportDb = LibSQLDatabase<typeof schema>;
 
 /**
- * GDPR Art. 20 (data portability) — assemble a machine-readable copy of
+ * GDPR Art. 20 (data portability), assemble a machine-readable copy of
  * everything Notes holds for a user, keyed by their Clerk userId.
  *
  * The counterpart to `account-erasure.ts`: erasure removes the footprint,
@@ -19,7 +19,7 @@ export type ExportDb = LibSQLDatabase<typeof schema>;
  * in-memory libSQL DB (see account-export.test.ts).
  *
  * SECURITY: `calendar_connections.refresh_token` is DELIBERATELY OMITTED.
- * It is a live OAuth credential, not user content — handing it back in a
+ * It is a live OAuth credential, not user content, handing it back in a
  * downloadable file would let a leaked export mint calendar access. We
  * export the connection metadata (provider, calendar, sync time) instead.
  */
@@ -51,7 +51,7 @@ export async function exportAccountData(database: ExportDb, clerkId: string) {
     exportedAt: new Date().toISOString(),
     userId: clerkId,
     notes: noteRows,
-    // Token-free by design — see the security note above.
+    // Token-free by design, see the security note above.
     calendarConnections: connectionRows,
     spawnedCalendarEvents: spawnedRows,
     preferences: prefsRows[0] ?? null,

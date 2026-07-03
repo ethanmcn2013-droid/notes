@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /**
- * Locked schema (PRODUCT.md §6) — one row per note, plus the
+ * Locked schema (PRODUCT.md §6), one row per note, plus the
  * one-way approved extraction edge to Signal Tasks.
  *
  * v1 surface: { id, body, created_at, updated_at, extract_body?,
@@ -14,13 +14,13 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
  * should store/read approved extracts, never raw note rows. Only the
  * extract_body (creator-authored, deliberate) ever leaves Notes.
  *
- * extract_body holds the creator-authored action wording — never the
+ * extract_body holds the creator-authored action wording, never the
  * raw note body, never auto-detected. Set by setNoteExtract, cleared
  * by clearNoteExtract. promoted_task_id is filled in by the cross-repo
  * write (Cycle 9.4b, shipped) once the action lands as a Task. Both
  * null = no extract drafted.
  *
- * archived_at (Unix ms, nullable) — RW-3a D1 promote semantics.
+ * archived_at (Unix ms, nullable), RW-3a D1 promote semantics.
  *   NULL     = note is in the active stream (listNotes returns it).
  *   non-null = note has been promoted and archived from the stream.
  * listNotes() filters WHERE archived_at IS NULL; listArchivedNotes()
@@ -44,7 +44,7 @@ export const notes = sqliteTable(
     promotedTaskId: text("promoted_task_id"),
     archivedAt: integer("archived_at", { mode: "number" }),
     /**
-     * N·24 (Pattern 4) — calendar-spawned note provenance.
+     * N·24 (Pattern 4), calendar-spawned note provenance.
      *   NULL       = ordinary capture (textarea, paste, email, clipper…)
      *   "calendar" = spawned 5 minutes pre-event by the calendar worker.
      *
@@ -55,7 +55,7 @@ export const notes = sqliteTable(
      * user edits.
      *
      * Refusal anchor (PRODUCT.md §8): a note with source="calendar" is
-     * a *scaffold* only — title + attendees. No auto-detected action
+     * a *scaffold* only, title + attendees. No auto-detected action
      * items, no summaries, no meeting body. The line stays clean.
      */
     source: text("source"),
@@ -72,11 +72,11 @@ export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
 
 /**
- * N·24 (Pattern 4) — calendar OAuth connection.
+ * N·24 (Pattern 4), calendar OAuth connection.
  *
  * One row per (user, provider, calendar) triple. v1 carries Google
  * only; `provider` exists so Microsoft can land later without a
- * second table. Tokens stored here are OAuth refresh tokens — long
+ * second table. Tokens stored here are OAuth refresh tokens, long
  * lived; access tokens are minted at use-time and never persisted.
  *
  * Encryption at rest: PRODUCT.md §11 (3) flags server-side encryption
@@ -86,11 +86,11 @@ export type NewNote = typeof notes.$inferInsert;
  * Pattern-4 follow-up; do not block the cycle on it.
  *
  * Webhook channel: Google supports both polling and push (watch
- * channels). v1 ships a 5-minute polling cron (Vercel cron) — the
+ * channels). v1 ships a 5-minute polling cron (Vercel cron), the
  * spawn window is +/- 5 min so push fidelity is not load-bearing.
  *
  * Spawn idempotency keys on (userId, calendarEventId) via the
- * `spawned_calendar_events` table below — never re-spawn the same
+ * `spawned_calendar_events` table below, never re-spawn the same
  * event occurrence, even across cron runs or multi-device races.
  */
 export const calendarConnections = sqliteTable(
@@ -126,7 +126,7 @@ export type CalendarConnection = typeof calendarConnections.$inferSelect;
 export type NewCalendarConnection = typeof calendarConnections.$inferInsert;
 
 /**
- * N·24 (Pattern 4) — idempotency ledger for calendar-spawned notes.
+ * N·24 (Pattern 4), idempotency ledger for calendar-spawned notes.
  *
  * One row per (user, provider, calendarEventId, occurrenceStart). The
  * occurrence start is included so recurring events spawn once per
@@ -134,7 +134,7 @@ export type NewCalendarConnection = typeof calendarConnections.$inferInsert;
  * same event → one wins on UNIQUE, the other no-ops.
  *
  * `note_id` references the spawned note. If the user deletes the
- * note the ledger row stays — that is the signal "this event was
+ * note the ledger row stays, that is the signal "this event was
  * already handled; don't re-spawn".
  */
 export const spawnedCalendarEvents = sqliteTable(
@@ -167,7 +167,7 @@ export type NewSpawnedCalendarEvent = typeof spawnedCalendarEvents.$inferInsert;
 /**
  * Per-user preferences. v1 holds only the email-to-capture slug
  * (N-1, 2026-05-14). Row is lazy-created the first time the user
- * asks for their capture address — never on signup.
+ * asks for their capture address, never on signup.
  */
 export const userPreferences = sqliteTable(
   "user_preferences",

@@ -11,7 +11,7 @@ type Props = {
 /**
  * Audience picker for the Notes capture demo.
  *
- * Previous design (N·13): iOS-style segmented control — thick rounded
+ * Previous design (N·13): iOS-style segmented control, thick rounded
  * container border + solid black filled pill. Off-brand for Notes: too
  * much chrome, too many competing shapes, the heavy black read "control"
  * not "thought". DESIGN.md §10 refuses glow and heavy shadow elevation;
@@ -29,7 +29,7 @@ export function AudienceToggle({ domain, onChange }: Props) {
 
   return (
     <div className="flex flex-col items-start gap-3">
-      {/* Description line — changes with audience */}
+      {/* Description line, changes with audience */}
       <p
         style={{
           fontSize: 13.5,
@@ -52,7 +52,7 @@ export function AudienceToggle({ domain, onChange }: Props) {
         {active.description}
       </p>
 
-      {/* Tab row — no container border, underline-only active state */}
+      {/* Tab row, no container border, underline-only active state */}
       <LayoutGroup id="notes-audience-toggle">
         <div
           role="tablist"
@@ -85,7 +85,7 @@ export function AudienceToggle({ domain, onChange }: Props) {
               >
                 {pack.label}
 
-                {/* Sliding underline — shared layout element */}
+                {/* Sliding underline, shared layout element */}
                 {isActive && (
                   <motion.span
                     layoutId="notes-audience-underline"

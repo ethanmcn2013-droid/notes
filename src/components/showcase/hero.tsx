@@ -115,7 +115,7 @@ export function Hero() {
 
       <style>{`
         /* The pip blinks on the product's own caret rhythm
-           (notes-dot-caret, defined globally for the wordmark dot) — not
+           (notes-dot-caret, defined globally for the wordmark dot), not
            an invented pulse. Same gesture, same timing. */
         .note-hero-pip {
           animation: notes-dot-caret 1.1s steps(1, end) infinite;

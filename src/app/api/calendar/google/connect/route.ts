@@ -7,20 +7,20 @@ import { buildGoogleAuthUrl } from "@/server/calendar/google";
 import { calendarSpawnEnabled } from "@/server/calendar/feature-flag";
 
 /**
- * N·24 (Pattern 4) — Google Calendar OAuth: connect entrypoint.
+ * N·24 (Pattern 4), Google Calendar OAuth: connect entrypoint.
  *
  * GET /api/calendar/google/connect → 302 to Google's consent screen.
  *
  * Operator gating (handoff §6 recommended "per-user opt-in" but also
  * allowed env-flag): we ship BOTH. The route 404s when
- * `NOTES_CALENDAR_SPAWN_ENABLED` is not "1" — operator kill-switch
+ * `NOTES_CALENDAR_SPAWN_ENABLED` is not "1", operator kill-switch
  * across the fleet. When enabled, the route still requires the user
- * to land here intentionally (the account UI button) — that is the
+ * to land here intentionally (the account UI button), that is the
  * per-user opt-in. OFF by default at both gates.
  *
  * State param: random nonce + HMAC(nonce | userId) using
  * NOTES_CALENDAR_STATE_SECRET. The callback verifies the HMAC to
- * defeat CSRF on the redirect — Google echoes whatever state we
+ * defeat CSRF on the redirect, Google echoes whatever state we
  * send, and a forged callback could otherwise bind a stranger's
  * Google account to the victim's Notes account.
  */

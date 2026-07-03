@@ -3,7 +3,7 @@
  *
  * The shared Signal Studio account is one identity across the suite, but each
  * product's *sign-in moment* is rendered in that product's own register
- * (sanctioned by DESIGN.md §14 — "Notes renders the affordance in its own
+ * (sanctioned by DESIGN.md §14, "Notes renders the affordance in its own
  * register, protected aesthetic §11"). So the Notes auth surface speaks green,
  * not the suite indigo it would otherwise inherit from the root ClerkProvider.
  *
@@ -11,11 +11,11 @@
  * resilient across Clerk versions; `elements` overrides are kept light and
  * additive.
  *
- * Colour system: Notes runs two tiers — indigo (`--color-signal`) is the
+ * Colour system: Notes runs two tiers, indigo (`--color-signal`) is the
  * primary-action signal (the wordmark dot, the loader dot, the "Open the
  * notebook" CTA), and green (`--color-accent`) is the warm register +
  * secondary accents. So the auth widget keeps the *warm Notes register*
- * (paper, ink, Inter) but its primary button stays indigo — consistent with
+ * (paper, ink, Inter) but its primary button stays indigo, consistent with
  * the homepage CTA the user just came from.
  */
 export const notesClerkAppearance = {
@@ -32,13 +32,13 @@ export const notesClerkAppearance = {
     borderRadius: "10px",
   },
   elements: {
-    // Quiet, warm card — a hairline + a soft lift, not a heavy popover.
+    // Quiet, warm card, a hairline + a soft lift, not a heavy popover.
     card: {
       border: "1px solid #e3e6da",
       boxShadow:
         "0 1px 2px rgba(22,24,21,0.04), 0 18px 48px rgba(22,24,21,0.06)",
     },
-    // Plain-language button — no shouting caps, calm weight.
+    // Plain-language button, no shouting caps, calm weight.
     formButtonPrimary: {
       textTransform: "none",
       fontWeight: 550,

@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * Notes hero — "The Voice" (Approach C, intro reworked 2026-07-03, review 20).
+ * Notes hero, "The Voice" (Approach C, intro reworked 2026-07-03, review 20).
  *
  * Entry sequence: the word "notes" rises into place letter by letter, and the
- * caret DRAWS ITSELF at the end — a thin indigo cursor stroking up from the
+ * caret DRAWS ITSELF at the end, a thin indigo cursor stroking up from the
  * baseline, the way a cursor arrives where you're about to write. No dot slides
  * in, no squash-pulse. Once drawn, the caret blinks. Second act: voice zone
  * fades in below the hairline rule, three product phrases type and delete in a
- * loop. The wordmark caret and the voice caret blink together — brand anchor
+ * loop. The wordmark caret and the voice caret blink together, brand anchor
  * above, live composition below.
  *
  * Phrases (Approach C):
@@ -17,10 +17,10 @@
  *   "Not everything needs a task."
  *
  * SAFETY CONTRACT (§13):
- *   · All CSS fully scoped — every class and @keyframes prefixed `nhv-`.
- *   · In-flow only — no position:fixed, no inset:0, no high z-index.
+ *   · All CSS fully scoped, every class and @keyframes prefixed `nhv-`.
+ *   · In-flow only, no position:fixed, no inset:0, no high z-index.
  *   · All timers collected in `timers[]` and cleared on unmount.
- *   · Intro is pure CSS (letter rise + caret draw) — no rAF loop to leak.
+ *   · Intro is pure CSS (letter rise + caret draw), no rAF loop to leak.
  *   · prefers-reduced-motion → skips to phrase 3, final caret state, static.
  */
 
@@ -254,7 +254,7 @@ export function NotesHeroVoice() {
       aria-label="Signal Notes"
       ref={rootRef}
     >
-      {/* Corner chrome — TR status counter only. The TL wordmark was removed:
+      {/* Corner chrome, TR status counter only. The TL wordmark was removed:
           the site header already carries the signal studio · notes breadcrumb. */}
       <div className="nhv-chrome nhv-chrome-tr" aria-hidden>
         <span className="nhv-pip" />
@@ -288,7 +288,7 @@ export function NotesHeroVoice() {
         aria-atomic="true"
       >
         <span className="nhv-voice-inner">
-          <span className="nhv-voice-text" />{/* zero-width — no whitespace node */
+          <span className="nhv-voice-text" />{/* zero-width, no whitespace node */
           }<span className="nhv-voice-caret" />
         </span>
       </div>
@@ -353,7 +353,7 @@ const CSS = `
   letter-spacing: -.03em; color: var(--nhv-ink);
   padding-bottom: calc(var(--nhv-wm-size) * .25);
 }
-/* Hairline rule — full-bleed both sides via -100vw. Fades in with the word. */
+/* Hairline rule, full-bleed both sides via -100vw. Fades in with the word. */
 .nhv-composer::before {
   content: ''; position: absolute;
   left: -100vw; right: -100vw;
@@ -377,8 +377,8 @@ const CSS = `
 }
 
 /* ─── The mark: a caret that draws itself, then blinks ───────── */
-/* Born as a caret (never a dot). It strokes up from the baseline — the way a
-   cursor arrives where you're about to write — settles, then blinks. */
+/* Born as a caret (never a dot). It strokes up from the baseline, the way a
+   cursor arrives where you're about to write, settles, then blinks. */
 .nhv-mark {
   position: relative;
   width: .075em; height: .78em; border-radius: .02em;

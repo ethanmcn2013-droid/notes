@@ -61,7 +61,7 @@ export default function RootError({
             marginBottom: "1.5rem",
           }}
         >
-          Nothing was lost. Your notes are saved — this was a loading
+          Nothing was lost. Your notes are saved, this was a loading
           hiccup. Try again in a moment.
         </p>
         {error.digest ? (

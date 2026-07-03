@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Notes hero loader — "a held thought, awaiting input."
+ * Notes hero loader, "a held thought, awaiting input."
  *
  * The dot rolls in from off-screen left, assembling "notes" as it passes
  * each letter. It lands, squishes on impact, then morphs into a tall
@@ -9,8 +9,8 @@
  * brand gesture: capture clarity, waiting for you.
  *
  * SAFETY CONTRACT:
- *   · Fully scoped — every class and @keyframes is prefixed `ntl-`.
- *   · In-flow only — no position:fixed, no inset:0, no high z-index.
+ *   · Fully scoped, every class and @keyframes is prefixed `ntl-`.
+ *   · In-flow only, no position:fixed, no inset:0, no high z-index.
  *   · rAF loop cancels itself when all letters are settled.
  *   · prefers-reduced-motion → renders final caret state immediately.
  */

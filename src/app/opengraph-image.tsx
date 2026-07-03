@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 export const runtime = "edge";
 
 // Image metadata
-export const alt = "Signal Notes — capture clarity";
+export const alt = "Signal Notes, capture clarity";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -23,7 +23,7 @@ export default async function Image() {
           fontFamily: "ui-sans-serif, system-ui, sans-serif",
         }}
       >
-        {/* Subtle grid rule — a single horizontal line for visual grounding */}
+        {/* Subtle grid rule, a single horizontal line for visual grounding */}
         <div
           style={{
             position: "absolute",

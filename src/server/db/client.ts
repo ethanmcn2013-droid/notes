@@ -5,7 +5,7 @@ import * as schema from "./schema";
 
 type Db = LibSQLDatabase<typeof schema>;
 
-// Lazy init — defer the env-var check until the first DB call so that
+// Lazy init, defer the env-var check until the first DB call so that
 // build-time prerender + dev-without-keys both run cleanly. Queries
 // without a configured DB will still throw, just at call-time.
 

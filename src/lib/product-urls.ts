@@ -5,7 +5,7 @@
  * NEXT_PUBLIC_*_URL on Vercel if a domain is not yet wired.
  *
  * dig results 2026-05-12: tasks/roadmap/signal.signalstudio.ie all resolve
- * to Vercel IPs — safe to use as defaults.
+ * to Vercel IPs, safe to use as defaults.
  */
 export const STUDIO_URL =
   process.env.NEXT_PUBLIC_STUDIO_URL ?? "https://signalstudio.ie";

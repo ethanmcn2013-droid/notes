@@ -1,5 +1,5 @@
 /**
- * Account-export integration test — Signal Notes. GDPR Art. 20 portability.
+ * Account-export integration test · Signal Notes. GDPR Art. 20 portability.
  *
  * Runs the REAL `exportAccountData` against an in-memory libSQL DB with a
  * bystander user, asserting the export contains exactly the caller's rows,

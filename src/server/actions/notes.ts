@@ -38,7 +38,7 @@ export type NoteRead = Pick<
  * workspace, roadmap, task, and analytics surfaces must use future
  * creator-approved extract endpoints, not this raw note action.
  */
-// Module-local — a "use server" file may only *export* async
+// Module-local, a "use server" file may only *export* async
 // functions, so the client mirrors this ceiling via its own
 // constant rather than importing this one.
 const MAX_NOTE_BODY_CHARS = 10_000;
@@ -90,7 +90,7 @@ export async function createNote(body: string): Promise<NoteRead> {
  * this query is always scoped to the current Clerk user and must not be
  * reused for guest, public, workspace, roadmap, or analytics views.
  *
- * v1: no pagination — the stream is bounded by the user's own
+ * v1: no pagination, the stream is bounded by the user's own
  * notebook size. Pagination/virtualisation lands when a real user
  * crosses 500 notes.
  */
@@ -130,16 +130,16 @@ export async function listNotes(): Promise<NoteRead[]> {
  *     listNotes() stream).
  *   - Single-token queries: appended with * to enable prefix matching
  *     so "wedd" matches "wedding". Multi-token queries pass through
- *     verbatim — FTS5 implicit AND between tokens.
+ *     verbatim, FTS5 implicit AND between tokens.
  *   - Special MATCH chars (",", AND/OR/NOT) sanitised so a user typing
  *     a literal comma doesn't crash the query.
  *
- * Privacy guardrail: same as listNotes — every row is filtered to
+ * Privacy guardrail: same as listNotes, every row is filtered to
  * the current Clerk user. notes_fts.user_id is UNINDEXED but stored,
  * so the WHERE filter happens before MATCH ranking.
  *
  * Returns notes ordered by FTS5 rank, most-relevant first. Capped at
- * 100 results — Notes's stream UX shows a few results at a time, so
+ * 100 results, Notes's stream UX shows a few results at a time, so
  * paging beyond that is unnecessary.
  */
 export async function searchNotes(query: string): Promise<NoteRead[]> {
@@ -152,7 +152,7 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
   // Sanitise: drop quote delimiters, parentheses, punctuation,
   // FTS5 operator chars (* ^), and standalone boolean keywords that
   // would otherwise alter MATCH semantics in surprising ways. The
-  // search box is not a query-DSL prompt — keep it intent-only.
+  // search box is not a query-DSL prompt, keep it intent-only.
   const stripped = trimmed
     .replace(/["'(),:.;\\*^]+/g, " ")
     .replace(/\b(AND|OR|NOT|NEAR)\b/g, " ")
@@ -211,7 +211,7 @@ export async function deleteNote(id: string): Promise<void> {
 
 /**
  * Server action: draft an action extract from a note. The creator
- * authors the action wording deliberately — Notes never auto-detects
+ * authors the action wording deliberately, Notes never auto-detects
  * todos from raw note bodies (PRODUCT.md §8 refusal).
  *
  * The extract_body lives alongside the raw note. The cross-repo write
@@ -294,12 +294,12 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
  * 2026-05-12). Calls the Tasks endpoint with the drafted extract,
  * stores the resulting taskId on the note, returns the destination
  * workspace name + deep link so the UI can label "Sent to [workspace]
- * — open in Tasks."
+ *, open in Tasks."
  *
  * Privacy guardrail: only extract_body crosses the boundary. The raw
  * note body never leaves Notes.
  *
- * Idempotency: Tasks keys on (userId, noteId) — a repeat call returns
+ * Idempotency: Tasks keys on (userId, noteId), a repeat call returns
  * the same task instead of creating a duplicate. Safe to retry.
  */
 export type ExtractSendResult = {
@@ -320,7 +320,7 @@ export async function sendExtractToTasks(
       ? "https://tasks.signalstudio.ie"
       : null);
   if (!tasksUrlRaw) {
-    // Refuse the silent prod default outside production — a
+    // Refuse the silent prod default outside production, a
     // misconfigured preview env would otherwise write into prod
     // Tasks. Local dev / preview must set TASKS_API_URL explicitly.
     throw new Error(
@@ -336,7 +336,7 @@ export async function sendExtractToTasks(
   }
 
   // Read the note's extract so the network call sees the freshest
-  // creator-authored wording — not whatever the client passed.
+  // creator-authored wording, not whatever the client passed.
   const [note] = await db
     .select({
       id: notes.id,
@@ -372,7 +372,7 @@ export async function sendExtractToTasks(
     });
   } catch (err) {
     if (err instanceof Error && err.name === "TimeoutError") {
-      throw new Error("Tasks timed out — try again in a moment");
+      throw new Error("Tasks timed out, try again in a moment");
     }
     throw err;
   }
@@ -383,7 +383,7 @@ export async function sendExtractToTasks(
       const data = (await response.json()) as { error?: string };
       if (data.error) detail = data.error;
     } catch {
-      // ignore — keep the status-code fallback
+      // ignore, keep the status-code fallback
     }
     throw new Error(detail);
   }
@@ -395,14 +395,14 @@ export async function sendExtractToTasks(
     typeof (raw as Record<string, unknown>).taskId !== "string" ||
     typeof (raw as Record<string, unknown>).taskUrl !== "string"
   ) {
-    throw new Error("Tasks returned an invalid response — try again");
+    throw new Error("Tasks returned an invalid response, try again");
   }
   const result = raw as ExtractSendResult;
 
   // Persist the task id and archive the note Notes-side (RW-3a D1
   // semantics). The note leaves the active stream; listArchivedNotes()
   // surfaces it in the "In Tasks" section. The task in Tasks is
-  // independent — it is never deleted by un-promote.
+  // independent, it is never deleted by un-promote.
   const now2 = Date.now();
   const updated = await db
     .update(notes)
@@ -429,14 +429,14 @@ export async function sendExtractToTasks(
   try {
     revalidatePath("/app", "page");
   } catch {
-    // Non-fatal — the extract was sent and archived; the client
+    // Non-fatal, the extract was sent and archived; the client
     // will see the updated state on next natural refresh.
   }
   return { note: noteRow, result };
 }
 
 /**
- * RW-3a: Direct promote — the note body's first line becomes the task
+ * RW-3a: Direct promote, the note body's first line becomes the task
  * title without requiring an intermediate "Draft action" step.
  *
  * This is the gesture path (long-press on touch; hover ghost button on
@@ -449,7 +449,7 @@ export async function sendExtractToTasks(
  * Privacy guardrail: only the first line (extract) crosses the boundary,
  * never the full raw note body. Same as sendExtractToTasks.
  *
- * Idempotency: Tasks keys on (userId, noteId) — repeat calls return the
+ * Idempotency: Tasks keys on (userId, noteId), repeat calls return the
  * same task, not a duplicate. Safe to retry after a network failure.
  */
 export async function promoteNoteToTasks(
@@ -475,7 +475,7 @@ export async function promoteNoteToTasks(
     );
   }
 
-  // Read the note fresh — confirms ownership, gets the latest body.
+  // Read the note fresh, confirms ownership, gets the latest body.
   const [note] = await db
     .select({
       id: notes.id,
@@ -507,7 +507,7 @@ export async function promoteNoteToTasks(
   // Cap at 280 chars (same ceiling as extract_body).
   const taskTitle = firstLine.length > 280 ? firstLine.slice(0, 280) : firstLine;
 
-  // Cross-repo write — same endpoint + auth as sendExtractToTasks.
+  // Cross-repo write, same endpoint + auth as sendExtractToTasks.
   // extractBody is written ONLY after a successful Tasks response,
   // consolidated into the final archive update below. Writing it here
   // (before the fetch) was P0-1: a failed fetch left the note with
@@ -527,7 +527,7 @@ export async function promoteNoteToTasks(
     });
   } catch (err) {
     if (err instanceof Error && err.name === "TimeoutError") {
-      throw new Error("Tasks timed out — try again in a moment");
+      throw new Error("Tasks timed out, try again in a moment");
     }
     throw err;
   }
@@ -538,7 +538,7 @@ export async function promoteNoteToTasks(
       const data = (await response.json()) as { error?: string };
       if (data.error) detail = data.error;
     } catch {
-      // ignore — keep the status-code fallback
+      // ignore, keep the status-code fallback
     }
     throw new Error(detail);
   }
@@ -550,7 +550,7 @@ export async function promoteNoteToTasks(
     typeof (raw as Record<string, unknown>).taskId !== "string" ||
     typeof (raw as Record<string, unknown>).taskUrl !== "string"
   ) {
-    throw new Error("Tasks returned an invalid response — try again");
+    throw new Error("Tasks returned an invalid response, try again");
   }
   const result = raw as ExtractSendResult;
 
@@ -588,7 +588,7 @@ export async function promoteNoteToTasks(
   try {
     revalidatePath("/app", "page");
   } catch {
-    // Non-fatal — the promote completed; client sees state on next refresh.
+    // Non-fatal, the promote completed; client sees state on next refresh.
   }
   return { note: noteRow, result };
 }
@@ -598,7 +598,7 @@ export async function promoteNoteToTasks(
  *
  * Returns notes where archived_at IS NOT NULL AND promoted_task_id IS
  * NOT NULL, ordered newest-archived first. These are the notes Niamh
- * can find below the active stream, always — never hidden in a dump.
+ * can find below the active stream, always, never hidden in a dump.
  */
 export async function listArchivedNotes(): Promise<NoteRead[]> {
   if (isDemoMode()) return demoArchivedNotes();
@@ -630,15 +630,15 @@ export async function listArchivedNotes(): Promise<NoteRead[]> {
 }
 
 /**
- * RW-3a: Un-promote a note — clear archived_at and promoted_task_id,
+ * RW-3a: Un-promote a note, clear archived_at and promoted_task_id,
  * returning the note to the active stream.
  *
- * The task in Tasks is NOT deleted — it was intentionally created and
+ * The task in Tasks is NOT deleted, it was intentionally created and
  * Tasks owns it. This action only severs the Notes-side archive state.
  * Copy in the UI: "Note returned here. The task stays in Tasks."
  *
  * Un-promote is undoable via the existing undo-toast pattern (6s
- * window, same as delete). No confirm dialog — reversibility is built
+ * window, same as delete). No confirm dialog, reversibility is built
  * into the model.
  */
 export async function unPromoteNote(noteId: string): Promise<NoteRead> {

@@ -5,19 +5,19 @@ import { OtherWorkedExamples } from "@/components/worked-examples";
 import { SiteFooter } from "@/components/marketing/site-footer";
 
 export const metadata: Metadata = {
-  title: "Wedding planning — a venue meeting note — Signal Notes",
+  title: "Wedding planning, a venue meeting note · Signal Notes",
   description:
-    "A worked example. What a single Sunday-evening note looks like after a venue meeting — plain sentences, decisions, questions, the things that need a reply by Tuesday.",
+    "A worked example. What a single Sunday-evening note looks like after a venue meeting, plain sentences, decisions, questions, the things that need a reply by Tuesday.",
 };
 
 const NOTE = {
   capturedLabel: "Captured Sunday 7 May · 8:42pm",
-  title: "Harbour House visit — second walkthrough",
+  title: "Harbour House visit, second walkthrough",
   body: [
     "Sat down with Aoife & Conor after the second walkthrough at Harbour House. The room is right. The light at 5pm is right. The pricing is not yet right.",
     "",
     "What was said:",
-    "• Aoife loves the long room over the marquee option. Conor is on the fence — wants the marquee for the dance.",
+    "• Aoife loves the long room over the marquee option. Conor is on the fence, wants the marquee for the dance.",
     "• Niamh confirmed they can hold the date until 31 May. After that it goes back on the public calendar.",
     "• Deposit is €4,200, not €3,800. The website is wrong. She asked us to flag this to whoever asks.",
     "• Couple's parents want a Friday rehearsal dinner on site. Niamh said yes in principle but the kitchen needs to be cleared by 6pm Saturday.",
@@ -28,9 +28,9 @@ const NOTE = {
     "• I send a single follow-up email by Tuesday with the deposit number, the date hold, and the rehearsal dinner ask.",
     "",
     "What still needs an answer:",
-    "• Dietary list — Niamh asked four days ago. No reply has gone back. Aoife said she'd handle it by Wednesday.",
-    "• Photographer access — Harbour House restricts drone and a few of the corners. Need the list emailed across before we sign with Conleth.",
-    "• Final guest count — sitting at 84 invited, 71 confirmed, 9 unanswered. Conor's brother (the +1 question) still open.",
+    "• Dietary list, Niamh asked four days ago. No reply has gone back. Aoife said she'd handle it by Wednesday.",
+    "• Photographer access, Harbour House restricts drone and a few of the corners. Need the list emailed across before we sign with Conleth.",
+    "• Final guest count, sitting at 84 invited, 71 confirmed, 9 unanswered. Conor's brother (the +1 question) still open.",
     "",
     "Reading this back: the venue is decided in everything but the deposit. The deposit is decided in everything but the timing. The timing is decided in everything but the Friday dinner ask. Tuesday's email closes three things at once.",
   ].join("\n"),

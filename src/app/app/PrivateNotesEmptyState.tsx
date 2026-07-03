@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-// Dalí row 4 — trim. Seven lines became four. The cut lines repeated
+// Dalí row 4, trim. Seven lines became four. The cut lines repeated
 // other angles ("For things not ready" overlapped "Ideas before they
 // become decisions"; "For thoughts still forming" overlapped "A place
 // to think"; "Not everything needs to be shared" overlapped "Some
@@ -15,13 +15,13 @@ const PRIVATE_NOTES_EMPTY_LINES = [
   "Some things are only for you.",
 ] as const;
 
-// E7(b) — settled placeholder shown to users with ≥ this many notes.
+// E7(b), settled placeholder shown to users with ≥ this many notes.
 // At this point the user knows the app; the rotating poem is first-touch
 // guidance, not a permanent feature. The settled string is calm, not a CTA.
 const SETTLED_NOTE_THRESHOLD = 8;
 const SETTLED_LINE = "A place to think before you speak.";
 
-// Typewriter rotation tuning. Total cycle ≈ 18s per line — was 30s,
+// Typewriter rotation tuning. Total cycle ≈ 18s per line, was 30s,
 // trimmed for Dalí row 4 so a four-line rotation completes in ~72s
 // instead of ~3.5 minutes. The full pass is now short enough to
 // re-encounter a line within one writing session.

@@ -5,31 +5,31 @@ import { OtherWorkedExamples } from "@/components/worked-examples";
 import { SiteFooter } from "@/components/marketing/site-footer";
 
 export const metadata: Metadata = {
-  title: "A freelancer's evening — a studio note — Signal Notes",
+  title: "A freelancer's evening, a studio note · Signal Notes",
   description:
-    "A worked example. What a designer carrying three jobs writes after shutting the laptop — what the client said in passing, what was decided, the invoice still not sent.",
+    "A worked example. What a designer carrying three jobs writes after shutting the laptop, what the client said in passing, what was decided, the invoice still not sent.",
 };
 
 const NOTE = {
   capturedLabel: "Captured Wednesday 7 May · 6:40pm",
-  title: "Studio — where the three jobs actually are",
+  title: "Studio, where the three jobs actually are",
   body: [
     "Shut the laptop and opened this instead. Three live jobs, all at a different stage, and I keep carrying the status in my head. Writing it down so I stop doing it at 4am.",
     "",
-    "Maeve — bakery rebrand:",
+    "Maeve, bakery rebrand:",
     "• She wants three homepage hero options by Friday, not one. She said it in passing on the call, not in the email. It's still the job.",
     "• Logo's signed off. Don't reopen it. If she asks for “one more tweak”, the answer is a change request, not a yes.",
-    "• Print pack — the menu and the window vinyl go to the printer Monday. Miss Monday and the opening slips. That's her money, but it's my name on it.",
+    "• Print pack, the menu and the window vinyl go to the printer Monday. Miss Monday and the opening slips. That's her money, but it's my name on it.",
     "",
-    "Tom — restaurant site:",
+    "Tom, restaurant site:",
     "• Waiting on his photos for nine days. The build is done. I can't launch a food site with grey boxes. Chase once more, then park it and bill the milestone.",
     "• Deposit invoice still not paid. Eleven days. Last time it ran to thirty. Don't start the next stage until it clears.",
     "",
     "Studio, mine:",
     "• Q1 invoice still not sent. The work is done and delivered. Not sending it is just losing my own money politely. Send it tonight.",
-    "• Portfolio case study for the bakery — only worth doing while it's fresh. Two hours, not a week. Block Thursday morning.",
+    "• Portfolio case study for the bakery, only worth doing while it's fresh. Two hours, not a week. Block Thursday morning.",
     "",
-    "Reading it back: none of these are stuck on the work. They're stuck on me — the invoice I won't send, the chase I keep softening, the change I should price instead of absorb. The three Friday things are decisions, not tasks.",
+    "Reading it back: none of these are stuck on the work. They're stuck on me, the invoice I won't send, the chase I keep softening, the change I should price instead of absorb. The three Friday things are decisions, not tasks.",
   ].join("\n"),
   meta: "Captured in 8 minutes before dinner. Three became tasks the next morning: send both invoices, the three hero options for Maeve, and the Thursday case-study block.",
 };
@@ -264,7 +264,7 @@ export default function FreelanceStudioNotePage() {
                 Signal Tasks &rarr;
               </a>
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
-                Your notes become the workspace. The invoices, the hero options, the Thursday block — in one place.
+                Your notes become the workspace. The invoices, the hero options, the Thursday block, in one place.
               </p>
             </li>
             <li>

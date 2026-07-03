@@ -13,7 +13,7 @@ import { revokeGoogleToken } from "@/server/calendar/google";
  * function so it can be exercised end-to-end against an in-memory libSQL
  * DB (see account-erasure.test.ts). It clears all four user-keyed tables —
  * including `calendar_connections`, which holds long-lived Google refresh
- * tokens — and returns those tokens so we can revoke them at Google here.
+ * tokens, and returns those tokens so we can revoke them at Google here.
  *
  * Revocation is best-effort and runs AFTER the DB purge: a revoke failure
  * (network, already-expired token) must never block the deletion. The DB

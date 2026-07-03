@@ -1,25 +1,25 @@
 import type { MetadataRoute } from "next";
 
 /**
- * PWA manifest — Signal Notes.
+ * PWA manifest · Signal Notes.
  *
  * Notes is intentionally outside the suite visual register
- * (green/mustard/Inter — see DESIGN.md §11 and the locked palette
+ * (green/mustard/Inter, see DESIGN.md §11 and the locked palette
  * comment in globals.css). The manifest uses Notes' own paper
  * canvas (#fffefa) as background_color so the install splash and
  * standalone shell read as a notebook, not as suite paper white.
  *
- * theme_color stays #ffffff to match layout.tsx — keeps the
+ * theme_color stays #ffffff to match layout.tsx, keeps the
  * cross-domain address-bar transitions white→white.
  *
- * start_url goes to /app — the notebook landing — because that's
+ * start_url goes to /app, the notebook landing, because that's
  * where the value is. The single shortcut "My notes" honestly
  * names the destination (the notebook listing, not a blank
  * compose-from-scratch surface).
  *
  * Maskable icon at /icon1 (512×512) uses Notes' green accent
  * (#335f54) as the field so any Android adaptive mask reads as a
- * solid green silhouette with a paper "n" + indigo dot — preserves
+ * solid green silhouette with a paper "n" + indigo dot, preserves
  * Notes' own register at install time.
  */
 export default function manifest(): MetadataRoute.Manifest {

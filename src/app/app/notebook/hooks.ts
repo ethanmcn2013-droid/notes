@@ -131,7 +131,7 @@ export function useNoteSearch(
 // Internal helper: keep search-result debounce state colocated.
 function useStateInternal(query: string): [NoteRead[] | null, never] {
   const ref = { current: null as NoteRead[] | null };
-  // This helper is intentionally a thin shim — see callsite for usage.
+  // This helper is intentionally a thin shim, see callsite for usage.
   // Implementation handled in caller via direct useEffect; this just types the tuple.
   return [ref.current, undefined as never];
 }
@@ -178,7 +178,7 @@ export function useVoiceCapture({
   onStop,
 }: UseVoiceCaptureArgs): UseVoiceCaptureResult {
   // Resolved once on mount (client only) so first paint / SSR never
-  // touches window — keeps the field painting before the mic resolves.
+  // touches window, keeps the field painting before the mic resolves.
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const [message, setMessage] = useState<VoiceCaptureMessage | null>(null);
@@ -206,7 +206,7 @@ export function useVoiceCapture({
         try {
           rec.abort();
         } catch {
-          // abort() throws if it never started — safe to ignore.
+          // abort() throws if it never started, safe to ignore.
         }
         recognitionRef.current = null;
       }
@@ -219,7 +219,7 @@ export function useVoiceCapture({
       try {
         rec.stop();
       } catch {
-        // ignore — onend will still settle the listening flag.
+        // ignore, onend will still settle the listening flag.
       }
     }
   }, []);
@@ -269,7 +269,7 @@ export function useVoiceCapture({
       rec.start();
       setListening(true);
     } catch {
-      // start() throws if already running — reset to a known state.
+      // start() throws if already running, reset to a known state.
       recognitionRef.current = null;
       setListening(false);
       setMessage({ kind: "error" });

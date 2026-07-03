@@ -6,7 +6,7 @@ import { deleteCalendarConnection } from "@/server/actions/calendar";
 import { calendarSpawnEnabled } from "@/server/calendar/feature-flag";
 
 /**
- * N·24 (Pattern 4) — disconnect Google Calendar.
+ * N·24 (Pattern 4), disconnect Google Calendar.
  *
  * POST /api/calendar/google/disconnect
  *
@@ -17,7 +17,7 @@ import { calendarSpawnEnabled } from "@/server/calendar/feature-flag";
  * Token revocation at Google is intentionally NOT called here: the
  * refresh token simply stops being used; if the user wants to fully
  * revoke they do so from their Google account permissions page. This
- * keeps the disconnect a single-write idempotent action — no network
+ * keeps the disconnect a single-write idempotent action, no network
  * call that could fail and leave the UI in a half-state.
  */
 export const dynamic = "force-dynamic";

@@ -3,10 +3,10 @@ import Link from "next/link";
 /**
  * Single source of truth for the worked-example pages. Each page
  * renders <OtherWorkedExamples current="..." /> so adding a new
- * example wires it into every existing page automatically — no
+ * example wires it into every existing page automatically, no
  * per-page reciprocal-link edits, no drift between them.
  *
- * Server component, plain anchors — crawler/no-JS safe.
+ * Server component, plain anchors, crawler/no-JS safe.
  */
 export const WORKED_EXAMPLES = [
   {
@@ -36,7 +36,7 @@ export type WorkedExampleSlug = (typeof WORKED_EXAMPLES)[number]["slug"];
 /**
  * Maps a demo-audience domain (src/lib/domains.ts DomainId) to its
  * worked-example route, so the homepage hero CTA takes a visitor to
- * the example for the audience they picked in the toggle — their own
+ * the example for the audience they picked in the toggle, their own
  * use case, not a default. Keep in sync with DomainId.
  */
 export const WORKED_EXAMPLE_BY_DOMAIN: Record<

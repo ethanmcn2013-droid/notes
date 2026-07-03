@@ -5,22 +5,22 @@ import { OtherWorkedExamples } from "@/components/worked-examples";
 import { SiteFooter } from "@/components/marketing/site-footer";
 
 export const metadata: Metadata = {
-  title: "A building job — a site note — Signal Notes",
+  title: "A building job, a site note · Signal Notes",
   description:
-    "A worked example. What a contractor writes on the tailgate before the crew leaves — what was found, what was decided, what is still waiting on someone else.",
+    "A worked example. What a contractor writes on the tailgate before the crew leaves, what was found, what was decided, what is still waiting on someone else.",
 };
 
 const NOTE = {
   capturedLabel: "Captured Thursday 8 May · 5:10pm",
-  title: "Site walk — Maple Road extension, week 6",
+  title: "Site walk, Maple Road extension, week 6",
   body: [
-    "Walked the Maple Road job with Tom before the crew left. Roof's on, first fix nearly done. We're two days behind, not a week — recoverable if the windows land Tuesday.",
+    "Walked the Maple Road job with Tom before the crew left. Roof's on, first fix nearly done. We're two days behind, not a week, recoverable if the windows land Tuesday.",
     "",
     "What I found:",
-    "• Steel's in clean. Building control signed off the beam this morning — keep the cert with the file, the bank will ask for it.",
+    "• Steel's in clean. Building control signed off the beam this morning, keep the cert with the file, the bank will ask for it.",
     "• Kitchen floor level is out 18mm front to back. The left bay needs a re-pour. Half a day, not a disaster, but it pushes the tiling.",
     "• Client asked again about moving the side door 300mm. Third time. That changes the lintel and the drainage run. Not a free change.",
-    "• Skip is full. Booked the swap for Monday 7am — yard closes early for the bank holiday.",
+    "• Skip is full. Booked the swap for Monday 7am, yard closes early for the bank holiday.",
     "",
     "What I decided:",
     "• Windows chased. Supplier confirmed Tuesday morning delivery. If they slip again we lose the dry-in before Thursday's rain. I want that in writing.",
@@ -28,11 +28,11 @@ const NOTE = {
     "• The side-door change goes in writing with a price before anyone lifts a tool. No verbal yeses on this one.",
     "",
     "What still needs an answer:",
-    "• Electrician's first-fix date. He said “next week” — I need a day. Can't close the walls without it.",
+    "• Electrician's first-fix date. He said “next week”, I need a day. Can't close the walls without it.",
     "• Client's tile choice. Showroom visit was a fortnight ago and still nothing. Wednesday's tiling won't wait.",
     "• Final payment stage. We hit the agreed point at dry-in. The invoice goes the day the windows are in, not a week after like the last job.",
     "",
-    "Reading it back: the build is fine. The risks aren't the build — they're the three things waiting on other people. The windows, the sparks, the tile choice. Tuesday tells me whether Thursday holds.",
+    "Reading it back: the build is fine. The risks aren't the build, they're the three things waiting on other people. The windows, the sparks, the tile choice. Tuesday tells me whether Thursday holds.",
   ].join("\n"),
   meta: "Captured in 9 minutes on the tailgate. Three of these became tasks the next morning: chase the window delivery in writing, price the side-door change, invoice at dry-in.",
 };
@@ -266,7 +266,7 @@ export default function BuildingProjectNotePage() {
                 Signal Tasks &rarr;
               </a>
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--color-ink-quiet, #6f6f68)", lineHeight: 1.5 }}>
-                Your notes become the workspace. The window chase, the side-door price, the invoice — held in one place.
+                Your notes become the workspace. The window chase, the side-door price, the invoice, held in one place.
               </p>
             </li>
             <li>

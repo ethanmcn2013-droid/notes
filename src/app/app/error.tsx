@@ -48,7 +48,7 @@ export default function NotebookError({
             marginBottom: "1.25rem",
           }}
         >
-          Nothing was lost — your notes are saved. This was a loading
+          Nothing was lost, your notes are saved. This was a loading
           hiccup, not a deletion.
         </p>
         {error.digest ? (

@@ -1,5 +1,5 @@
 /**
- * NoteProvenanceChip — N·24 (Pattern 4) cross-cutting primitive.
+ * NoteProvenanceChip, N·24 (Pattern 4) cross-cutting primitive.
  *
  * The handoff §4 names two provenance affordances that converge on
  * the same chip shape:
@@ -10,7 +10,7 @@
  * disappear-on-interaction rule. One component, two colour tokens,
  * no extra design surface.
  *
- * Pattern 2 is not shipping in this cycle — the `image-match` branch
+ * Pattern 2 is not shipping in this cycle, the `image-match` branch
  * is wired so the OCR pass (Cycle 3) can use this primitive without
  * rebuilding it.
  *
@@ -22,7 +22,7 @@
  *
  * The disappear rule (Pattern 4): the calendar chip only renders
  * while the spawned note is untouched (createdAt === updatedAt).
- * That decision lives in the *caller* (NoteRow.tsx), not here — the
+ * That decision lives in the *caller* (NoteRow.tsx), not here, the
  * chip is a dumb pill.
  */
 

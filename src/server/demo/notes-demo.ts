@@ -7,8 +7,8 @@ import type { NoteRead } from "@/server/actions/notes";
  *
  * Used only when access-mode is demo/review (see lib/access-mode.ts). The
  * real Turso DB is never touched in that mode, so this is the *entire* world
- * a reviewer sees. It must feel like a real, lived-in notebook — calm
- * coordination for normal people — not a lorem-ipsum placeholder.
+ * a reviewer sees. It must feel like a real, lived-in notebook, calm
+ * coordination for normal people, not a lorem-ipsum placeholder.
  *
  * The cast of one person: a wedding-venue duty manager who also helps run a
  * small studio and is finishing a night course. Notes are written the way
@@ -38,14 +38,14 @@ type Seed = {
 const ACTIVE: Seed[] = [
   {
     id: "demo_n_01",
-    body: "Saturday wedding — Maria + James. Ceremony 2pm in the orchard, drinks on the terrace if it stays dry. Confirm marquee sides with the hire company by Thursday.",
+    body: "Saturday wedding, Maria + James. Ceremony 2pm in the orchard, drinks on the terrace if it stays dry. Confirm marquee sides with the hire company by Thursday.",
     ago: 35 * MIN,
     extractBody: "Confirm marquee sides with hire company before Thursday",
     promotedTaskId: "demo_task_marquee",
   },
   {
     id: "demo_n_02",
-    body: "Florist can do the arch but wants final stem count Monday. Maria leaning toward the looser, wilder look — fewer roses, more foliage.",
+    body: "Florist can do the arch but wants final stem count Monday. Maria leaning toward the looser, wilder look, fewer roses, more foliage.",
     ago: 2 * HOUR,
   },
   {
@@ -62,12 +62,12 @@ const ACTIVE: Seed[] = [
   },
   {
     id: "demo_n_05",
-    body: "Walk-in couple this morning — June 2027, ~80 guests, budget-conscious but lovely. Sent them the midweek rate. Follow up Friday if no reply.",
+    body: "Walk-in couple this morning, June 2027, ~80 guests, budget-conscious but lovely. Sent them the midweek rate. Follow up Friday if no reply.",
     ago: 1 * DAY + 3 * HOUR,
   },
   {
     id: "demo_n_06",
-    body: "Bar restock: tonic running low, order two extra cases before the weekend. Also the good olives — last delivery was short.",
+    body: "Bar restock: tonic running low, order two extra cases before the weekend. Also the good olives, last delivery was short.",
     ago: 1 * DAY + 6 * HOUR,
     extractBody: "Order 2 cases tonic + olives before weekend",
     promotedTaskId: "demo_task_restock",
@@ -101,7 +101,7 @@ const ACTIVE: Seed[] = [
 const ARCHIVED: Seed[] = [
   {
     id: "demo_n_a1",
-    body: "Maria asked about a late checkout for the bridal suite — Sunday 11am instead of 9. Said yes in principle, just needs to clear housekeeping.",
+    body: "Maria asked about a late checkout for the bridal suite, Sunday 11am instead of 9. Said yes in principle, just needs to clear housekeeping.",
     ago: 1 * DAY + 8 * HOUR,
     extractBody: "Clear Sunday 11am late checkout with housekeeping",
     promotedTaskId: "demo_task_checkout",
@@ -109,9 +109,9 @@ const ARCHIVED: Seed[] = [
   },
   {
     id: "demo_n_a2",
-    body: "Linen supplier rang — the order now ships Tuesday, not Friday. Fine for Saturday, but tight if anything slips.",
+    body: "Linen supplier rang, the order now ships Tuesday, not Friday. Fine for Saturday, but tight if anything slips.",
     ago: 2 * DAY + 5 * HOUR,
-    extractBody: "Chase linen order — now shipping Tuesday",
+    extractBody: "Chase linen order, now shipping Tuesday",
     promotedTaskId: "demo_task_linen",
     archived: true,
   },

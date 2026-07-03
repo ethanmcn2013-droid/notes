@@ -3,16 +3,16 @@
 import { useEffect } from "react";
 
 /**
- * FirstCaptureMoment — the one signature moment in Notes.
+ * FirstCaptureMoment, the one signature moment in Notes.
  *
  * Fires exactly once, ever: the first note a brand-new notebook receives.
  * The indigo pip (the wordmark/loader gesture) blooms at centre and a single
- * warm line settles beneath it — "Your notebook starts here." — then the whole
+ * warm line settles beneath it, "Your notebook starts here.", then the whole
  * thing fades. It is non-blocking (pointer-events: none), never repeats, and
  * extends the existing caret-dot signature rather than inventing a gimmick.
  *
  * Silence-by-default (PRODUCT.md §9) is preserved for every *subsequent*
- * capture — this is the single sanctioned exception, gated to once-ever and
+ * capture, this is the single sanctioned exception, gated to once-ever and
  * operator-disable-able via NEXT_PUBLIC_NOTES_FIRST_CAPTURE=off.
  *
  * Reduced motion: no bloom/scale; the line simply appears and holds.

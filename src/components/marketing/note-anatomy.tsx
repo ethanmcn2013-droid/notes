@@ -10,19 +10,19 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Anatomy of a note — the marketing decomposition.
+ * Anatomy of a note, the marketing decomposition.
  *
  * Modelled on Tasks's "Anatomy of a card" pattern (shared state-machine
  * choreography + numbered slot annotations + hover-spotlight + reduced-
- * motion fallback) — earns its own quieter register. Tasks loops every
+ * motion fallback), earns its own quieter register. Tasks loops every
  * ~15s with live-presence beats; Notes loops every ~11s with a long
  * settle pause built in. M·05 *settle* (the slowest motion in the suite
- * by design) is honored — no infinite ticking, no live presence, no
+ * by design) is honored, no infinite ticking, no live presence, no
  * typing animation (Notes never simulates typing).
  *
- * Five honest slots — title, preview, stamp, tasks-extract pip, action
+ * Five honest slots, title, preview, stamp, tasks-extract pip, action
  * draft. The title is the first line of the body, NOT a
- * separate field — that is the differentiator and the anatomy makes it
+ * separate field, that is the differentiator and the anatomy makes it
  * visible in the type scale (semibold first line, soft preview after).
  *
  * Reduced-motion: choreography pauses at base state; annotations still
@@ -32,7 +32,7 @@ import { useEffect, useRef, useState } from "react";
 const EASE = {
   outExpo: [0.16, 1, 0.3, 1] as const,
   inOut: [0.65, 0, 0.35, 1] as const,
-  // Notes intentionally avoids back.out — overshoot reads as too playful
+  // Notes intentionally avoids back.out, overshoot reads as too playful
   // against the warm paper aesthetic.
   glide: [0.32, 0.72, 0, 1] as const,
 };
@@ -45,7 +45,7 @@ const ANN: { slot: Slot; label: string; note: string }[] = [
   {
     slot: "title",
     label: "Title",
-    note: "First line, semibold. No prompt, no required field — the title is the body.",
+    note: "First line, semibold. No prompt, no required field, the title is the body.",
   },
   {
     slot: "preview",
@@ -65,7 +65,7 @@ const ANN: { slot: Slot; label: string; note: string }[] = [
   {
     slot: "promote",
     label: "Action draft",
-    note: "Only appears when you choose it. Notes can send work to Tasks — never the other way.",
+    note: "Only appears when you choose it. Notes can send work to Tasks, never the other way.",
   },
 ];
 
@@ -74,7 +74,7 @@ type ExtractState = "idle" | "drafted" | "sent";
 type Stage = {
   // Highlight beats (mirrors hover-spotlight, but driven by the loop)
   hi: Slot | null;
-  // Stamp counter — 3m, 4m, 5m … steps once during the beat
+  // Stamp counter, 3m, 4m, 5m … steps once during the beat
   stamp: number;
   // Tasks-extract pip lifecycle
   extract: ExtractState;
@@ -96,7 +96,7 @@ function useChoreography(active: boolean, reduced: boolean) {
 
   useEffect(() => {
     // Reduced-motion: hold at BASE. MotionConfig only suppresses
-    // motion/react animation durations — the setState loop still fires
+    // motion/react animation durations, the setState loop still fires
     // unless we gate it here. WCAG 2.3.3 spirit.
     if (!active || reduced) {
       setStage(BASE);
@@ -111,23 +111,23 @@ function useChoreography(active: boolean, reduced: boolean) {
         await wait(800);
         if (cancelled) return;
 
-        // Beat 1 — title highlights
+        // Beat 1, title highlights
         setStage((s) => ({ ...s, hi: "title" }));
         await wait(1200);
         if (cancelled) return;
 
-        // Beat 2 — preview highlights
+        // Beat 2, preview highlights
         setStage((s) => ({ ...s, hi: "preview" }));
         await wait(1200);
         if (cancelled) return;
 
-        // Beat 3 — stamp ticks 3m → 4m, briefly highlights
+        // Beat 3, stamp ticks 3m → 4m, briefly highlights
         setStage((s) => ({ ...s, hi: "stamp", stamp: s.stamp + 1 }));
         await wait(1200);
         if (cancelled) return;
 
-        // Beat 4 — extract lifecycle: idle → drafted → sent.
-        // Drafted holds 1400ms — long enough for visitor to register that
+        // Beat 4, extract lifecycle: idle → drafted → sent.
+        // Drafted holds 1400ms, long enough for visitor to register that
         // a note can live in a "shaped but not sent" middle state, which
         // is the most pedagogically valuable beat in this loop.
         setStage((s) => ({ ...s, hi: "extract", extract: "drafted" }));
@@ -137,7 +137,7 @@ function useChoreography(active: boolean, reduced: boolean) {
         await wait(800);
         if (cancelled) return;
 
-        // Beat 5 — long-press affordance pulses once
+        // Beat 5, long-press affordance pulses once
         setStage((s) => ({
           ...s,
           hi: "promote",
@@ -146,7 +146,7 @@ function useChoreography(active: boolean, reduced: boolean) {
         await wait(1400);
         if (cancelled) return;
 
-        // Long settle — let the visitor read the finished row at rest
+        // Long settle, let the visitor read the finished row at rest
         setStage((s) => ({ ...s, hi: null }));
         await wait(2400);
         if (cancelled) return;
@@ -195,7 +195,7 @@ function DemoRow({
     onFocus: () => setActive(s),
     onBlur: () => setActive(null),
     tabIndex: 0,
-    // role="group" not "button" — these are labelled regions that respond
+    // role="group" not "button", these are labelled regions that respond
     // to focus, not controls activated by Enter/Space. Avoids WCAG 2.1.1
     // false-promise of a button role with no key handler.
     role: "group" as const,
@@ -228,7 +228,7 @@ function DemoRow({
       }}
       onMouseLeave={() => setActive(null)}
     >
-      {/* Ambient mustard glow — intensifies on focus + on extract beat */}
+      {/* Ambient mustard glow, intensifies on focus + on extract beat */}
       <motion.div
         aria-hidden
         className="absolute inset-0 -z-10 rounded-3xl"
@@ -263,7 +263,7 @@ function DemoRow({
           animate={revealInView ? "visible" : "hidden"}
           className="space-y-2"
         >
-          {/* Slot 1 — Title (first line, semibold) */}
+          {/* Slot 1, Title (first line, semibold) */}
           <motion.div variants={itemVariants}>
             <motion.div
               {...hoverProps("title")}
@@ -276,12 +276,12 @@ function DemoRow({
                 className="text-[15px] leading-[1.35] font-semibold"
                 style={{ color: "var(--color-ink)" }}
               >
-                Call the band — first dance is non-negotiable
+                Call the band, first dance is non-negotiable
               </p>
             </motion.div>
           </motion.div>
 
-          {/* Slot 2 — Preview (rest of body) */}
+          {/* Slot 2, Preview (rest of body) */}
           <motion.div variants={itemVariants}>
             <motion.div
               {...hoverProps("preview")}
@@ -300,7 +300,7 @@ function DemoRow({
             </motion.div>
           </motion.div>
 
-          {/* Slot 3+4 — Meta row: stamp + extract pip */}
+          {/* Slot 3+4, Meta row: stamp + extract pip */}
           <motion.div variants={itemVariants}>
             <div className="mt-3 flex items-center justify-between gap-3">
               {/* Stamp */}
@@ -326,7 +326,7 @@ function DemoRow({
                 </AnimatePresence>
               </motion.div>
 
-              {/* Extract pip — quiet, drafted (ring), or sent (filled+ring) */}
+              {/* Extract pip, quiet, drafted (ring), or sent (filled+ring) */}
               <motion.div
                 {...hoverProps("extract")}
                 animate={spotlightAnim("extract", active, stage.hi)}
@@ -351,7 +351,7 @@ function DemoRow({
                     ) : null}
                   </AnimatePresence>
                   <div className="relative flex h-3 w-3 items-center justify-center">
-                    {/* Idle dot — faint */}
+                    {/* Idle dot, faint */}
                     <motion.span
                       aria-hidden
                       className="absolute inset-0 rounded-full"
@@ -363,7 +363,7 @@ function DemoRow({
                       }}
                       transition={{ duration: 0.32, ease: EASE.inOut }}
                     />
-                    {/* Ring — appears at drafted, persists at sent */}
+                    {/* Ring, appears at drafted, persists at sent */}
                     <motion.span
                       aria-hidden
                       className="absolute inset-[-3px] rounded-full"
@@ -393,7 +393,7 @@ function DemoRow({
             </div>
           </motion.div>
 
-          {/* Slot 5 — chosen action affordance (gentle scale pulse on beat) */}
+          {/* Slot 5, chosen action affordance (gentle scale pulse on beat) */}
           <motion.div variants={itemVariants}>
             <motion.div
               {...hoverProps("promote")}
@@ -402,7 +402,7 @@ function DemoRow({
               className="cursor-default rounded-md px-2 py-1 -mx-2 -my-1 mt-1"
               style={{ outline: "none" }}
             >
-              {/* Dalí row 13 — "Shape it first" promoted to equal
+              {/* Dalí row 13, "Shape it first" promoted to equal
                   weight with "Send to Tasks". The shaping step is the
                   editorial move that makes Notes' lifecycle honest;
                   the send is the dispatch. Both surfaced, same type,
@@ -553,7 +553,7 @@ export function NoteAnatomy() {
             className="mt-5 max-w-[58ch] text-[15.5px] leading-[1.55]"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            A note is the body. The title is its first line — the same string,
+            A note is the body. The title is its first line, the same string,
             no prompt. The stamp stays relative. The pip on the right says
             whether the note has crossed into Tasks. Sending work is one-way,
             and always chosen by you.
@@ -562,8 +562,8 @@ export function NoteAnatomy() {
             className="mt-3 max-w-[58ch] text-[13px] leading-[1.55]"
             style={{ color: "var(--color-ink-faint)" }}
           >
-            Watch the row settle, or hover a number — on the row or in the
-            list — to see them speak.
+            Watch the row settle, or hover a number, on the row or in the
+            list, to see them speak.
           </p>
         </div>
 

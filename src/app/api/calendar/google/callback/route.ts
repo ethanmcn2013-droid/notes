@@ -7,7 +7,7 @@ import { saveCalendarConnection } from "@/server/actions/calendar";
 import { calendarSpawnEnabled } from "@/server/calendar/feature-flag";
 
 /**
- * N·24 (Pattern 4) — Google Calendar OAuth: callback.
+ * N·24 (Pattern 4), Google Calendar OAuth: callback.
  *
  * GET /api/calendar/google/callback?code=...&state=...
  *

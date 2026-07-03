@@ -6,7 +6,7 @@ import { runCalendarSpawnSweep } from "@/server/actions/calendar";
 import { calendarSpawnEnabled } from "@/server/calendar/feature-flag";
 
 /**
- * N·24 (Pattern 4) — calendar spawn cron.
+ * N·24 (Pattern 4), calendar spawn cron.
  *
  * GET /api/calendar/cron
  *
@@ -23,7 +23,7 @@ import { calendarSpawnEnabled } from "@/server/calendar/feature-flag";
  * Refusal anchor (PRODUCT.md §9 "Zero notifications"): a successful
  * sweep produces zero side-effects beyond the spawned notes
  * themselves. No email, no push, no slack, no "your meeting starts
- * soon" — the note arrives in the stream and the user discovers it
+ * soon", the note arrives in the stream and the user discovers it
  * on their next foreground.
  */
 export const dynamic = "force-dynamic";

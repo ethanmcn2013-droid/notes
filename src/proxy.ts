@@ -22,17 +22,17 @@ import { isDemoMode } from "@/lib/access-mode";
  *
  * ── Layer 2 · Seamless ecosystem redirect (DESIGN.md §14) ────────────
  * Authed visitors landing on M routes are redirected to /app (the
- * notebook). This is routing + nav presentation only — session infra
+ * notebook). This is routing + nav presentation only, session infra
  * is unchanged.
  *
  * M routes (notes.signalstudio.ie): / (+ /method /pricing /about if
  * they ever exist). Per Layer 0 allowlist.
  *
  * NOT redirected (pass-through):
- *   A = /app, /app/*        — the authed destination itself
+ *   A = /app, /app/*       , the authed destination itself
  *   X = /sign-in, /sign-up, /api/*, /og/*, static assets
  *   C = /wedding-planning, /building-project, /teaching-week,
- *       /freelance-studio   — audience showcase pages, publicly linked
+ *       /freelance-studio  , audience showcase pages, publicly linked
  *
  * Preview escape hatch (DESIGN.md §14):
  *   cookie signal_preview_public=1  OR  ?preview=public suppresses
@@ -64,7 +64,7 @@ const isPublicRoute = createRouteMatcher([
   // session. They must bypass clerkMiddleware or Resend's POST gets
   // 307-redirected to /sign-in and the mail loop silently fails.
   "/api/capture/email",
-  // N·24 (Pattern 4) — calendar OAuth callback arrives from Google
+  // N·24 (Pattern 4), calendar OAuth callback arrives from Google
   // with no Clerk cookie; userId is recovered from a state-HMAC.
   // Cron is bearer-authed by Vercel. /connect and /disconnect stay
   // session-gated (the user must be signed in to opt in).
@@ -81,7 +81,7 @@ const clerkConfigured = Boolean(
 
 const productionProxy = clerkMiddleware(
   async (auth, req) => {
-    // Demo/Review mode: the whole app — including /app/* — is publicly
+    // Demo/Review mode: the whole app, including /app/*, is publicly
     // reachable. No Clerk session exists; the server auth layer resolves to
     // the synthetic demo user bound to in-memory seed data. We still let
     // clerkMiddleware run (so auth() stays callable on public pages), but we
@@ -91,7 +91,7 @@ const productionProxy = clerkMiddleware(
 
     if (!clerkConfigured) {
       // Fail CLOSED in production. A prod deploy missing Clerk keys must
-      // not silently serve /app unauthenticated — the proxy is the edge
+      // not silently serve /app unauthenticated, the proxy is the edge
       // backstop; requireUser() also fails closed server-side. Locally we
       // still pass through so dev runs before keys are provisioned.
       if (process.env.NODE_ENV === "production") {

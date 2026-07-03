@@ -6,7 +6,7 @@ import { ManageIdentityButton } from "@/components/account/manage-identity-butto
 import { isDemoMode } from "@/lib/access-mode";
 
 export const metadata: Metadata = {
-  title: "Account — Signal Notes",
+  title: "Account · Signal Notes",
   description: "Account management.",
 };
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
  * /app/account
  *
  * The Account surface in Notes. Only the destructive delete lives
- * here — Clerk owns identity, and Notes has no other per-user
+ * here, Clerk owns identity, and Notes has no other per-user
  * settings to surface.
  */
 export default async function AccountPage() {
@@ -40,7 +40,7 @@ export default async function AccountPage() {
         Your Signal account
       </h1>
       <p className="mb-7 max-w-[560px] text-[15px] leading-[1.6] text-ink-soft">
-        Signed in as <span className="font-medium text-ink">{email}</span> — one
+        Signed in as <span className="font-medium text-ink">{email}</span>, one
         account across Notes, Tasks, Timeline, and Signal. Notes keeps only what
         you write; your password and sign-in methods live in your Signal
         account.

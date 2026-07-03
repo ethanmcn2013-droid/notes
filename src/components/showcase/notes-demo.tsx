@@ -54,7 +54,7 @@ async function typeText(
 type Props = { domain?: DomainId };
 
 /**
- * NotesDemo — the live capture demo on the Notes marketing page.
+ * NotesDemo, the live capture demo on the Notes marketing page.
  *
  * Performs the product's core act: a thought is typed into the capture
  * field character-by-character (natural rhythm, punctuation pauses, blinking
@@ -136,7 +136,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           if (!live()) break;
           const cap = captures[i];
 
-          // ① Empty capture field appears with blinking cursor — "about to type"
+          // ① Empty capture field appears with blinking cursor, "about to type"
           setCaptureShown(true);
           setIsTyping(true);
           await waitMs(420);
@@ -146,11 +146,11 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           const ok = await typeText(cap.text, setCaptureText, live);
           if (!ok || !live()) break;
 
-          // ③ Hold — full thought on screen, cursor still blinking
+          // ③ Hold, full thought on screen, cursor still blinking
           await waitMs(880);
           if (!live()) break;
 
-          // ④ Cursor disappears (commit moment — Enter key mental-model)
+          // ④ Cursor disappears (commit moment, Enter key mental-model)
           setIsTyping(false);
           await waitMs(180);
           if (!live()) break;
@@ -193,7 +193,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
     <div className="notebook-demo">
       <section
         className="notebook"
-        aria-label="Signal Notes — a look at the notebook"
+        aria-label="Signal Notes, a look at the notebook"
         style={{ minHeight: 0 }}
       >
         {/* Top bar: wordmark + search */}
@@ -358,7 +358,7 @@ export function NotesDemo({ domain = "wedding" }: Props = {}) {
           from { opacity: 0; transform: translateY(5px); }
           to   { opacity: 1; transform: translateY(0);   }
         }
-        /* Exit: commit moment — field rises gently away */
+        /* Exit: commit moment, field rises gently away */
         .demo-capture-text[data-committing="true"] {
           animation: demo-text-out 200ms cubic-bezier(0.4, 0, 1, 1) both;
         }

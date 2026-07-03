@@ -1,8 +1,8 @@
 /**
- * Notes /app loading boundary — wordmark identity loader.
+ * Notes /app loading boundary, wordmark identity loader.
  *
  * Server Component, zero JS, inlined keyframes so motion paints with
- * the first HTML chunk — survives the cross-origin pre-CSS window
+ * the first HTML chunk, survives the cross-origin pre-CSS window
  * during sibling-product jumps.
  *
  * Choreography:
@@ -20,10 +20,10 @@
  * caret stops blinking.
  *
  * Loading canon (2026-07-01 review, pitch 7): the mark's dot becomes
- * the canonical sharp caret — a held cursor, 1.1s steps(1,end) on/off.
+ * the canonical sharp caret, a held cursor, 1.1s steps(1,end) on/off.
  * No blank notebook line is drawn before the real notebook shell
- * exists. After a real 5s wait one calm line appears — "Opening the
- * notebook" — with role="status" aria-live="polite".
+ * exists. After a real 5s wait one calm line appears, "Opening the
+ * notebook", with role="status" aria-live="polite".
  */
 import { LongWaitStatus } from "@/components/system/long-wait-status";
 
@@ -71,7 +71,7 @@ export default function NotesLoading() {
         ))}
         <span
           style={{
-            // The canonical Notes caret — a sharp held cursor, not a dot
+            // The canonical Notes caret, a sharp held cursor, not a dot
             // (BRAND.md §4). Hard px so it cannot balloon pre-hydration.
             display: "inline-block",
             width: 3,

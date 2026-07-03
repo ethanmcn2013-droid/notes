@@ -4,12 +4,12 @@ import { db } from "@/server/db/client";
 import { exportAccountData } from "@/server/account-export";
 
 /**
- * GET /api/account/export — Signal Notes.
+ * GET /api/account/export · Signal Notes.
  *
  * GDPR Art. 20 data portability: the signed-in user downloads a complete,
  * machine-readable (JSON) copy of everything Notes holds for them. Authed;
  * a user can only export their own footprint (keyed by their Clerk userId,
- * never a client-supplied id). The OAuth refresh token is omitted — see
+ * never a client-supplied id). The OAuth refresh token is omitted, see
  * account-export.ts.
  */
 export async function GET() {

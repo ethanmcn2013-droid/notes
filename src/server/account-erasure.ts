@@ -11,7 +11,7 @@ import * as schema from "./db/schema";
 /**
  * Database handle accepted by {@link eraseAccountData}. Typed against the
  * full schema so the function can run against the production singleton OR
- * an in-memory test DB — the seam that makes erasure provably testable
+ * an in-memory test DB, the seam that makes erasure provably testable
  * (see account-erasure.test.ts).
  */
 export type ErasureDb = LibSQLDatabase<typeof schema>;
@@ -28,8 +28,8 @@ export type ErasureDb = LibSQLDatabase<typeof schema>;
  *
  * ── Why this changed ──────────────────────────────────────────────────
  * The previous erasure deleted only `notes` + `user_preferences`. It left
- * `calendar_connections` — which stores a long-lived Google OAuth
- * **refresh token** (`refresh_token NOT NULL`) — and `spawned_calendar_events`
+ * `calendar_connections`, which stores a long-lived Google OAuth
+ * **refresh token** (`refresh_token NOT NULL`), and `spawned_calendar_events`
  * behind. A deleted user's refresh token survived and could still mint
  * access tokens against their calendar. That is both a standing-credential
  * security hole and a GDPR Art. 17 breach. This function now clears all

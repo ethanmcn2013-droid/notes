@@ -1,6 +1,6 @@
 import type { NoteRead } from "@/server/actions/notes";
 
-// Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts — kept in
+// Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts, kept in
 // sync by hand because a "use server" module can't export a const.
 export const MAX_NOTE_BODY_CHARS = 10_000;
 
@@ -36,7 +36,7 @@ export function normalizeForSearch(s: string) {
 export function friendlyError(err: unknown, fallback: string): string {
   if (!(err instanceof Error)) return fallback;
   if (err.name === "UnauthorizedError" || /not authenticated/i.test(err.message)) {
-    return "Your session expired — sign in again.";
+    return "Your session expired, sign in again.";
   }
   return err.message || fallback;
 }

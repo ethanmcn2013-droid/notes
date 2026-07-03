@@ -1,12 +1,12 @@
 /**
- * Account-erasure integration test — Signal Notes. GDPR right-to-erasure /
+ * Account-erasure integration test · Signal Notes. GDPR right-to-erasure /
  * App Store 5.1.1(v) guard.
  *
  * Runs the REAL `eraseAccountData` against a real in-memory libSQL DB
  * across all four user-keyed tables, with a second "bystander" user whose
  * rows must survive. The load-bearing assertion is that
- * `calendar_connections` — which holds a long-lived Google OAuth refresh
- * token — is fully cleared and the token is surfaced for revocation. A
+ * `calendar_connections`, which holds a long-lived Google OAuth refresh
+ * token, is fully cleared and the token is surfaced for revocation. A
  * regression that drops the calendar deletes (the bug this fixes) fails here.
  *
  * Notes has no `tsx`; this runs under Node's native TS type-stripping, the
@@ -97,7 +97,7 @@ test("erasure clears all four user-keyed tables and returns the calendar token",
     // The OAuth refresh token must be surfaced for revocation.
     assert.deepEqual(refreshTokens, ["REFRESH-TARGET"]);
 
-    // Zero residual rows for the target across every table — including the
+    // Zero residual rows for the target across every table, including the
     // calendar tables the old erasure left behind.
     for (const where of [
       "notes WHERE user_id='u-target'",

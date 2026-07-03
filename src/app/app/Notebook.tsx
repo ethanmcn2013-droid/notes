@@ -33,7 +33,7 @@ import {
 } from "@/server/actions/notes";
 import { TASKS_URL } from "@/lib/product-urls";
 
-// The Tasks app entry — the destination of the one-way edge. Used as the
+// The Tasks app entry, the destination of the one-way edge. Used as the
 // always-available "Open in Tasks" target for promoted notes whose precise
 // task URL isn't in this session's sentResults (e.g. after a reload), so the
 // ecosystem hop is never a dead end.
@@ -41,7 +41,7 @@ const TASKS_APP_URL = `${TASKS_URL.replace(/\/+$/, "")}/app`;
 
 /**
  * Warm the cross-subdomain hop on intent (hover/focus) so moving from the
- * notebook into Tasks feels instant — the suite-arrows pattern, applied to
+ * notebook into Tasks feels instant, the suite-arrows pattern, applied to
  * the "Open in Tasks" edge. Idempotent; safe to call repeatedly.
  */
 function prefetchHop(url: string) {
@@ -54,7 +54,7 @@ function prefetchHop(url: string) {
   document.head.appendChild(link);
 }
 
-// Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts — kept in
+// Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts, kept in
 // sync by hand because a "use server" module can't export a const.
 const MAX_NOTE_BODY_CHARS = 10_000;
 
@@ -84,7 +84,7 @@ function normalizeForSearch(s: string) {
 function friendlyError(err: unknown, fallback: string): string {
   if (!(err instanceof Error)) return fallback;
   if (err.name === "UnauthorizedError" || /not authenticated/i.test(err.message)) {
-    return "Your session expired — sign in again.";
+    return "Your session expired, sign in again.";
   }
   return err.message || fallback;
 }
@@ -143,7 +143,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const [archivedNotes, setArchivedNotes] = useState<NoteRead[]>(initialArchivedNotes);
   const [openId, setOpenId] = useState<string | null>(null);
   // Ref-mirror of openId for stable access inside long-lived keydown handlers
-  // (Caravaggio walkover row 2 — Cmd/Ctrl+Backspace delete).
+  // (Caravaggio walkover row 2, Cmd/Ctrl+Backspace delete).
   const openIdRef = useRef<string | null>(null);
   useEffect(() => {
     openIdRef.current = openId;
@@ -152,7 +152,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
-  // The one signature moment — fires once, ever, on the first note a
+  // The one signature moment, fires once, ever, on the first note a
   // brand-new notebook receives (see FirstCaptureMoment).
   const [firstCapture, setFirstCapture] = useState(false);
   const [editingExtractFor, setEditingExtractFor] = useState<string | null>(null);
@@ -177,12 +177,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const [archivedOpen, setArchivedOpen] = useState(false);
   // unpromotingIds: tracks which archived notes are being un-promoted
   const [unpromotingIds, setUnpromotingIds] = useState<Set<string>>(new Set());
-  // E2 — in-panel success state: shows confirmation text inside the open-note
+  // E2, in-panel success state: shows confirmation text inside the open-note
   // panel for ~800ms before setOpenId(null) closes it. Keyed by note id so
   // rapid-fire opens don't stale. null = no confirmation showing.
   const [openNoteConfirmId, setOpenNoteConfirmId] = useState<string | null>(null);
   const openNoteConfirmTimerRef = useRef<number | null>(null);
-  // E2 (UX a11y) — always-mounted polite SR announcer. Empty until a send
+  // E2 (UX a11y), always-mounted polite SR announcer. Empty until a send
   // succeeds; NVDA/TalkBack only announce a live region whose text changes
   // while it is already mounted, so this string (not the conditional visible
   // receipt) carries the screen-reader confirmation. Shared by both the
@@ -193,10 +193,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   const notesRef = useRef<NoteRead[]>(initialNotes);
 
   // Caravaggio walkover row 3: the persistent "Long-press any note…" nudge
-  // was removed — the product that refuses tutorials ships no tutorial. The
+  // was removed, the product that refuses tutorials ships no tutorial. The
   // ghost `→ Tasks` button on hover (fine pointers) plus long-press tray
   // (coarse pointers) are the affordance. The session-scoped misfire toast
-  // that briefly piggy-backed on this surface was also retired — it named
+  // that briefly piggy-backed on this surface was also retired, it named
   // a keystroke (⌘↵) the product did not bind, and a tutorial-as-toast is
   // still a tutorial.
 
@@ -211,7 +211,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     new Map(),
   );
   const promoteToastTimerRef = useRef<number | null>(null);
-  // E5 — SR-only mirror for the stream count string.
+  // E5, SR-only mirror for the stream count string.
   // aria-live on the visible count causes redundant announcements on
   // unrelated re-renders; a dedicated hidden span fires only on count change.
   const srCountRef = useRef<HTMLSpanElement | null>(null);
@@ -221,7 +221,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   // Touch start coords for move-threshold check
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // P3-1: Deterministic first-paint focus — cursor ready, nothing highlighted.
+  // P3-1: Deterministic first-paint focus, cursor ready, nothing highlighted.
   useEffect(() => {
     const el = captureRef.current;
     if (!el) return;
@@ -296,12 +296,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Keyboard note navigation — utility pass 2026-05-18.
+  // Keyboard note navigation, utility pass 2026-05-18.
   // j / ArrowDown → next note, k / ArrowUp → previous, Enter/Space open
   // (native <button>), Esc closes the open note (or exits the search box
   // back to the list). Mirrors the existing Cmd/K idiom. Reads live DOM so
   // it always tracks the rendered (filtered) list with no stale closures.
-  // No new styling — reuses the app's existing focus-visible ring.
+  // No new styling, reuses the app's existing focus-visible ring.
   useEffect(() => {
     const isTypingTarget = (el: EventTarget | null) => {
       const n = el as HTMLElement | null;
@@ -350,7 +350,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     return () => document.removeEventListener("keydown", onNav);
   }, []);
 
-  // Cmd/Ctrl+Backspace — delete the open note from the keyboard.
+  // Cmd/Ctrl+Backspace, delete the open note from the keyboard.
   // Caravaggio walkover row 2: Delete moved out of the always-visible
   // open-note panel chrome. Long-press on the row tray and this keyboard
   // shortcut are the two surviving paths so the open-note panel stays
@@ -431,7 +431,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
   // ── Promote toast helpers ────────────────────────────────────────
 
-  // The bottom promote toast is now error-only — success cases use the
+  // The bottom promote toast is now error-only, success cases use the
   // row's own fade-to-"In Tasks" gesture (row-level paths) or the in-panel
   // receipt (open-note paths), with the SR announcer below carrying the
   // screen-reader confirmation. Silence-by-default per PRODUCT.md §9.
@@ -516,7 +516,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           });
           showPromoteToast({
             kind: "error",
-            message: "Couldn't add to Tasks — tap to try again",
+            message: "Couldn't add to Tasks, tap to try again",
             noteId,
           });
         }
@@ -650,10 +650,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
   // ── Existing note actions ────────────────────────────────────────
 
-  // `andPromote` — the one-keystroke line→task handoff (⌘/Ctrl+Enter in
+  // `andPromote`, the one-keystroke line→task handoff (⌘/Ctrl+Enter in
   // the capture box): the draft saves through the normal path, then the
   // saved note promotes to Tasks in the same stroke. Promotion waits for
-  // the real server id — the optimistic temp id never crosses the
+  // the real server id, the optimistic temp id never crosses the
   // cross-repo boundary.
   const commit = useCallback((opts?: { andPromote?: boolean }) => {
     const body = draft.trim();
@@ -888,7 +888,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   );
 
   // Two-step send (escape hatch for notes needing extract shaping).
-  // E2 — single confirm mechanism shared by both Send-to-Tasks paths.
+  // E2, single confirm mechanism shared by both Send-to-Tasks paths.
   // Shows the in-panel receipt + drives the SR announcer, then closes the
   // open-note panel after 800ms. The later PROMOTE_GRACE_MS close is a
   // no-op once this has already nulled openId (guarded at its callsite).
@@ -934,7 +934,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             const without = prev.filter((n) => n.id !== noteId);
             return [updated, ...without];
           });
-          // No bottom toast — the in-panel receipt (beginOpenNoteConfirm)
+          // No bottom toast, the in-panel receipt (beginOpenNoteConfirm)
           // is the single visible confirmation, and it carries the SR
           // announce too. Silence-by-default per PRODUCT.md §9.
           // Keep the note in the active stream so the open-note panel (and
@@ -966,9 +966,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
         setDraft("");
         return;
       }
-      // ⌘/Ctrl+Enter — the line you just wrote becomes a task, one
+      // ⌘/Ctrl+Enter, the line you just wrote becomes a task, one
       // stroke, no dialog. Deliberate by definition: the user pressed
-      // the promote chord (PRODUCT.md §8 — never automatic).
+      // the promote chord (PRODUCT.md §8, never automatic).
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         commit({ andPromote: true });
@@ -1015,7 +1015,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
   // Open-note promote (button in the open-note panel controls).
   // E2: show in-panel confirmation for ~800ms at the point of attention
-  // before closing the panel — the bottom toast was missed because the
+  // before closing the panel, the bottom toast was missed because the
   // panel vanished under the user's eyes on the same click.
   const promoteFromOpenNote = useCallback(
     (noteId: string) => {
@@ -1026,12 +1026,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
     [executePromote, beginOpenNoteConfirm]
   );
 
-  // ⌘/Ctrl+Enter outside the capture box — the same one-keystroke
+  // ⌘/Ctrl+Enter outside the capture box, the same one-keystroke
   // handoff on a focused note row (j/k navigation) or the open note.
   // Mirrors the ⌘⌫ delete handler's shape: live DOM read, typing
   // targets excluded (the capture textarea binds its own chord, the
   // extract input keeps plain Enter). Optimistic temp ids and rows
-  // already promoting are skipped — the chord never double-fires and
+  // already promoting are skipped, the chord never double-fires and
   // never sends an id the server doesn't know.
   useEffect(() => {
     const isTypingTarget = (el: EventTarget | null) => {
@@ -1136,8 +1136,8 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
               {voice.message.kind === "denied"
                 ? "Voice needs microphone access. Allow it in your browser, or just type."
                 : voice.message.kind === "no-speech"
-                  ? "Didn’t catch that — tap the mic and try again, or type."
-                  : "Voice isn’t available right now — type your note instead."}
+                  ? "Didn’t catch that, tap the mic and try again, or type."
+                  : "Voice isn’t available right now, type your note instead."}
             </p>
           )}
           <p className="capture-hint">
@@ -1152,9 +1152,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
         <div className="stream-head">
           <span>Stream</span>
-          {/* E5 — canonical count string.
+          {/* E5, canonical count string.
               Unfiltered: "N notes" (or "1 note").
-              Filtered:   "N of M" — only shown when filter is active AND
+              Filtered:   "N of M", only shown when filter is active AND
               the result count differs from total (kill the identity case
               "X of X" which adds noise without information). */}
           {notes.length > 0 && (
@@ -1165,7 +1165,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             </span>
           )}
         </div>
-        {/* E5 — SR-only mirror for the stream count. Dedicated span with
+        {/* E5, SR-only mirror for the stream count. Dedicated span with
             aria-live so announcements fire on count change without
             polluting every unrelated re-render that touches the visible span. */}
         <span
@@ -1198,12 +1198,12 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             const isOpen = openId === note.id;
             const isPromoting = promotingIds.has(note.id);
             const hasFeedback = pendingFeedbackIds.has(note.id);
-            // Tray hides the moment a promote is in flight — prevents a
+            // Tray hides the moment a promote is in flight, prevents a
             // second tap on an already-succeeding note (false error toast).
             const hasTray = activeTrayId === note.id && !isPromoting;
             return (
               <li key={note.id} className="note-list-item">
-                {/* Note row — the main clickable target */}
+                {/* Note row, the main clickable target */}
                 <div className="note-row-wrapper">
                   <button
                     type="button"
@@ -1216,7 +1216,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                       .filter(Boolean)
                       .join(" ")}
                     onClick={(e) => {
-                      // Don't open/close if tray is showing — the tray
+                      // Don't open/close if tray is showing, the tray
                       // handles the confirm.
                       if (hasTray) {
                         e.stopPropagation();
@@ -1249,13 +1249,13 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                         <span aria-label="In Tasks" className="note-dot--sent" />
                       )}
                       {!isPromoting && note.extractBody && !note.promotedTaskId && (
-                        <span aria-label="Extract drafted — not yet in Tasks" className="note-dot" />
+                        <span aria-label="Extract drafted, not yet in Tasks" className="note-dot" />
                       )}
-                      {/* N·24 (Pattern 4) — calendar provenance pill.
+                      {/* N·24 (Pattern 4), calendar provenance pill.
                           Renders only while the spawned note is untouched
                           (updatedAt === createdAt). The moment the user
                           types into the note, updatedAt drifts and the
-                          pill disappears — the disappear-on-interaction
+                          pill disappears, the disappear-on-interaction
                           rule from handoff §2 Pattern 4. */}
                       {!isPromoting &&
                         note.source === "calendar" &&
@@ -1270,7 +1270,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                     </span>
                   </button>
 
-                  {/* Pointer hover ghost button — "→ Tasks" */}
+                  {/* Pointer hover ghost button, "→ Tasks" */}
                   {/* Only shown on non-touch pointer devices via CSS.
                       Does not appear when the note is already promoting. */}
                   {!isPromoting && (
@@ -1338,11 +1338,11 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           })}
         </ol>
 
-        {/* Always-mounted polite announcer — empty until success so the
+        {/* Always-mounted polite announcer, empty until success so the
             screen reader reliably announces the change (NVDA/TalkBack
             ignore live regions that mount already-populated). Lives at
             the section root so row-level promotes (no open note) still
-            announce — the bottom success toast was retired as the visible
+            announce, the bottom success toast was retired as the visible
             confirmation, this carries the SR signal in its place. */}
         <span className="sr-only" aria-live="polite" aria-atomic="true">
           {srConfirm}
@@ -1351,10 +1351,10 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
           <article className="open-note" aria-label="Open note" id={`note-panel-${openNote.id}`}>
             {/* Caravaggio walkover row 2 + row 13:
                 Open-note panel reduces to body + a single corner indicator.
-                Delete is no longer always-visible chrome — it lives on
+                Delete is no longer always-visible chrome, it lives on
                 long-press (touch) and ⌘⌫ / Ctrl⌫ (keyboard). The corner
                 now shows the "In Tasks" label when relevant and nothing
-                otherwise — the icon-only "Send to Tasks" arrow was cut so
+                otherwise, the icon-only "Send to Tasks" arrow was cut so
                 "Send as-is" / "Shape & send" below the body are the single
                 canonical shape (not the third sibling on the open note).
                 Equal-weight siblings live inline below the body so they
@@ -1371,7 +1371,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             </div>
             <p className="open-note-body">{openNote.body}</p>
 
-            {/* Row 13 — equal-weight siblings for the not-yet-extracted path.
+            {/* Row 13, equal-weight siblings for the not-yet-extracted path.
                 "Send as-is" is the canonical promote action; "Shape & send"
                 opens the rename input inline. They sit below the body so
                 neither outweighs the other. Hidden once the user has either
@@ -1404,7 +1404,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                 </div>
               )}
 
-            {/* E2 — in-panel success confirmation shown at the point of
+            {/* E2, in-panel success confirmation shown at the point of
                 attention for ~800ms before the panel closes. Ink-faint
                 so it reads as a receipt, not a celebration. */}
             {openNoteConfirmId === openNote.id && (
@@ -1425,7 +1425,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                   value={draftAction}
                   onChange={(event) => setDraftAction(event.target.value)}
                   onKeyDown={(event) => onExtractKeyDown(event, openNote.id)}
-                  placeholder="Type the action wording — be deliberate."
+                  placeholder="Type the action wording, be deliberate."
                   maxLength={280}
                   spellCheck
                   autoComplete="off"
@@ -1497,7 +1497,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                     /* Caravaggio walkover row 2: Edit + Remove collapse
                        behind an overflow control that reveals on hover
                        (pointer) or focus-within (keyboard). The summary
-                       is a 16x16 ellipsis button — keyboard-reachable,
+                       is a 16x16 ellipsis button, keyboard-reachable,
                        screen-reader labelled, and never raises rest
                        weight. Touch users open it via tap-toggle. */
                     <div
@@ -1544,7 +1544,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
             {extractError && (
               <div role="alert" className="extract-error">
                 <span>{extractError}</span>
-                {/* E2 — retry affordance mirrors promoteToast Retry pattern.
+                {/* E2, retry affordance mirrors promoteToast Retry pattern.
                     Re-invokes sendExtractToTasks so the error is not a dead end. */}
                 <button
                   type="button"
@@ -1598,7 +1598,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                 {archivedNotes.map((note) => {
                   const sent = sentResults.get(note.id);
                   // Persistent hop: the precise task URL when this session sent
-                  // it, otherwise the Tasks app entry — so the edge is never a
+                  // it, otherwise the Tasks app entry, so the edge is never a
                   // dead end after a reload.
                   const hopUrl = sent?.taskUrl ?? TASKS_APP_URL;
                   const isUnpromoting = unpromotingIds.has(note.id);
@@ -1679,7 +1679,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       )}
 
       {/* ── Promote toast (error path only) ──────────────────────────
-          Success cases are silent at this surface — the row gesture and
+          Success cases are silent at this surface, the row gesture and
           the in-panel receipt are the visible confirmations, srConfirm
           carries the SR announce. This toast remains for error-with-Retry,
           where the in-panel receipt does not fire and a dead-end would
@@ -1709,7 +1709,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
       {/* ── Right rail (authed state) ────────────────────────────
           Marketing copy (headline + promise) is removed in authed
-          view — user already bought in. The four metadata rows give
+          view, user already bought in. The four metadata rows give
           the rail its weight; a quiet reassurance line (Geist Mono,
           11px, ink-faint) anchors the bottom without competing. */}
       <aside className="product product--authed">

@@ -8,7 +8,7 @@ import { userPreferences } from "@/server/db/schema";
 import { notesProEnabled } from "@/server/entitlements";
 import { isDemoMode } from "@/lib/access-mode";
 
-// Server-only config — not NEXT_PUBLIC because this value is only ever
+// Server-only config, not NEXT_PUBLIC because this value is only ever
 // used inside server actions and never needs to appear in client bundles.
 // Rename env var to NOTES_CAPTURE_DOMAIN on Vercel (see operator note in
 // src/app/api/capture/email/route.ts). The NEXT_PUBLIC_ variant still
@@ -39,7 +39,7 @@ export type CaptureEmailResult =
  *      env must be set). Until DNS/Resend is configured, we hide the
  *      address rather than show one that silently drops mail.
  *
- * Row is lazy-created on first ok call — never seeded at signup, so
+ * Row is lazy-created on first ok call, never seeded at signup, so
  * the cost (a single INSERT) only lands on users who actually want
  * this feature AND can use it.
  */
@@ -91,7 +91,7 @@ export async function getCaptureEmail(): Promise<CaptureEmailResult> {
 }
 
 /**
- * Rotate the user's capture slug — useful if the address leaked to
+ * Rotate the user's capture slug, useful if the address leaked to
  * a public mailing list. The old address stops resolving immediately
  * after this returns. Tier-gated.
  */
@@ -115,7 +115,7 @@ export async function regenerateCaptureSlug(): Promise<CaptureEmailResult> {
         });
       next = candidate;
     } catch {
-      // captureSlug unique constraint may collide — retry.
+      // captureSlug unique constraint may collide, retry.
     }
   }
   if (!next) {

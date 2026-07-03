@@ -11,7 +11,7 @@ import { notesProEnabled } from "@/server/entitlements";
  *
  * Generic provider-shape webhook: accepts a normalized JSON body
  * with { to, from, subject, text }. The `to` address is parsed for
- * the slug — `capture-<slug>@notes.signalstudio.ie` — which maps
+ * the slug, `capture-<slug>@notes.signalstudio.ie`, which maps
  * back to a Clerk userId via user_preferences.
  *
  * Operator setup (NOT yet done at time of commit):
@@ -26,7 +26,7 @@ import { notesProEnabled } from "@/server/entitlements";
  *          not NEXT_PUBLIC so it stays out of client bundles)
  *
  * Until those land, the endpoint returns 401 on every call. That's
- * the right shape — no inbound mail means no inbound mail.
+ * the right shape, no inbound mail means no inbound mail.
  *
  * Privacy guardrail: the From address is recorded only inside the
  * note body's first line ("from: ..."). It is never extracted into
@@ -46,7 +46,7 @@ type InboundPayload = {
 const MAX_BODY_BYTES = 256 * 1024;
 // Mirrors MAX_NOTE_BODY_CHARS in server/actions/notes.ts. Inbound
 // mail inserts directly (not via createNote), so it enforces the
-// same per-note ceiling — truncated, not rejected, since the sender
+// same per-note ceiling, truncated, not rejected, since the sender
 // never sees an error response.
 const MAX_NOTE_BODY_CHARS = 10_000;
 const THROTTLE_WINDOW_MS = 60_000;
@@ -180,13 +180,13 @@ export async function POST(req: Request) {
 
   const userId = found[0]?.userId;
   if (!userId) {
-    // Slug doesn't map to anyone — silently 202 so spam doesn't
+    // Slug doesn't map to anyone, silently 202 so spam doesn't
     // signal which slugs exist.
     return NextResponse.json({ ok: true, accepted: false }, { status: 202 });
   }
 
   // Delivery-time tier recheck. The slug was issued while the user
-  // held workspace+, but entitlements expire — a workspace→free
+  // held workspace+, but entitlements expire, a workspace→free
   // downgrade must stop capture-by-email, not keep a paid feature
   // live until the slug is manually rotated. notesProEnabled
   // fail-closes to `free` on a Turso error (suite doctrine: an
