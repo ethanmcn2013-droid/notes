@@ -119,7 +119,7 @@ export default function TeachingWeekNotePage() {
           padding: "72px 24px 120px",
         }}
       >
-        <Eyebrow>Signal Notes · A worked example</Eyebrow>
+        <Eyebrow>Notes · A worked example</Eyebrow>
         <h1
           style={{
             fontSize: "clamp(2rem, 1.4rem + 2.6vw, 2.8rem)",
