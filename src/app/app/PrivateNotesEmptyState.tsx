@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 // things are only for you"). What's left covers four distinct angles:
 // voice, time, mind, ownership.
 const PRIVATE_NOTES_EMPTY_LINES = [
-  "Writings you can’t say out loud.",
+  "Things you can’t say out loud.",
   "Ideas before they become decisions.",
   "A place to think before you speak.",
   "Some things are only for you.",

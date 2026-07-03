@@ -24,7 +24,7 @@ export function NotesDemo() {
 
         <div className="nd-body">
           <p className="nd-line nd-l1">Met the florist about the wedding.</p>
-          <p className="nd-line nd-l2">Peonies might be out of season &mdash;</p>
+          <p className="nd-line nd-l2">Peonies might be out of season…</p>
           <p className="nd-line nd-l3">
             ask about ranunculus instead
             <span className="nd-caret" />

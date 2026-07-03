@@ -102,5 +102,5 @@ export default async function AnatomyPage() {
 export const metadata = {
   title: "Anatomy of a note · Signal Notes",
   description:
-    "Five honest slots: title, preview, stamp, pip, draft. The decomposition behind the three-second capture promise.",
+    "Five honest slots: title, preview, stamp, pip, draft. The five parts behind the three-second capture promise.",
 };

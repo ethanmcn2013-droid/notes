@@ -75,7 +75,7 @@ export function SiteFooter() {
             className="mt-4 max-w-xs text-[13.5px] leading-relaxed"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            Capture clarity for the thought before it becomes work.
+            Catch the thought before it becomes work.
           </p>
           <p
             className="mt-4 text-[12px]"

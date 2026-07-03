@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 export const runtime = "edge";
 
 // Image metadata
-export const alt = "Signal Notes, capture clarity";
+export const alt = "Signal Notes, before it fades";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -102,7 +102,7 @@ export default async function Image() {
             letterSpacing: "0em",
           }}
         >
-          capture clarity
+          before it fades
         </div>
       </div>
     ),

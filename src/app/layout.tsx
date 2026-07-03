@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Notes · capture clarity",
+  title: "Notes · before it fades",
   description:
     "A private place for thoughts before they become work. Write it down in three seconds. Decide later what becomes work.",
   metadataBase: new URL(
@@ -37,13 +37,13 @@ export const metadata: Metadata = {
   ),
   manifest: "/manifest.webmanifest",
   openGraph: {
-    title: "Notes · capture clarity",
+    title: "Notes · before it fades",
     description: "A private place for thoughts before they become work.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Notes · capture clarity",
+    title: "Notes · before it fades",
     description: "A private place for thoughts before they become work.",
   },
 };
