@@ -1,14 +1,15 @@
 "use client";
 
 /**
- * Notes hero — "The Voice" (Approach C).
+ * Notes hero — "The Voice" (Approach C, intro reworked 2026-07-03, review 20).
  *
- * Entry sequence: dot rolls in from off-screen left, letter-rise rAF loop
- * assembles "notes" as the dot passes each letter center, dot morphs into
- * a tall caret and blinks. Second act: voice zone fades in below hairline
- * rule, three product phrases type and delete in a loop. The wordmark caret
- * and the voice caret blink simultaneously — brand anchor above, live
- * composition below.
+ * Entry sequence: the word "notes" rises into place letter by letter, and the
+ * caret DRAWS ITSELF at the end — a thin indigo cursor stroking up from the
+ * baseline, the way a cursor arrives where you're about to write. No dot slides
+ * in, no squash-pulse. Once drawn, the caret blinks. Second act: voice zone
+ * fades in below the hairline rule, three product phrases type and delete in a
+ * loop. The wordmark caret and the voice caret blink together — brand anchor
+ * above, live composition below.
  *
  * Phrases (Approach C):
  *   "Write it here first."
@@ -19,11 +20,16 @@
  *   · All CSS fully scoped — every class and @keyframes prefixed `nhv-`.
  *   · In-flow only — no position:fixed, no inset:0, no high z-index.
  *   · All timers collected in `timers[]` and cleared on unmount.
- *   · rAF loop cancelled on unmount; self-cancels when all letters settled.
+ *   · Intro is pure CSS (letter rise + caret draw) — no rAF loop to leak.
  *   · prefers-reduced-motion → skips to phrase 3, final caret state, static.
  */
 
 import { useEffect, useRef } from "react";
+
+// Letter-rise stagger (must match the CSS animation durations below).
+const RISE_START_MS = 180;
+const RISE_STEP_MS = 90;
+const LETTER_COUNT = 5; // "notes"
 
 export function NotesHeroVoice() {
   const rootRef = useRef<HTMLElement>(null);
@@ -46,7 +52,9 @@ export function NotesHeroVoice() {
     const STATUS_LABELS = ["READY", "1 / 3", "2 / 3", "3 / 3", "CAPTURE CLARITY"] as const;
 
     // timing (ms)
-    const ENTRY_SETTLE_MS   = 5600;  // wait for roll-in + morph + settle
+    // Word settles by ~RISE_START + (LETTER_COUNT-1)*RISE_STEP + rise dur (~420),
+    // caret draws just after; give the whole intro a calm beat before the voice.
+    const ENTRY_SETTLE_MS   = 2200;
     const VOICE_FADE_IN_MS  = 420;   // voice zone opacity 0→1
     const PRE_TYPE_PAUSE_MS = 380;   // pause before first char of a phrase
     const CARET_BREATHE_MS  = 700;   // hold with blinking caret before phrase 1
@@ -65,24 +73,15 @@ export function NotesHeroVoice() {
     const DELETE_BASE_MS = 22;
     const DELETE_VAR_MS  = 8;
 
-    // letter rise
-    const RISE_MS   = 280;
-    const RISE_LEAD = 80;  // px ahead of mark center to trigger rise
-
     // ── Elements ───────────────────────────────────────────────────────
-    const composerEl  = root.querySelector<HTMLElement>(".nhv-composer");
     const wordEl      = root.querySelector<HTMLElement>(".nhv-word");
-    const markEl      = root.querySelector<HTMLElement>(".nhv-mark");
     const voiceZoneEl = root.querySelector<HTMLElement>(".nhv-voice-zone");
     const voiceTextEl = root.querySelector<HTMLElement>(".nhv-voice-text");
     const voiceCaretEl = root.querySelector<HTMLElement>(".nhv-voice-caret");
     const captionEl   = root.querySelector<HTMLElement>(".nhv-caption");
     const statusTREl  = root.querySelector<HTMLElement>(".nhv-status-tr");
 
-    if (
-      !composerEl || !wordEl || !markEl || !voiceZoneEl ||
-      !voiceTextEl || !voiceCaretEl || !captionEl
-    ) return;
+    if (!wordEl || !voiceZoneEl || !voiceTextEl || !voiceCaretEl || !captionEl) return;
 
     const letterEls = [...wordEl.querySelectorAll<HTMLElement>(".nhv-letter")];
 
@@ -90,6 +89,7 @@ export function NotesHeroVoice() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       letterEls.forEach((el) => {
+        el.style.animation = "none";
         el.style.opacity = "1";
         el.style.transform = "translateY(0)";
       });
@@ -106,7 +106,6 @@ export function NotesHeroVoice() {
     // ── Cleanup state ──────────────────────────────────────────────────
     let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    let rafId = 0;
 
     // ── Helpers ────────────────────────────────────────────────────────
     const wait = (ms: number): Promise<void> =>
@@ -119,73 +118,15 @@ export function NotesHeroVoice() {
     const rand = (base: number, variance: number) =>
       base + (Math.random() * 2 - 1) * variance;
 
-    // ── Letter rise rAF loop ────────────────────────────────────────────
-    // Ported verbatim from NotesHeroLoader: watches mark's live x-position
-    // and triggers each letter's rise (translateY 115%→0) as the dot passes
-    // within RISE_LEAD px of the letter center.
-    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-
-    const start = performance.now();
-    const risenAt: Array<number | null> = new Array(letterEls.length).fill(null);
-    let centers: number[] = [];
-
-    const measure = () => {
-      const cl = composerEl.getBoundingClientRect().left;
-      centers = letterEls.map((el) => {
-        const r = el.getBoundingClientRect();
-        return r.left + r.width / 2 - cl;
-      });
-    };
-
-    const frame = () => {
-      const elapsed = performance.now() - start;
-      const cl = composerEl.getBoundingClientRect().left;
-      const mr = markEl.getBoundingClientRect();
-      const markX = mr.left + mr.width / 2 - cl;
-      const markOpacity = parseFloat(getComputedStyle(markEl).opacity);
-
-      let allDone = true;
-
-      letterEls.forEach((el, i) => {
-        const lx = centers[i];
-        if (lx === undefined) { allDone = false; return; }
-
-        const distance = lx - markX;
-        if (risenAt[i] === null && markOpacity > 0.2 && distance < RISE_LEAD) {
-          risenAt[i] = elapsed;
-        }
-        if (risenAt[i] === null) {
-          el.style.opacity = "0";
-          el.style.transform = "translateY(115%)";
-          allDone = false;
-          return;
-        }
-
-        const timeSinceRise = elapsed - risenAt[i]!;
-        let p = Math.min(1, Math.max(0, timeSinceRise / RISE_MS));
-        if (p < 1) allDone = false;
-        p = easeOutCubic(p);
-        el.style.opacity = p.toString();
-        el.style.transform = `translateY(${(1 - p) * 115}%)`;
-      });
-
-      if (!allDone) {
-        rafId = requestAnimationFrame(frame);
-      } else {
-        // All letters settled — entry complete
-        if (statusTREl) statusTREl.textContent = STATUS_LABELS[0];
-      }
-    };
-
-    rafId = requestAnimationFrame(() => {
-      measure();
-      rafId = requestAnimationFrame(frame);
-    });
-    window.addEventListener("resize", measure);
+    // The word rises and the caret draws entirely in CSS. Once the last letter
+    // is up, flip the status counter to READY.
+    const introDoneMs = RISE_START_MS + (LETTER_COUNT - 1) * RISE_STEP_MS + 480;
+    const readyTimer = setTimeout(() => {
+      if (!cancelled && statusTREl) statusTREl.textContent = STATUS_LABELS[0];
+    }, introDoneMs);
+    timers.push(readyTimer);
 
     // ── Voice loop helpers ──────────────────────────────────────────────
-    // Status fires on first visible character — not before the pre-type
-    // dead zone, so counter always corresponds to text on screen.
     const typePhrase = async (text: string, phraseIdx: number) => {
       voiceTextEl.textContent = "";
       voiceCaretEl.className = "nhv-voice-caret active";
@@ -224,8 +165,6 @@ export function NotesHeroVoice() {
         voiceTextEl.textContent = text;
         await wait(rand(DELETE_BASE_MS, DELETE_VAR_MS));
       }
-      // Hide caret when text clears — no orphaned blinking cursor during
-      // inter-phrase / loop-gap pauses.
       voiceCaretEl.className = "nhv-voice-caret";
     };
 
@@ -239,9 +178,6 @@ export function NotesHeroVoice() {
       captionEl.style.opacity = "1";
       await wait(CAPTION_FADE_MS / 2);
 
-      // "capture clarity." landing: brief color pulse stone→near-ink→stone.
-      // ~750ms total; plays during the hold; barely perceptible, just enough
-      // weight to mark the line's arrival.
       if (newText === CAPTIONS[2]) {
         await wait(80);
         if (cancelled) return;
@@ -259,13 +195,10 @@ export function NotesHeroVoice() {
 
     // ── Voice loop ──────────────────────────────────────────────────────
     const voiceLoop = async () => {
-      // Both carets blink simultaneously throughout: wordmark caret above
-      // as brand anchor, voice caret below as live composition.
       voiceZoneEl.style.transition = `opacity ${VOICE_FADE_IN_MS}ms cubic-bezier(.22,.7,.2,1)`;
       voiceZoneEl.style.opacity = "1";
       await wait(VOICE_FADE_IN_MS);
 
-      // Breathing room: caret blinks alone before first phrase types.
       voiceCaretEl.className = "nhv-voice-caret active";
       await wait(CARET_BREATHE_MS);
 
@@ -274,13 +207,12 @@ export function NotesHeroVoice() {
           if (cancelled) return;
           const isLast = i === PHRASES.length - 1;
 
-          // Status update fires inside typePhrase on first character.
           await typePhrase(PHRASES[i], i);
           if (cancelled) return;
 
           if (isLast) {
             await wait(500);
-            await setCaption(CAPTIONS[i]); // → "capture clarity."
+            await setCaption(CAPTIONS[i]);
             if (statusTREl) statusTREl.textContent = STATUS_LABELS[4];
           }
 
@@ -288,7 +220,6 @@ export function NotesHeroVoice() {
           if (cancelled) return;
 
           if (isLast) {
-            // Caption resets BEFORE phrase deletes — smoother loop transition.
             await setCaption(CAPTIONS[0]);
             await wait(400);
           }
@@ -314,8 +245,6 @@ export function NotesHeroVoice() {
     return () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", measure);
     };
   }, []);
 
@@ -332,22 +261,22 @@ export function NotesHeroVoice() {
         <span className="nhv-status-tr">waiting</span>
       </div>
 
-      {/* Stage: animated wordmark */}
+      {/* Stage: the word rises in place, the caret draws itself, then blinks —
+          no slide-in, no pulse (review 20). */}
       <div className="nhv-stage" aria-hidden>
         <div className="nhv-composer">
           <span className="nhv-word">
             {"notes".split("").map((ch, i) => (
-              <span key={i} className="nhv-letter">{ch}</span>
+              <span
+                key={i}
+                className="nhv-letter"
+                style={{ animationDelay: `${RISE_START_MS + i * RISE_STEP_MS}ms` }}
+              >
+                {ch}
+              </span>
             ))}
           </span>
-          {/* Ghost trails — right:0/bottom:.06em anchors to mark resting position */}
-          <span className="nhv-trail nhv-t1" />
-          <span className="nhv-trail nhv-t2" />
-          <span className="nhv-trail nhv-t3" />
-          {/* Impact ripples */}
-          <span className="nhv-ripple-slow" />
-          <span className="nhv-ripple" />
-          {/* The mark: dot → caret */}
+          {/* The mark: a caret that draws itself in place, then blinks */}
           <span className="nhv-mark" />
         </div>
       </div>
@@ -390,7 +319,6 @@ const CSS = `
   --nhv-stone: #8c887e;
   --nhv-hairline: rgba(17,17,17,0.06);
   --nhv-wm-size: clamp(56px, 10.5vw, 142px);
-  --nhv-roll: calc(var(--nhv-wm-size) * 8);
   --nhv-voice-size: clamp(20px, 3.1vw, 42px);
   --nhv-font: var(--font-geist, 'Geist', system-ui, sans-serif);
   --nhv-font-surface: var(--font-sans, system-ui, sans-serif);
@@ -425,111 +353,52 @@ const CSS = `
   letter-spacing: -.03em; color: var(--nhv-ink);
   padding-bottom: calc(var(--nhv-wm-size) * .25);
 }
-/* Hairline rule — full-bleed both sides via -100vw. */
+/* Hairline rule — full-bleed both sides via -100vw. Fades in with the word. */
 .nhv-composer::before {
   content: ''; position: absolute;
   left: -100vw; right: -100vw;
   bottom: calc(var(--nhv-wm-size) * .15);
   height: 1px; background: var(--nhv-hairline);
+  opacity: 0;
+  animation: nhv-rule-in .8s cubic-bezier(.22,.7,.2,1) .1s forwards;
 }
+@keyframes nhv-rule-in { to { opacity: 1; } }
 .nhv-word { display: inline-flex; gap: 0; position: relative; z-index: 1; }
 .nhv-letter {
   display: inline-block; opacity: 0; transform: translateY(115%);
   color: var(--nhv-ink); will-change: opacity, transform;
+  /* animation-delay is set inline per letter for the stagger */
+  animation: nhv-rise .46s cubic-bezier(.22,.9,.28,1) both;
+}
+@keyframes nhv-rise {
+  0%   { opacity: 0; transform: translateY(115%); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── The mark: dot → caret ──────────────────────────────────── */
+/* ─── The mark: a caret that draws itself, then blinks ───────── */
+/* Born as a caret (never a dot). It strokes up from the baseline — the way a
+   cursor arrives where you're about to write — settles, then blinks. */
 .nhv-mark {
   position: relative;
-  width: .16em; height: .16em; border-radius: 50%;
+  width: .075em; height: .78em; border-radius: .02em;
   background: var(--nhv-indigo);
-  margin-left: .06em; align-self: flex-end; margin-bottom: .06em;
-  transform-origin: center bottom; z-index: 3;
+  margin-left: .08em; align-self: flex-end; margin-bottom: .06em;
+  transform-origin: center bottom; transform: scaleY(0); opacity: 0;
+  z-index: 3;
   animation:
-    nhv-roll   5s    cubic-bezier(.34,1.56,.64,1) 0s   1        forwards,
-    nhv-morph  .6s   cubic-bezier(.22,.7,.2,1)    3.9s 1        forwards,
-    nhv-blink  1.06s linear                       4.5s infinite;
+    nhv-draw  .5s   cubic-bezier(.22,1.02,.3,1) .82s 1        forwards,
+    nhv-blink 1.06s linear                      1.5s infinite;
 }
-@keyframes nhv-roll {
-  0%  { transform: translate(calc(-1 * var(--nhv-roll)), 0) scale(1,1); opacity: 0; }
-  4%  { transform: translate(calc(-1 * var(--nhv-roll)), 0) scale(1,1); opacity: 1; }
-  33% { transform: translate(calc(-.03 * var(--nhv-wm-size)), 0) scale(1,1); opacity: 1; }
-  35% { transform: translate(0,0) scale(1,1); opacity: 1; }
-  38% { transform: translate(0,0) scale(1.55,.55); opacity: 1; }
-  41% { transform: translate(0,0) scale(1.96,.4); opacity: 1; }
-  43% { transform: translate(0,0) scale(1.88,.43); opacity: 1; }
-  48% { transform: translate(0, calc(-.075 * var(--nhv-wm-size))) scale(.74,1.34); opacity: 1; }
-  53% { transform: translate(0,0) scale(1.24,.82); opacity: 1; }
-  57% { transform: translate(0,0) scale(.96,1.05); opacity: 1; }
-  60% { transform: translate(0,0) scale(1,1); opacity: 1; }
-  68% { transform: translate(0,0) scale(.86,.86); opacity: .86; }
-  77%,100% { transform: translate(0,0) scale(1,1); opacity: 1; }
-}
-@keyframes nhv-morph {
-  0%   { width: .16em; height: .16em; border-radius: 50%; }
-  100% { width: .075em; height: .78em; border-radius: .02em; }
+@keyframes nhv-draw {
+  0%   { transform: scaleY(0);    opacity: 0; }
+  55%  { transform: scaleY(1.12); opacity: 1; }
+  78%  { transform: scaleY(.94);  opacity: 1; }
+  100% { transform: scaleY(1);    opacity: 1; }
 }
 @keyframes nhv-blink {
   0%,50%     { opacity: 1; }
   50.01%,100%{ opacity: 0; }
-}
-
-/* ─── Ghost trails ───────────────────────────────────────────── */
-/* right:0/bottom:.06em co-locates with mark's natural resting position.
-   position:absolute + align-self has no effect on abs children in flex. */
-.nhv-trail {
-  position: absolute; right: 0; bottom: .06em; margin: 0;
-  width: .16em; height: .16em; border-radius: 50%;
-  background: var(--nhv-indigo); opacity: 0; z-index: 2;
-}
-.nhv-t1 { animation: nhv-ghost1 5s cubic-bezier(.34,1.56,.64,1) 0s 1 forwards; }
-.nhv-t2 { animation: nhv-ghost2 5s cubic-bezier(.34,1.56,.64,1) 0s 1 forwards; }
-.nhv-t3 { animation: nhv-ghost3 5s cubic-bezier(.34,1.56,.64,1) 0s 1 forwards; }
-@keyframes nhv-ghost1 {
-  0%,5%  { transform: translate(calc(-1 * var(--nhv-roll)), 0); opacity: 0; }
-  14%    { transform: translate(calc(-.85 * var(--nhv-roll)), 0); opacity: .5; }
-  26%    { transform: translate(calc(-.2 * var(--nhv-roll)), 0); opacity: .26; }
-  33%,100%{ transform: translate(calc(-.1 * var(--nhv-roll)), 0); opacity: 0; }
-}
-@keyframes nhv-ghost2 {
-  0%,7%  { transform: translate(calc(-1 * var(--nhv-roll)), 0); opacity: 0; }
-  16%    { transform: translate(calc(-.78 * var(--nhv-roll)), 0); opacity: .36; }
-  26%    { transform: translate(calc(-.28 * var(--nhv-roll)), 0); opacity: .18; }
-  33%,100%{ transform: translate(calc(-.16 * var(--nhv-roll)), 0); opacity: 0; }
-}
-@keyframes nhv-ghost3 {
-  0%,9%  { transform: translate(calc(-1 * var(--nhv-roll)), 0); opacity: 0; }
-  18%    { transform: translate(calc(-.7 * var(--nhv-roll)), 0); opacity: .24; }
-  26%    { transform: translate(calc(-.35 * var(--nhv-roll)), 0); opacity: .11; }
-  33%,100%{ transform: translate(calc(-.24 * var(--nhv-roll)), 0); opacity: 0; }
-}
-
-/* ─── Impact ripples ─────────────────────────────────────────── */
-/* Same right:0/bottom:.06em anchor as trails. */
-.nhv-ripple, .nhv-ripple-slow {
-  position: absolute; right: 0; bottom: .06em; margin: 0;
-  width: .16em; height: .16em; border-radius: 50%;
-  background: transparent; opacity: 0; transform: scale(1); z-index: 1;
-}
-.nhv-ripple {
-  border: 1px solid var(--nhv-indigo);
-  animation: nhv-rip-fast 5s cubic-bezier(.22,.7,.2,1) 0s 1 forwards;
-}
-.nhv-ripple-slow {
-  border: 1px solid var(--nhv-indigo-300);
-  animation: nhv-rip-slow 5s cubic-bezier(.22,.7,.2,1) 0s 1 forwards;
-}
-@keyframes nhv-rip-fast {
-  0%,39%{ transform: scale(1); opacity: 0; }
-  41%   { transform: scale(1); opacity: .7; }
-  60%   { transform: scale(11); opacity: 0; }
-  100%  { transform: scale(11); opacity: 0; }
-}
-@keyframes nhv-rip-slow {
-  0%,39%{ transform: scale(1); opacity: 0; }
-  41%   { transform: scale(1); opacity: .45; }
-  74%   { transform: scale(22); opacity: 0; }
-  100%  { transform: scale(22); opacity: 0; }
 }
 
 /* ─── Voice zone ─────────────────────────────────────────────── */
@@ -569,7 +438,7 @@ const CSS = `
   font-size: 11px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--nhv-stone);
   opacity: 0; margin-top: 36px; text-align: center;
-  animation: nhv-cap-in .8s cubic-bezier(.22,.7,.2,1) 4.1s 1 forwards;
+  animation: nhv-cap-in .8s cubic-bezier(.22,.7,.2,1) 1.7s 1 forwards;
 }
 @keyframes nhv-cap-in {
   0%   { opacity: 0; transform: translateY(4px); }
@@ -580,13 +449,12 @@ const CSS = `
 @media (prefers-reduced-motion: reduce) {
   .nhv-mark {
     animation: none;
-    width: .075em; height: .78em; border-radius: .02em;
-    opacity: 1; transform: none;
+    transform: scaleY(1); opacity: 1;
   }
-  .nhv-trail, .nhv-ripple, .nhv-ripple-slow { display: none; }
+  .nhv-composer::before { animation: none; opacity: 1; }
   .nhv-caption { animation: none; opacity: 1; }
   .nhv-pip { animation: none; opacity: 1; }
-  .nhv-letter { opacity: 1; transform: none; }
+  .nhv-letter { animation: none; opacity: 1; transform: none; }
   .nhv-voice-zone { opacity: 1; }
   .nhv-voice-caret.active { animation: none; opacity: 1; }
 }
