@@ -239,7 +239,7 @@ export default function FreelanceStudioNotePage() {
             One evening note becomes three tasks. The studio workspace in
             Tasks holds them. The shared timeline is what each client sees
             without an email. The Monday briefing surfaces the invoice you
-            keep not sending. Four layers, one job.
+            keep not sending. Four tools, one job.
           </p>
           <ul
             style={{

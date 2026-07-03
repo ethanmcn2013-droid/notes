@@ -242,7 +242,7 @@ export default function WeddingPlanningNotePage() {
           >
             One note becomes three items. The wedding workspace in Tasks holds the items.
             The shared timeline is what the couple sees. The morning briefing surfaces
-            what still needs an answer. Four layers, one job.
+            what still needs an answer. Four tools, one job.
           </p>
           <ul
             style={{

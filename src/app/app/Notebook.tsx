@@ -1649,8 +1649,8 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                   );
                 })}
                 <li className="in-tasks-footer">
-                  Sent one way into Tasks. Remove brings the note back here —
-                  the task stays.
+                  Sent one way into Tasks. Remove brings the note back here.
+                  The task stays.
                 </li>
               </ol>
             )}

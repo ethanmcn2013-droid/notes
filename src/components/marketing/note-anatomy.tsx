@@ -562,8 +562,7 @@ export function NoteAnatomy() {
             className="mt-3 max-w-[58ch] text-[13px] leading-[1.55]"
             style={{ color: "var(--color-ink-faint)" }}
           >
-            Watch the row settle, or hover a number, on the row or in the
-            list, to see them speak.
+            Watch the row settle. Or hover a number to see each part speak.
           </p>
         </div>
 

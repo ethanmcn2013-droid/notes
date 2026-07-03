@@ -240,7 +240,7 @@ export default function TeachingWeekNotePage() {
             One Friday note becomes three tasks. The term&rsquo;s workspace in
             Tasks holds them. The shared timeline is what the year team sees.
             The Monday briefing surfaces what is still open before the week
-            starts. Four layers, one job.
+            starts. Four tools, one job.
           </p>
           <ul
             style={{

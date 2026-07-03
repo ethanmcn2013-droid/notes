@@ -241,7 +241,7 @@ export default function BuildingProjectNotePage() {
             One site note becomes three tasks. The job&rsquo;s workspace in
             Tasks holds them. The shared timeline is what the client sees
             without ringing you. The morning briefing surfaces what is still
-            waiting on someone else. Four layers, one job.
+            waiting on someone else. Four tools, one job.
           </p>
           <ul
             style={{
