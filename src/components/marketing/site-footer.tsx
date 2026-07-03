@@ -62,7 +62,7 @@ export function SiteFooter() {
 
   return (
     <footer
-      className="reveal mt-24 border-t pb-10 pt-14"
+      className="reveal mt-32 border-t pb-10 pt-16"
       style={{ borderColor: "var(--color-line)" }}
     >
       <div className="grid w-full gap-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_repeat(4,1fr)]">
