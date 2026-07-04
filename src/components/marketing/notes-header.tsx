@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SuiteLauncher } from "@/components/suite-launcher";
+import { SuiteHeader } from "@/components/chrome/suite-header";
 import { UserButtonWithSuite } from "@/components/user-button-with-suite";
 
 type NotesHeaderProps = {
@@ -8,65 +9,64 @@ type NotesHeaderProps = {
   showAuth?: boolean;
 };
 
+/**
+ * Notes marketing header — a thin wrapper over the shared SuiteHeader shell.
+ *
+ * Notes carries no marketing nav links (nav={[]}), so no mobile menu button
+ * renders. Its wordmark glyph is the `notes.` mark rendered at the shared md
+ * size, matching the other products' lockup. The optional section label rides
+ * the breadcrumb slot. Auth is the notes-flavoured account menu. Since the
+ * 2026-07-02 green retirement, Notes shares the suite register — the warm
+ * green-grey header hairline is gone; the shell is the one neutral suite rule.
+ */
 export function NotesHeader({
   isSignedIn = false,
   sectionLabel,
   showAuth = true,
 }: NotesHeaderProps) {
   return (
-    <header
-      className="suitebar"
-      aria-label="Signal Notes notebook chrome"
-      style={{
-        background: "color-mix(in srgb, var(--color-bg) 88%, transparent)",
-        backdropFilter: "saturate(150%) blur(12px)",
-        WebkitBackdropFilter: "saturate(150%) blur(12px)",
-      }}
-    >
-      <div className="suitebar-inner">
-        <div className="suite-breadcrumb">
-          <SuiteLauncher current="notes" isAuthed={isSignedIn} />
-          <span
-            aria-hidden
-            className="text-[12px]"
-            style={{ color: "var(--color-ink-faint)" }}
-          >
-            /
-          </span>
-          <Link href="/" className="notes-mark text-[15px]" aria-label="Signal Notes home">
-            <span className="word">notes</span>
-            <span className="dot" aria-hidden />
-          </Link>
-          {sectionLabel ? (
-            <span className="notes-section-breadcrumb">
-              <span
-                aria-hidden
-                className="text-[12px]"
-                style={{ color: "var(--color-ink-faint)" }}
-              >
-                /
-              </span>
-              <span
-                className="text-[15px]"
-                style={{ color: "var(--color-ink-soft)" }}
-              >
-                {sectionLabel}
-              </span>
+    <SuiteHeader
+      ariaLabel="Signal Notes notebook chrome"
+      launcher={<SuiteLauncher current="notes" isAuthed={isSignedIn} />}
+      wordmark={
+        <Link
+          href="/"
+          className="notes-mark"
+          aria-label="Signal Notes home"
+          style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.05em" }}
+        >
+          <span className="word">notes</span>
+          <span className="dot" aria-hidden />
+        </Link>
+      }
+      nav={[]}
+      breadcrumb={
+        sectionLabel ? (
+          <span className="notes-section-breadcrumb">
+            <span
+              aria-hidden
+              className="text-[12px]"
+              style={{ color: "var(--ink-faint)" }}
+            >
+              /
             </span>
-          ) : null}
-        </div>
-        {showAuth ? (
+            <span className="text-[15px]" style={{ color: "var(--ink-soft)" }}>
+              {sectionLabel}
+            </span>
+          </span>
+        ) : undefined
+      }
+      account={
+        showAuth ? (
           isSignedIn ? (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <UserButtonWithSuite current="notes" />
-            </div>
+            <UserButtonWithSuite current="notes" />
           ) : (
             <Link href="/sign-in" className="notes-signin">
               Sign in
             </Link>
           )
-        ) : null}
-      </div>
-    </header>
+        ) : undefined
+      }
+    />
   );
 }
