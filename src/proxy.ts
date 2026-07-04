@@ -48,6 +48,9 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  // Closed-beta holding page: the redirect target for signed-in-but-not-
+  // allowlisted accounts. Must be public so it never bounces to /sign-in.
+  "/waitlist",
   "/wedding-planning",
   "/wedding-planning/(.*)",
   "/building-project",
