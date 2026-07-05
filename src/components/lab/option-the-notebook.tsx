@@ -2,19 +2,18 @@
  * Option ntb — The Notebook (hybrid of Notebook First × The Crossing).
  *
  * The whole Signal Notes story in one surface. The product IS the hero:
- * a focused capture field with a caret that writes, a stream of recent
- * notes, and — the differentiator made first-class — one note's approved
- * line crossing ONE WAY into Signal Tasks. The raw note stays private;
- * only the extract travels; the indigo dot is left behind.
+ * a focused capture field with a caret that writes a genuine thought, a
+ * stream of recent notes, and — the differentiator made first-class — one
+ * note's approved line lifting off its row and crossing ONE WAY into
+ * Signal Tasks, where it commits. The raw note stays private; only the
+ * extract travels; the indigo dot is left behind as the line departs.
  *
  * Fuses the two strongest directions: Notebook First's product-truth (the
- * live surface) and The Crossing's un-clonable mechanic (the one-way edge),
- * so the surface leads and the differentiator is a moment, not a static dot.
+ * live surface) and The Crossing's un-clonable mechanic (the one-way edge).
  *
  * SSR-safe: the settled composition — capture written, stream present with
  * one note "in Tasks", the task committed in the Tasks lane — is the default
- * CSS. The intro (caret writes; the extract lifts, arcs across the edge, and
- * commits as a task) runs once on mount, motion-safe only. No JS.
+ * CSS. The intro runs once on mount, motion-safe only. No JS.
  */
 export function OptionTheNotebook() {
   const stream = [
@@ -32,7 +31,7 @@ export function OptionTheNotebook() {
     },
     {
       title: "Client prefers matte over gloss",
-      preview: "worth remembering for the invites",
+      preview: "matte for the invites",
       time: "16m",
       crossed: false,
     },
@@ -49,9 +48,8 @@ export function OptionTheNotebook() {
             Write it down before it becomes&nbsp;work.
           </h1>
           <p className="ntb-lede">
-            Catch the thought in three seconds. Find it later. Approve the one
-            line that becomes a task, and it crosses into Signal Tasks. The note
-            stays private.
+            Catch the thought in three seconds. Find it later. Approve one line
+            and it crosses into Signal Tasks. The rest stays private.
           </p>
         </header>
 
@@ -60,7 +58,7 @@ export function OptionTheNotebook() {
           <div className="ntb-notebook">
             <div className="ntb-capture">
               <div className="ntb-capture-line">
-                <span className="ntb-typed">Book the tasting for Tuesday</span>
+                <span className="ntb-typed">Tuesday works best for the tasting</span>
                 <span className="ntb-caret" />
               </div>
               <p className="ntb-hint">
@@ -69,7 +67,7 @@ export function OptionTheNotebook() {
             </div>
 
             <div className="ntb-streamhead">
-              <span>Stream</span>
+              <span className="ntb-streamhead-label">stream</span>
               <span className="ntb-streamhead-count">3 notes</span>
             </div>
             <ul className="ntb-stream">
@@ -132,8 +130,10 @@ export function OptionTheNotebook() {
             </ul>
           </div>
 
-          {/* The travelling extract — invisible at rest, crosses on mount */}
-          <span className="ntb-chip">Send the caterer the headcount</span>
+          {/* The travelling extract — invisible at rest, arcs across on mount */}
+          <div className="ntb-cross-layer">
+            <span className="ntb-chip">Send the caterer the headcount</span>
+          </div>
         </div>
       </div>
     </section>
@@ -177,7 +177,7 @@ const CSS = `
   color: var(--ntb-ink); text-wrap: balance;
 }
 .ntb-lede {
-  margin: 20px auto 0; max-width: 52ch;
+  margin: 20px auto 0; max-width: 50ch;
   font-size: 16.5px; line-height: 1.6; color: var(--ntb-soft);
   text-wrap: pretty;
 }
@@ -186,8 +186,8 @@ const CSS = `
 .ntb-stage {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 0.95fr);
-  align-items: stretch; gap: clamp(12px, 2.4vw, 32px);
+  grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 1fr);
+  align-items: stretch; gap: clamp(10px, 1.9vw, 26px);
 }
 
 /* ── Notebook ── */
@@ -204,7 +204,7 @@ const CSS = `
   position: relative; display: block;
   width: fit-content; max-width: 100%;
   min-height: 1.1em; white-space: nowrap;
-  font-size: clamp(20px, 2.2vw, 30px); font-weight: 560;
+  font-size: clamp(19px, 2.05vw, 28px); font-weight: 560;
   letter-spacing: -0.025em; line-height: 1.05; color: var(--ntb-ink);
 }
 .ntb-typed { display: inline-block; clip-path: inset(0 0 0 0); }
@@ -223,15 +223,20 @@ const CSS = `
   padding: 1px 5px; border: 1px solid var(--ntb-line);
   border-radius: 4px; background: var(--ntb-field);
 }
+/* Both panel headers share one grammar: lowercase-sans label · mono-uppercase kind */
 .ntb-streamhead {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 13px clamp(20px, 2.6vw, 32px);
+  padding: 12px clamp(20px, 2.6vw, 32px);
   border-top: 1px solid var(--ntb-line);
   border-bottom: 1px solid var(--ntb-line);
-  font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ntb-faint);
 }
-.ntb-streamhead-count { letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.ntb-streamhead-label {
+  font-size: 13.5px; font-weight: 500; letter-spacing: -0.03em; color: var(--ntb-soft);
+}
+.ntb-streamhead-count {
+  font-family: var(--ntb-mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ntb-faint); font-variant-numeric: tabular-nums;
+}
 .ntb-stream { list-style: none; margin: 0; padding: 0; flex: 1 1 auto; }
 .ntb-row {
   position: relative;
@@ -265,16 +270,32 @@ const CSS = `
   background: var(--ntb-accent); display: inline-block; flex: 0 0 auto;
 }
 
-/* ── Edge ── */
+/* ── Edge — the one-way spine ── */
 .ntb-edge {
+  position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; color: var(--ntb-faint);
 }
+/* the quiet boundary rule, present at rest */
+.ntb-edge::before {
+  content: ""; position: absolute; top: 8%; bottom: 8%; left: 50%;
+  width: 1px; background: var(--ntb-line); transform: translateX(-50%);
+}
+/* the indigo gate, invisible at rest — pulses as the extract pierces it */
+.ntb-edge::after {
+  content: ""; position: absolute; top: 8%; bottom: 8%; left: 50%;
+  width: 1px; background: var(--ntb-accent); transform: translateX(-50%); opacity: 0;
+}
 .ntb-edge-label {
+  position: relative;
   font-family: var(--ntb-mono); font-size: 9.5px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ntb-faint);
+  background: var(--ntb-paper); padding: 3px 0;
 }
-.ntb-edge-arrow { font-size: 18px; color: var(--ntb-accent); line-height: 1; }
+.ntb-edge-arrow {
+  position: relative; font-size: 18px; color: var(--ntb-accent); line-height: 1;
+  background: var(--ntb-paper); padding: 2px 0;
+}
 
 /* ── Tasks ── */
 .ntb-tasks {
@@ -322,7 +343,7 @@ const CSS = `
 }
 .ntb-task-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .ntb-task-title {
-  font-size: 13.5px; font-weight: 560; letter-spacing: -0.01em; line-height: 1.3;
+  font-size: 14.5px; font-weight: 560; letter-spacing: -0.01em; line-height: 1.3;
   color: var(--ntb-ink);
 }
 .ntb-task-meta {
@@ -330,31 +351,36 @@ const CSS = `
   color: var(--ntb-faint);
 }
 
-/* ── Travelling extract chip — invisible at rest ── */
+/* ── Travelling extract chip — invisible at rest, transform-only ballistic arc ── */
+.ntb-cross-layer {
+  position: absolute; inset: 0; pointer-events: none;
+  container-type: inline-size;
+}
 .ntb-chip {
-  position: absolute; top: 50%; left: 30%;
-  transform: translate(-50%, -50%);
+  position: absolute; top: 50%; left: 0;
+  transform: translate3d(27cqw, calc(-50% + 8px), 0) scale(0.9);
   padding: 7px 12px; border-radius: 8px;
   background: var(--ntb-paper);
   border: 1px solid var(--ntb-accent);
   box-shadow: 0 14px 34px -18px var(--ntb-accent);
   font-size: 12px; font-weight: 500; color: var(--ntb-ink);
-  white-space: nowrap; opacity: 0; pointer-events: none;
+  white-space: nowrap; opacity: 0; will-change: transform, opacity;
 }
 
 /* ─────────────────────────────────────────────────────────────
-   INTRO — motion-safe only. Header settles; the caret writes; the
-   stream cascades; then one note's extract lifts, arcs across the
-   one-way edge, and commits as a task (its check draws) while the
-   source note keeps the indigo dot.
+   INTRO — motion-safe only. Header settles; the caret writes a
+   thought; the stream cascades (the source row lands last, so the
+   eye is already on it); its approved line lifts off, its dot is
+   left behind, the extract arcs across the one-way edge, and it
+   commits as a task whose check draws.
    ───────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .ntb-kicker   { animation: ntb-up 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both; }
   .ntb-headline { opacity: 0; animation: ntb-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.1s forwards; }
   .ntb-lede     { opacity: 0; animation: ntb-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.26s forwards; }
   .ntb-notebook { opacity: 0; animation: ntb-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.5s forwards; }
-  .ntb-edge     { opacity: 0; animation: ntb-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.6s forwards; }
-  .ntb-tasks    { opacity: 0; animation: ntb-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.62s forwards; }
+  .ntb-tasks    { opacity: 0; animation: ntb-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.52s forwards; }
+  .ntb-edge     { opacity: 0; animation: ntb-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.15s forwards; }
 
   /* the caret writes the capture line */
   .ntb-typed {
@@ -370,47 +396,50 @@ const CSS = `
       ntb-blink 1.05s steps(1, end) 1.6s infinite;
   }
 
-  /* stream rows cascade */
+  /* stream rows cascade; the source row lands last (no eye-backtrack) */
   .ntb-row {
     opacity: 0; transform: translateY(8px);
     animation: ntb-row-in 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both;
-    animation-delay: calc(1.5s + var(--i) * 0.1s);
+    animation-delay: calc(1.25s + var(--i) * 0.08s);
   }
-
-  /* the source row's extract highlights as its copy lifts off, then stays */
   .ntb-row.is-source {
     animation:
-      ntb-row-in 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.5s both,
-      ntb-source-pulse 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.15s both;
+      ntb-row-in 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.45s both,
+      ntb-source-pulse 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.75s both;
   }
-  /* its "in Tasks" dot arrives as the chip lands */
+  /* the dot is left behind as the line departs */
   .ntb-row-dot {
     transform: scale(0);
-    animation: ntb-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 3.05s forwards;
+    animation: ntb-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 1.95s forwards;
   }
+  /* the "in Tasks" label confirms on arrival */
   .ntb-row-crossed-label {
     opacity: 0;
-    animation: ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.15s forwards;
+    animation: ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.8s forwards;
   }
 
-  /* the edge arrow nudges as the chip passes */
+  /* the edge gate pulses as the extract pierces it */
+  .ntb-edge::after {
+    animation: ntb-gate 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.1s both;
+  }
   .ntb-edge-arrow {
-    animation: ntb-arrow-pass 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.4s both;
+    animation: ntb-arrow-pass 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.95s both;
   }
 
-  /* the chip lifts off the source row, arcs across the edge, and lands */
+  /* the extract lifts off the source row, arcs across, and lands — a physical
+     toss: near-constant horizontal velocity, parabolic rise, caught level */
   .ntb-chip {
-    animation: ntb-cross 1.35s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 2.15s forwards;
+    animation: ntb-cross 1.05s linear 1.75s forwards;
   }
 
-  /* the task commits as the chip lands (~3.1s): it rises in and its check draws */
+  /* the task commits as the extract lands (~2.8s): it rises and its check draws */
   .ntb-task.is-arrived {
     opacity: 0; transform: translateY(6px);
-    animation: ntb-in 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.0s forwards;
+    animation: ntb-in 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.55s forwards;
   }
   .ntb-check-mark {
     stroke-dashoffset: 15;
-    animation: ntb-check-draw 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.2s forwards;
+    animation: ntb-check-draw 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.78s forwards;
   }
 
   @keyframes ntb-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -427,25 +456,24 @@ const CSS = `
   @keyframes ntb-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
   @keyframes ntb-row-in { to { opacity: 1; transform: translateY(0); } }
   @keyframes ntb-source-pulse {
-    0% { background: transparent; }
-    45% { background: color-mix(in srgb, var(--ntb-accent) 7%, transparent); }
-    100% { background: transparent; }
+    0%   { background: transparent; box-shadow: inset 2px 0 0 transparent; }
+    35%  { background: color-mix(in srgb, var(--ntb-accent) 8%, transparent);
+           box-shadow: inset 2px 0 0 var(--ntb-accent); }
+    100% { background: transparent; box-shadow: inset 2px 0 0 transparent; }
   }
   @keyframes ntb-pop { to { transform: scale(1); } }
   @keyframes ntb-check-draw { to { stroke-dashoffset: 0; } }
+  @keyframes ntb-gate { 0%,100% { opacity: 0; } 50% { opacity: 0.55; } }
   @keyframes ntb-arrow-pass {
     0%, 100% { transform: translateX(0); }
     50% { transform: translateX(4px); }
   }
   @keyframes ntb-cross {
-    0%   { opacity: 0; left: 30%; transform: translate(-50%, -50%) translateY(0) scale(0.96);
-           box-shadow: 0 6px 14px -10px var(--ntb-accent); }
-    16%  { opacity: 1; transform: translate(-50%, -50%) translateY(-16px) scale(1); }
-    50%  { transform: translate(-50%, -50%) translateY(-16px) scale(1);
-           box-shadow: 0 26px 50px -18px var(--ntb-glow); }
-    84%  { opacity: 1; transform: translate(-50%, -50%) translateY(-12px) scale(1); }
-    100% { opacity: 0; left: 84%; transform: translate(-50%, -50%) translateY(0) scale(0.98);
-           box-shadow: 0 6px 14px -10px var(--ntb-accent); }
+    0%   { opacity: 0; transform: translate3d(27cqw, calc(-50% + 8px), 0) scale(0.9); }
+    12%  { opacity: 1; transform: translate3d(31cqw, calc(-50% - 14px), 0) scale(1); }
+    50%  { transform: translate3d(56cqw, calc(-50% - 34px), 0) scale(1.02); }
+    88%  { opacity: 1; transform: translate3d(76cqw, calc(-50% - 12px), 0) scale(1); }
+    100% { opacity: 0; transform: translate3d(82cqw, calc(-50% + 0px), 0) scale(0.97); }
   }
 }
 
@@ -453,9 +481,10 @@ const CSS = `
 @media (max-width: 860px) {
   .ntb-stage { grid-template-columns: 1fr; gap: 12px; }
   .ntb-edge { flex-direction: row; gap: 10px; }
+  .ntb-edge::before, .ntb-edge::after { display: none; }
   .ntb-edge-arrow { transform: rotate(90deg); }
   .ntb-tasks { align-self: stretch; }
-  .ntb-chip { display: none; }
+  .ntb-cross-layer { display: none; }
 }
 @media (max-width: 640px) {
   .ntb { min-height: 88svh; padding: 40px 16px; }
