@@ -77,8 +77,6 @@ export function OptionTheCrossing() {
               <span className="ntw-task-title">Send the revised florals quote</span>
             </div>
             <div className="ntw-task-meta">
-              <span>New in Tasks</span>
-              <span className="ntw-task-sep">·</span>
               <span>from a note</span>
             </div>
           </article>

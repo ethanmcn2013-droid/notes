@@ -18,7 +18,7 @@ export function OptionThreeSeconds() {
       <style>{CSS}</style>
 
       <div className="nt3-frame">
-        <p className="nt3-kicker">Signal Notes · the promise</p>
+        <p className="nt3-kicker">Signal Notes</p>
 
         <h1 className="nt3-headline">
           Three seconds from thought to&nbsp;written.
@@ -33,7 +33,7 @@ export function OptionThreeSeconds() {
         <div className="nt3-track" aria-hidden>
           <div className="nt3-fill">
             <div className="nt3-marker">
-              <span className="nt3-flag">captured</span>
+              <span className="nt3-flag">written</span>
             </div>
           </div>
           <span className="nt3-tick" style={{ ["--p" as string]: "0%" }}>

@@ -38,7 +38,7 @@ export function OptionBeforeItFades() {
             </p>
           ))}
           <p className="nt2-caught">
-            <span className="nt2-caught-text">Florist confirms pink, not red</span>
+            <span className="nt2-caught-text">the florist confirmed pink, not red</span>
             <span className="nt2-caught-caret" />
           </p>
         </div>
@@ -48,7 +48,7 @@ export function OptionBeforeItFades() {
         </h1>
         <p className="nt2-lede">
           A thought has a shelf life. Open the notebook, write it down in three
-          seconds, and keep it while it still means something.
+          seconds, and find it again when you need it.
         </p>
       </div>
     </section>
