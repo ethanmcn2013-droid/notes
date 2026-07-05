@@ -75,7 +75,7 @@ export function OptionTheNotebook() {
             </div>
 
             <div className="ntb-streamhead">
-              <span className="ntb-streamhead-label">stream</span>
+              <span className="ntb-streamhead-label">stream<span className="ntb-streamhead-kind">private</span></span>
               <span className="ntb-streamhead-count">
                 <span className="ntb-count ntb-count-0">0 notes</span>
                 <span className="ntb-count ntb-count-1">1 note</span>
@@ -148,7 +148,7 @@ export function OptionTheNotebook() {
         {/* Narration → resolves onto the signal wordmark and a closing line */}
         <div className="ntb-narrate" aria-hidden>
           <span className="ntb-cap ntb-cap-0">Catch each thought in three seconds.</span>
-          <span className="ntb-cap ntb-cap-1">Everything you’d forget, kept in one place.</span>
+          <span className="ntb-cap ntb-cap-1">Everything you’d forget, kept where you’ll find it.</span>
           <span className="ntb-cap ntb-cap-2">Send the one that becomes work to Tasks.</span>
           <span className="ntb-cap ntb-cap-3">The rest stays private.</span>
           <span className="ntb-signoff">
@@ -292,6 +292,10 @@ const CSS = `
 }
 .ntb-streamhead-label {
   font-size: 13.5px; font-weight: 500; letter-spacing: -0.03em; color: var(--ntb-soft);
+}
+.ntb-streamhead-kind {
+  margin-left: 8px; font-family: var(--ntb-mono); font-size: 9.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ntb-faint);
 }
 .ntb-streamhead-count {
   position: relative; display: inline-grid;
@@ -448,63 +452,68 @@ const CSS = `
   .ntb-tasks    { opacity: 0; animation: ntb-in 0.75s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.5s forwards; }
   .ntb-edge     { opacity: 0; animation: ntb-fade 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.9s forwards; }
 
-  /* the capture returns to a ready state once the three notes are in */
+  /* the ready caret shows in the overture, hides while notes type, and
+     returns (blinking) once the three notes are in — matching rest */
   .ntb-caret-ready {
     opacity: 0;
-    animation: ntb-fade 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.7s forwards,
-               ntb-blink 1.05s steps(1, end) 6.05s infinite;
+    animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.9s forwards,
+               ntb-out 0.15s linear 1.2s forwards,
+               ntb-fade 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.4s forwards,
+               ntb-blink 1.06s steps(1, end) 5.75s infinite;
   }
   .ntb-placeholder {
-    animation: ntb-out 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s forwards,
-               ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.7s forwards;
+    animation: ntb-out 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.1s forwards,
+               ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.4s forwards;
   }
 
-  /* narration */
-  .ntb-cap-0   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.5s forwards; }
-  .ntb-cap-1   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.4s forwards; }
-  .ntb-cap-2   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.5s forwards; }
-  .ntb-cap-3   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.6s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.5s forwards; }
-  .ntb-signoff { opacity: 0; animation: ntb-signoff-in 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.6s forwards; }
+  /* narration — the capture caption covers all three notes; the payoff
+     line ("kept where you'll find it") is given room to breathe */
+  .ntb-cap-0   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s forwards; }
+  .ntb-cap-1   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.6s forwards; }
+  .ntb-cap-2   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.7s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.5s forwards; }
+  .ntb-cap-3   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.6s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.7s forwards; }
+  .ntb-signoff { opacity: 0; animation: ntb-signoff-in 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.8s forwards; }
   .ntb-wm-dot  { transform: scale(0);
-    animation: ntb-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the caret settles as the wordmark dot */ 10.0s forwards; }
+    animation: ntb-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the caret settles as the wordmark dot */ 10.2s forwards; }
 
-  /* ── Notes 1–3: each types, then logs (its row grows in; count ticks) ── */
-  .ntb-tw-1 { animation: ntb-fade 0.2s linear 1.15s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.4s forwards; }
-  .ntb-tw-1 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.1s linear 1.2s forwards; }
-  .ntb-tw-1 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 1.2s forwards, ntb-ride 1.1s linear 1.2s forwards, ntb-out 0.15s linear 2.35s forwards; }
+  /* ── Notes 1–3: each types (speed scaled to length so it reads as a
+     hand, not a wipe), then logs (its row grows in; count ticks) ── */
+  .ntb-tw-1 { animation: ntb-fade 0.2s linear 1.1s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s forwards; }
+  .ntb-tw-1 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.05s linear 1.2s forwards; }
+  .ntb-tw-1 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 1.2s forwards, ntb-ride 1.05s linear 1.2s forwards, ntb-out 0.15s linear 2.25s forwards; }
 
-  .ntb-tw-2 { animation: ntb-fade 0.2s linear 2.75s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.0s forwards; }
-  .ntb-tw-2 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.1s linear 2.8s forwards; }
-  .ntb-tw-2 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 2.8s forwards, ntb-ride 1.1s linear 2.8s forwards, ntb-out 0.15s linear 3.95s forwards; }
+  .ntb-tw-2 { animation: ntb-fade 0.2s linear 2.5s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.9s forwards; }
+  .ntb-tw-2 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.28s linear 2.6s forwards; }
+  .ntb-tw-2 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 2.6s forwards, ntb-ride 1.28s linear 2.6s forwards, ntb-out 0.15s linear 3.88s forwards; }
 
-  .ntb-tw-3 { animation: ntb-fade 0.2s linear 4.35s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s forwards; }
-  .ntb-tw-3 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.1s linear 4.4s forwards; }
-  .ntb-tw-3 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 4.4s forwards, ntb-ride 1.1s linear 4.4s forwards, ntb-out 0.15s linear 5.55s forwards; }
+  .ntb-tw-3 { animation: ntb-fade 0.2s linear 4.15s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s forwards; }
+  .ntb-tw-3 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.0s linear 4.25s forwards; }
+  .ntb-tw-3 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 4.25s forwards, ntb-ride 1.0s linear 4.25s forwards, ntb-out 0.15s linear 5.25s forwards; }
 
   /* rows grow into the stream as each note logs */
-  .ntb-row--n1     { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.4s both; }
-  .ntb-row--source { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.0s both,
-                                ntb-source-pulse 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.5s both; }
-  .ntb-row--n3     { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s both; }
-  .ntb-row--source .ntb-row-title { animation: ntb-peel 0.5s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 6.5s both; }
+  .ntb-row--n1     { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s both; }
+  .ntb-row--source { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.9s both,
+                                ntb-source-pulse 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.6s both; }
+  .ntb-row--n3     { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s both; }
+  .ntb-row--source .ntb-row-title { animation: ntb-peel 0.5s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 6.6s both; }
 
   /* the count ticks 0 → 1 → 2 → 3 as notes log */
-  .ntb-count-0 { opacity: 1; animation: ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.4s forwards; }
-  .ntb-count-1 { animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.45s forwards, ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.0s forwards; }
-  .ntb-count-2 { animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.05s forwards, ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s forwards; }
-  .ntb-count-3 { opacity: 0; animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.65s forwards; }
+  .ntb-count-0 { opacity: 1; animation: ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s forwards; }
+  .ntb-count-1 { animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.35s forwards, ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.9s forwards; }
+  .ntb-count-2 { animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.95s forwards, ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s forwards; }
+  .ntb-count-3 { opacity: 0; animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.35s forwards; }
 
-  /* ── Promote: the marquee note crosses to Tasks (~6.5s) ── */
-  .ntb-row-dot { transform: scale(0); animation: ntb-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 6.85s forwards; }
-  .ntb-row-crossed-label { opacity: 0; animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.25s forwards; }
-  .ntb-edge::after { animation: ntb-gate 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.15s both; }
-  .ntb-edge-arrow { animation: ntb-arrow-pass 1.1s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.85s both; }
-  .ntb-chip { will-change: transform, opacity; animation: ntb-cross 1.5s linear 6.65s forwards; }
+  /* ── Promote: the marquee note crosses to Tasks (~6.6s) ── */
+  .ntb-row-dot { transform: scale(0); animation: ntb-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 6.95s forwards; }
+  .ntb-row-crossed-label { opacity: 0; animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.35s forwards; }
+  .ntb-edge::after { animation: ntb-gate 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.25s both; }
+  .ntb-edge-arrow { animation: ntb-arrow-pass 1.1s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.95s both; }
+  .ntb-chip { will-change: transform, opacity; animation: ntb-cross 1.5s linear 6.75s forwards; }
   .ntb-task.is-arrived {
     opacity: 0; transform: translateY(6px);
-    animation: ntb-task-land 0.55s cubic-bezier(0.22,1.12,0.4,1) /* ds-allow — gentle settle on the committed task */ 8.15s forwards;
+    animation: ntb-task-land 0.55s cubic-bezier(0.22,1.12,0.4,1) /* ds-allow — gentle settle on the committed task */ 8.25s forwards;
   }
-  .ntb-check-mark { stroke-dashoffset: 15; animation: ntb-check-draw 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.4s forwards; }
+  .ntb-check-mark { stroke-dashoffset: 15; animation: ntb-check-draw 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.5s forwards; }
 
   @keyframes ntb-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes ntb-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -512,11 +521,7 @@ const CSS = `
   @keyframes ntb-out { to { opacity: 0; } }
   @keyframes ntb-type { to { clip-path: inset(0 0 0 0); } }
   @keyframes ntb-ride { to { left: 100%; } }
-  @keyframes ntb-ready-blink {
-    0%,7% { opacity: 1; } 7.01%,14% { opacity: 0; } 14.01%,21% { opacity: 1; }
-    /* the ready caret only shows in the gaps; it's hidden while a note types */
-    21.01%,100% { opacity: 0; }
-  }
+  @keyframes ntb-blink { 0%,53% { opacity: 1; } 53.01%,100% { opacity: 0; } }
   @keyframes ntb-grow {
     0%   { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0;
            border-bottom-color: transparent; background: color-mix(in srgb, var(--ntb-accent) 10%, transparent); }
