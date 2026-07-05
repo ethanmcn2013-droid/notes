@@ -233,7 +233,7 @@ const CSS = `
 
 /* Travelling extract — invisible at rest */
 .ntw-chip {
-  position: absolute; top: 50%; left: 26%;
+  position: absolute; top: 44%; left: 26%;
   transform: translate(-50%, -50%);
   padding: 7px 12px; border-radius: 8px;
   background: var(--ntw-paper);
@@ -295,9 +295,10 @@ const CSS = `
   @keyframes ntw-cross {
     0%   { opacity: 0; left: 26%; transform: translate(-50%, -50%) translateY(0) scale(0.96);
            box-shadow: 0 6px 14px -10px var(--ntw-accent); }
-    18%  { opacity: 1; transform: translate(-50%, -50%) translateY(-8px) scale(1); }
-    50%  { box-shadow: 0 26px 50px -18px var(--ntw-glow); }
-    82%  { opacity: 1; }
+    16%  { opacity: 1; transform: translate(-50%, -50%) translateY(-13px) scale(1); }
+    50%  { transform: translate(-50%, -50%) translateY(-13px) scale(1);
+           box-shadow: 0 26px 50px -18px var(--ntw-glow); }
+    84%  { opacity: 1; transform: translate(-50%, -50%) translateY(-10px) scale(1); }
     100% { opacity: 0; left: 74%; transform: translate(-50%, -50%) translateY(0) scale(0.98);
            box-shadow: 0 6px 14px -10px var(--ntw-accent); }
   }

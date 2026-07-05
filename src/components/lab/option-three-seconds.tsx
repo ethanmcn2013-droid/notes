@@ -70,7 +70,7 @@ const CSS = `
   --nt3-ghost: var(--ink-ghost);
   --nt3-sans: var(--font-geist-sans), "Geist", system-ui, sans-serif;
   --nt3-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
-  --nt3-land: 78%; /* where capture lands on the 0→3s track */
+  --nt3-land: 60%; /* where capture lands on the 0→3s track — comfortably under budget */
 
   position: relative; overflow: hidden;
   min-height: clamp(560px, 86svh, 900px);
@@ -101,7 +101,7 @@ const CSS = `
 /* ── Capture-time track ── */
 .nt3-track {
   position: relative; margin: clamp(52px, 8vh, 88px) 0 0;
-  height: 1.5px; width: 100%; max-width: 600px;
+  height: 1.5px; width: 100%;
   background: linear-gradient(
     to right,
     var(--nt3-ghost) 0 66.66%,
@@ -166,9 +166,9 @@ const CSS = `
     width: 0;
     animation: nt3-travel 0.95s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.75s forwards;
   }
-  /* ticks darken as the marker passes them */
-  .nt3-tick:nth-of-type(2) { animation: nt3-tick-pass 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s both; }
-  .nt3-tick:nth-of-type(3) { animation: nt3-tick-pass 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.35s both; }
+  /* the 1s tick darkens exactly as the marker's leading edge passes it
+     (the marker lands at 60% — before the 2s tick — so only 1s flicks) */
+  .nt3-tick:nth-of-type(2) { animation: nt3-tick-pass 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.9s both; }
   /* the flag drops onto the landed marker */
   .nt3-flag {
     opacity: 0; transform: translateX(-50%) translateY(-6px);
@@ -182,7 +182,7 @@ const CSS = `
 
   @keyframes nt3-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes nt3-fade { to { opacity: 1; } }
-  @keyframes nt3-travel { 0% { width: 0; } 84% { width: 80%; } 100% { width: var(--nt3-land); } }
+  @keyframes nt3-travel { 0% { width: 0; } 84% { width: 62%; } 100% { width: var(--nt3-land); } }
   @keyframes nt3-tick-pass {
     0%   { color: var(--nt3-faint); }
     40%  { color: var(--nt3-ink); }

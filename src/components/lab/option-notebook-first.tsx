@@ -199,7 +199,7 @@ const CSS = `
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .nt1-row-meta {
-  display: inline-flex; align-items: center; gap: 10px;
+  display: inline-flex; align-items: center; gap: 16px;
   color: var(--nt1-faint); font-size: 12px; white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -261,7 +261,7 @@ const CSS = `
       nt1-caret-in 0.01s linear 0.5s forwards,
       nt1-ride 0.62s linear 0.5s forwards,
       nt1-settle 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.12s both,
-      nt1-blink 1.05s steps(1, end) 1.6s infinite;
+      nt1-blink 1.05s steps(1, end) 1.4s infinite;
   }
 
   /* stream rows cascade after the line settles */

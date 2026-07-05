@@ -86,7 +86,7 @@ const CSS = `
 .nt2-stack {
   display: flex; flex-direction: column; align-items: center;
   gap: clamp(10px, 1.8vh, 18px);
-  margin-bottom: clamp(40px, 6vh, 68px);
+  margin-bottom: clamp(32px, 5vh, 56px);
 }
 .nt2-ghost {
   margin: 0; font-weight: 500; letter-spacing: -0.02em;
@@ -95,6 +95,9 @@ const CSS = `
   color: var(--nt2-ink);
   opacity: calc(0.18 + var(--i) * 0.13);
 }
+/* the top thought is already half-gone at rest — a blurred trace, so the
+   loss reads without motion (reduced-motion never sees the escape play). */
+.nt2-ghost:first-child { opacity: 0.1; filter: blur(0.4px); }
 .nt2-caught {
   position: relative; margin: 8px 0 0;
   display: inline-flex; align-items: baseline; justify-content: center;
@@ -171,8 +174,8 @@ const CSS = `
     to   { transform: translateY(0); }
   }
   @keyframes nt2-lose {
-    from { opacity: 0.18; transform: translateY(0);    filter: blur(0); }
-    to   { opacity: 0;    transform: translateY(-16px); filter: blur(0.6px); }
+    from { opacity: 0.1; transform: translateY(0);    filter: blur(0.4px); }
+    to   { opacity: 0;   transform: translateY(-16px); filter: blur(1px); }
   }
   @keyframes nt2-catch {
     from { opacity: 0; transform: translateY(10px); }
