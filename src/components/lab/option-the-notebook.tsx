@@ -280,6 +280,13 @@ const CSS = `
   border-bottom: 1px solid var(--ntb-line-soft);
 }
 .ntb-row:last-child { border-bottom: 0; }
+/* the tether: the crossed note and its landed task carry the same faint
+   indigo edge on both sides of the spine, so the pairing reads at rest */
+.ntb-row.is-source::before,
+.ntb-task.is-arrived::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px; background: color-mix(in srgb, var(--ntb-accent) 40%, transparent);
+}
 .ntb-row-main { min-width: 0; }
 .ntb-row-title {
   display: block; font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em;
@@ -331,8 +338,11 @@ const CSS = `
 }
 
 /* ── Tasks ── */
+/* Positioned so the arrived task sits level with its source note across the
+   spine — the crossing reads as one horizontal line even at rest. */
 .ntb-tasks {
-  align-self: center;
+  align-self: start;
+  margin-top: clamp(150px, 12vw, 178px);
   background: var(--ntb-soft-bg);
   border: 1px solid var(--ntb-line);
   border-radius: 14px;
@@ -353,6 +363,7 @@ const CSS = `
 }
 .ntb-tasklist { list-style: none; margin: 0; padding: 0; }
 .ntb-task {
+  position: relative;
   display: flex; align-items: flex-start; gap: 10px;
   padding: 13px clamp(16px, 1.6vw, 22px);
   border-bottom: 1px solid var(--ntb-line-soft);
@@ -391,7 +402,7 @@ const CSS = `
 }
 .ntb-chip {
   position: absolute; top: 50%; left: 0;
-  transform: translate3d(27cqw, calc(-50% + 34px), 0) scale(0.9);
+  transform: translate3d(27cqw, calc(-50% + 41px), 0) scale(0.9);
   padding: 7px 12px; border-radius: 8px;
   background: var(--ntb-paper);
   border: 1px solid var(--ntb-accent);
@@ -521,11 +532,11 @@ const CSS = `
     50% { transform: translateX(4px); }
   }
   @keyframes ntb-cross {
-    0%   { opacity: 0; transform: translate3d(27cqw, calc(-50% + 34px), 0) scale(0.9); }
-    12%  { opacity: 1; transform: translate3d(31cqw, calc(-50% + 6px), 0) scale(1); }
-    50%  { transform: translate3d(56cqw, calc(-50% - 18px), 0) scale(1.02); }
-    88%  { opacity: 1; transform: translate3d(76cqw, calc(-50% - 4px), 0) scale(1); }
-    100% { opacity: 0; transform: translate3d(82cqw, calc(-50% + 2px), 0) scale(0.97); }
+    0%   { opacity: 0; transform: translate3d(27cqw, calc(-50% + 41px), 0) scale(0.9); }
+    12%  { opacity: 1; transform: translate3d(31cqw, calc(-50% + 12px), 0) scale(1); }
+    50%  { transform: translate3d(56cqw, calc(-50% - 8px), 0) scale(1.02); }
+    88%  { opacity: 1; transform: translate3d(76cqw, calc(-50% + 22px), 0) scale(1); }
+    100% { opacity: 0; transform: translate3d(82cqw, calc(-50% + 33px), 0) scale(0.97); }
   }
 }
 
