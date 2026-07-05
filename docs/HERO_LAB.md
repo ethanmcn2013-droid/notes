@@ -17,10 +17,11 @@ The `/lab` route is dev-only. Its `layout.tsx` hides Clerk keyless + Next dev ch
 
 ## The four directions
 
-Each is grounded in `docs/PRODUCT.md`. Every option is a fully scoped hero: the settled **rest state is the default CSS**, and the intro animation plays **only** inside `@media (prefers-reduced-motion: no-preference)`, so SSR, no-JS, and reduced-motion all render the finished composition. Pure CSS, no JS motion (the switcher is the only client component). Unique class prefix per option (`nt1-`, `nt2-`, `nt3-`, `ntw-`).
+Each is grounded in `docs/PRODUCT.md`. Every option is a fully scoped hero: the settled **rest state is the default CSS**, and the intro animation plays **only** inside `@media (prefers-reduced-motion: no-preference)`, so SSR, no-JS, and reduced-motion all render the finished composition. Pure CSS, no JS motion (the switcher is the only client component). Unique class prefix per option (`ntb-`, `nt1-`, `nt2-`, `nt3-`, `ntw-`).
 
 | Slug | Name | Role | Concept (PRODUCT.md anchor) |
 |---|---|---|---|
+| `the-notebook` | **The Notebook** (hybrid, featured) | polished | Notebook First × The Crossing. The whole story in one surface, three beats: a caret **writes** a thought → it **joins the stream** (count 3→4) → an older note's approved line **crosses one way** into Signal Tasks and commits. Crossing legible at rest (tether on one baseline). §3, §6, §8, §9. Prefix `ntb-`. |
 | `notebook-first` | Notebook First | polished | The marketing surface **is** the product surface — a live capture field + stream, one note crossed to Tasks. §9 "Notebook First" contract made literal. |
 | `before-it-fades` | Before It Fades | polished | The feeling under capture: the gap between remembered and lost. Thoughts drift and fade; the one you caught sits solid with the indigo caret. §3. |
 | `three-seconds` | Three Seconds | polished | The locked design budget as proof: a 0→3s capture-time track, marker landing inside budget. §3, §9. |
