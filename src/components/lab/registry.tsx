@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { OptionTheNotebook } from "./option-the-notebook";
 import { OptionNotebookFirst } from "./option-notebook-first";
 import { OptionBeforeItFades } from "./option-before-it-fades";
 import { OptionThreeSeconds } from "./option-three-seconds";
@@ -31,6 +32,16 @@ export type LabOption = {
 };
 
 export const OPTIONS: LabOption[] = [
+  {
+    slug: "the-notebook",
+    name: "The Notebook",
+    role: "polished",
+    lens: "Hybrid · capture to commit",
+    headline: "Write it down before it becomes work.",
+    blurb:
+      "The whole Signal Notes story in one surface, fusing Notebook First and The Crossing. The live notebook is the hero: a caret writes, the stream fills, and one note's approved line crosses one way into Signal Tasks and commits as a task. The surface leads; the differentiator is a moment, not a static dot; the note stays private.",
+    Component: OptionTheNotebook,
+  },
   {
     slug: "notebook-first",
     name: "Notebook First",
