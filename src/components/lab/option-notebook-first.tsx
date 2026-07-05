@@ -2,13 +2,14 @@
  * Option nt1 — Notebook First.
  *
  * The marketing surface IS the product surface (PRODUCT.md §9 "Notebook
- * First" contract). A focused capture field with the private caret, a
+ * First" contract). A focused capture field with a caret that WRITES, a
  * hairline, and a stream that fills newest-first. One note has crossed
- * into Signal Tasks and wears the indigo dot.
+ * into Signal Tasks: its indigo dot glides in from the Tasks side.
  *
- * SSR-safe: the settled composition is the default CSS. The intro (the
- * captured line wiping in like typing, the stream rows rising, the
- * Tasks dot arriving) runs once on mount, only under
+ * SSR-safe: the settled composition is the default CSS (caret parked at
+ * the line's end, dot present, headline set). The intro — the caret
+ * riding the line as it appears, the stream cascading, the Tasks dot
+ * arriving — runs once on mount, only under
  * `prefers-reduced-motion: no-preference`. No JS.
  */
 export function OptionNotebookFirst() {
@@ -48,7 +49,7 @@ export function OptionNotebookFirst() {
               <span className="nt1-caret" aria-hidden />
             </div>
             <p className="nt1-hint">
-              <kbd>⌘↵</kbd> saves &nbsp;·&nbsp; <kbd>esc</kbd> discards
+              <kbd>⌘↵</kbd> save &nbsp;·&nbsp; <kbd>esc</kbd> discard
             </p>
           </div>
 
@@ -82,7 +83,9 @@ export function OptionNotebookFirst() {
           </ul>
         </div>
 
-        <h1 className="nt1-say">Write it down before it becomes work.</h1>
+        <h1 className="nt1-say">
+          Write it down before it becomes&nbsp;work.
+        </h1>
       </div>
     </section>
   );
@@ -125,32 +128,38 @@ const CSS = `
 .nt1-kicker {
   margin: 0 0 20px; text-align: center;
   font-family: var(--nt1-mono); font-size: 11px;
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--nt1-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--nt1-faint);
 }
 
 .nt1-notebook {
   background: var(--nt1-paper);
   border: 1px solid var(--nt1-line);
   border-radius: 14px;
-  box-shadow: 0 1px 0 var(--nt1-line-soft), 0 30px 80px -40px rgba(17,17,17,0.28);
+  box-shadow: 0 1px 0 var(--nt1-line-soft), 0 24px 64px -44px rgba(17,17,17,0.20);
   overflow: hidden;
 }
 
 /* ── Capture ── */
 .nt1-capture { padding: clamp(24px, 4vw, 40px) clamp(22px, 4vw, 40px) 20px; }
 .nt1-capture-line {
-  display: flex; align-items: baseline; min-height: 1.1em;
+  position: relative; display: block;
+  width: fit-content; max-width: 100%;
+  min-height: 1.1em; white-space: nowrap;
   font-size: clamp(24px, 3.6vw, 40px); font-weight: 560;
-  letter-spacing: -0.02em; line-height: 1.08; color: var(--nt1-ink);
+  letter-spacing: -0.028em; line-height: 1.05; color: var(--nt1-ink);
 }
 .nt1-typed {
   display: inline-block;
   /* rest state: fully shown */
   clip-path: inset(0 0 0 0);
 }
+/* The caret that writes: parked at the line's end at rest; rides the
+   line left→right during the intro. */
 .nt1-caret {
-  flex: 0 0 auto; width: 2px; height: 0.86em; margin-left: 3px;
-  align-self: center; border-radius: 1px; background: var(--nt1-accent);
+  position: absolute; left: 100%; top: 50%;
+  transform: translate(0, -50%);
+  width: 2px; height: 0.82em; margin-left: 3px;
+  border-radius: 1px; background: var(--nt1-accent);
 }
 .nt1-hint {
   margin: 18px 0 0; font-family: var(--nt1-mono);
@@ -171,7 +180,7 @@ const CSS = `
   font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--nt1-faint);
 }
-.nt1-streamhead-count { letter-spacing: 0.04em; }
+.nt1-streamhead-count { letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
 .nt1-stream { list-style: none; margin: 0; padding: 0; }
 .nt1-row {
   display: grid; grid-template-columns: minmax(0, 1fr) auto;
@@ -192,6 +201,7 @@ const CSS = `
 .nt1-row-meta {
   display: inline-flex; align-items: center; gap: 10px;
   color: var(--nt1-faint); font-size: 12px; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .nt1-row-crossed {
   display: inline-flex; align-items: center; gap: 6px;
@@ -205,9 +215,20 @@ const CSS = `
 .nt1-row-crossed-label { white-space: nowrap; }
 
 .nt1-say {
-  margin: 30px auto 0; max-width: 24ch; text-align: center;
-  font-size: clamp(20px, 2vw, 26px); font-weight: 500;
-  letter-spacing: -0.02em; line-height: 1.15; color: var(--nt1-ink);
+  margin: 44px auto 0; max-width: 20ch; text-align: center;
+  font-size: clamp(24px, 2.6vw, 34px); font-weight: 520;
+  letter-spacing: -0.028em; line-height: 1.12; color: var(--nt1-ink);
+  text-wrap: balance;
+}
+
+/* Row hover — the surface is the product, so it responds. Pointer only. */
+@media (hover: hover) and (pointer: fine) {
+  .nt1-row {
+    transition: background 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)),
+                transform 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1));
+  }
+  .nt1-row:hover { background: var(--nt1-field); transform: translateX(2px); }
+  .nt1-row:hover .nt1-row-time { color: var(--nt1-soft); }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -219,33 +240,44 @@ const CSS = `
     animation: nt1-rise 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both;
   }
   .nt1-kicker { animation: nt1-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both; }
+  .nt1-streamhead {
+    opacity: 0;
+    animation: nt1-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.35s forwards;
+  }
   .nt1-say {
     opacity: 0;
-    animation: nt1-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.15s forwards;
+    animation: nt1-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.1s forwards;
   }
 
-  /* captured line wipes in like typing */
+  /* the line appears as a confident, even hand writes it (no typewriter) */
   .nt1-typed {
     clip-path: inset(0 100% 0 0);
-    animation: nt1-type 0.9s steps(28, end) 0.5s forwards;
+    animation: nt1-type 0.62s linear 0.5s forwards;
   }
+  /* the caret rides the line, plants with a 2px settle, then blinks */
   .nt1-caret {
-    opacity: 0;
+    left: 0; opacity: 0;
     animation:
       nt1-caret-in 0.01s linear 0.5s forwards,
-      nt1-blink 1.05s steps(1, end) 1.5s infinite;
+      nt1-ride 0.62s linear 0.5s forwards,
+      nt1-settle 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.12s both,
+      nt1-blink 1.05s steps(1, end) 1.6s infinite;
   }
 
-  /* stream rows rise, staggered after the line settles */
+  /* stream rows cascade after the line settles */
   .nt1-row {
     opacity: 0; transform: translateY(8px);
     animation: nt1-row-in 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both;
-    animation-delay: calc(1.5s + var(--i) * 0.14s);
+    animation-delay: calc(1.45s + var(--i) * 0.11s);
   }
-  /* the crossed dot lands last */
+  /* the crossed dot glides in from the Tasks side and lands with a spring */
   .nt1-row-dot {
-    transform: scale(0);
-    animation: nt1-dot-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) /* ds-allow — spring overshoot for the Tasks-dot arrival; no contract ease overshoots */ 2.05s forwards;
+    transform: translateX(-9px) scale(0); opacity: 0;
+    animation: nt1-dot-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) /* ds-allow — spring overshoot for the Tasks-dot arrival; no contract ease overshoots */ 2.0s forwards;
+  }
+  .nt1-row-crossed-label {
+    opacity: 0;
+    animation: nt1-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.2s forwards;
   }
 
   @keyframes nt1-rise {
@@ -255,17 +287,22 @@ const CSS = `
   @keyframes nt1-fade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes nt1-type { to { clip-path: inset(0 0 0 0); } }
   @keyframes nt1-caret-in { to { opacity: 1; } }
-  @keyframes nt1-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
-  @keyframes nt1-row-in {
-    to { opacity: 1; transform: translateY(0); }
+  @keyframes nt1-ride { to { left: 100%; } }
+  @keyframes nt1-settle {
+    0%   { transform: translate(0, -50%); }
+    50%  { transform: translate(2px, -50%); }
+    100% { transform: translate(0, -50%); }
   }
+  @keyframes nt1-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+  @keyframes nt1-row-in { to { opacity: 1; transform: translateY(0); } }
   @keyframes nt1-dot-in {
-    to { transform: scale(1); }
+    60%  { opacity: 1; }
+    to   { transform: translateX(0) scale(1); opacity: 1; }
   }
 }
 
 @media (max-width: 640px) {
   .nt1 { min-height: 78svh; padding: 40px 16px; }
-  .nt1-capture-line { font-size: clamp(21px, 6.4vw, 30px); }
+  .nt1-capture-line { font-size: clamp(20px, 6vw, 30px); }
 }
 `;

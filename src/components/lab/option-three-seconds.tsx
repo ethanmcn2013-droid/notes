@@ -3,12 +3,14 @@
  *
  * The locked design budget (PRODUCT.md §3, §9) as the whole story: from
  * "I need to write this down" to written, under three seconds. A calm
- * editorial headline, a hairline capture-time track with an indigo marker
- * that lands well inside the budget, and the notes. wordmark as anchor.
+ * editorial headline, a hairline capture-time track, and a marker that
+ * departs fast, decelerates, and plants inside the budget with a flag
+ * dropping onto it and a single ring pinging out. The notes. wordmark
+ * anchors the composition.
  *
- * SSR-safe: the marker's settled position (inside the budget) and the
- * proof flag are the default CSS. The marker's travel and the flag's
- * arrival run once on mount, motion-safe only. No JS.
+ * SSR-safe: the marker's settled position and the proof flag are the
+ * default CSS. The plant (travel, tick-flicks, flag drop, ring ping)
+ * runs once on mount, motion-safe only. No JS.
  */
 export function OptionThreeSeconds() {
   return (
@@ -35,7 +37,7 @@ export function OptionThreeSeconds() {
             </div>
           </div>
           <span className="nt3-tick" style={{ ["--p" as string]: "0%" }}>
-            0
+            0s
           </span>
           <span className="nt3-tick" style={{ ["--p" as string]: "33.33%" }}>
             1s
@@ -82,23 +84,24 @@ const CSS = `
 
 .nt3-kicker {
   margin: 0 0 26px; font-family: var(--nt3-mono); font-size: 11px;
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--nt3-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--nt3-faint);
 }
 .nt3-headline {
   margin: 0; max-width: 16ch;
   font-size: clamp(2.1rem, 1.5rem + 3vw, 4.1rem);
-  font-weight: 600; letter-spacing: -0.04em; line-height: 1.0;
+  font-weight: 600; letter-spacing: -0.04em; line-height: 1.04;
   color: var(--nt3-ink); text-wrap: balance;
 }
 .nt3-lede {
   margin: 26px 0 0; max-width: 48ch;
   font-size: 17px; line-height: 1.6; color: var(--nt3-soft);
+  text-wrap: pretty;
 }
 
 /* ── Capture-time track ── */
 .nt3-track {
-  position: relative; margin: clamp(48px, 8vh, 84px) 0 0;
-  height: 2px; width: 100%;
+  position: relative; margin: clamp(52px, 8vh, 88px) 0 0;
+  height: 1.5px; width: 100%; max-width: 600px;
   background: linear-gradient(
     to right,
     var(--nt3-ghost) 0 66.66%,
@@ -116,6 +119,12 @@ const CSS = `
   border-radius: 50%; background: var(--nt3-accent);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--nt3-accent) 12%, transparent);
 }
+/* the ping ring — invisible at rest, expands once on landing */
+.nt3-marker::after {
+  content: ""; position: absolute; inset: -3px;
+  border-radius: 50%; border: 1.5px solid var(--nt3-accent);
+  opacity: 0; transform: scale(0.6);
+}
 .nt3-flag {
   position: absolute; left: 50%; bottom: calc(100% + 12px);
   transform: translateX(-50%);
@@ -126,13 +135,13 @@ const CSS = `
   position: absolute; top: calc(100% + 12px); left: var(--p);
   transform: translateX(-50%);
   font-family: var(--nt3-mono); font-size: 11px; letter-spacing: 0.04em;
-  color: var(--nt3-faint);
+  color: var(--nt3-faint); font-variant-numeric: tabular-nums;
 }
 .nt3-tick.is-end { color: var(--nt3-ghost); }
 
 .nt3-mark {
   display: inline-flex; align-items: baseline; gap: 1px;
-  margin: clamp(46px, 8vh, 84px) 0 0;
+  margin: clamp(52px, 8vh, 88px) 0 0;
   font-family: var(--nt3-sans); font-weight: 500;
   font-size: 20px; letter-spacing: -0.03em; color: var(--nt3-ink);
 }
@@ -143,8 +152,9 @@ const CSS = `
 }
 
 /* ─────────────────────────────────────────────────────────────
-   INTRO — motion-safe only. The marker travels 0 → land once; the
-   proof flag arrives on landing. Everything else fades up calmly.
+   INTRO — motion-safe only. The marker departs fast, decelerates,
+   overshoots 2% and settles; ticks flick as it passes; the flag
+   drops onto the marker and a ring pings out.
    ───────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .nt3-kicker   { animation: nt3-up 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both; }
@@ -154,25 +164,34 @@ const CSS = `
 
   .nt3-fill {
     width: 0;
-    animation: nt3-travel 1.15s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 0.75s forwards;
+    animation: nt3-travel 0.95s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.75s forwards;
   }
+  /* ticks darken as the marker passes them */
+  .nt3-tick:nth-of-type(2) { animation: nt3-tick-pass 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s both; }
+  .nt3-tick:nth-of-type(3) { animation: nt3-tick-pass 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.35s both; }
+  /* the flag drops onto the landed marker */
   .nt3-flag {
-    opacity: 0; transform: translateX(-50%) translateY(4px);
-    animation: nt3-flag-in 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.75s forwards;
+    opacity: 0; transform: translateX(-50%) translateY(-6px);
+    animation: nt3-flag-in 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.6s forwards;
   }
-  .nt3-marker {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--nt3-accent) 30%, transparent);
-    animation: nt3-ping 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.75s forwards;
+  /* the ring pings out on landing */
+  .nt3-marker::after {
+    animation: nt3-ping 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.6s forwards;
   }
-  .nt3-mark { opacity: 0; animation: nt3-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.7s forwards; }
+  .nt3-mark { opacity: 0; animation: nt3-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.85s forwards; }
 
   @keyframes nt3-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes nt3-fade { to { opacity: 1; } }
-  @keyframes nt3-travel { to { width: var(--nt3-land); } }
+  @keyframes nt3-travel { 0% { width: 0; } 84% { width: 80%; } 100% { width: var(--nt3-land); } }
+  @keyframes nt3-tick-pass {
+    0%   { color: var(--nt3-faint); }
+    40%  { color: var(--nt3-ink); }
+    100% { color: var(--nt3-faint); }
+  }
   @keyframes nt3-flag-in { to { opacity: 1; transform: translateX(-50%) translateY(0); } }
   @keyframes nt3-ping {
-    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--nt3-accent) 30%, transparent); }
-    100% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--nt3-accent) 12%, transparent); }
+    from { opacity: 0.5; transform: scale(0.6); }
+    to   { opacity: 0;   transform: scale(2.4); }
   }
 }
 

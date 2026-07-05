@@ -6,9 +6,14 @@
  * The raw note stays private; only the chosen extract travels; the indigo
  * approved-dot is left behind on the note. Bold, but dead on-truth.
  *
- * SSR-safe: the settled composition — note with its approved dot on the
- * left, the task arrived on the right — is the default CSS. The extract's
- * glide across the divider runs once on mount, motion-safe only. No JS.
+ * The payoff beat: the extract lifts off the note (its highlight pulses,
+ * then stays — nothing goes the other way), arcs across the one-way edge,
+ * and plants into the task, whose checkbox draws its check. Both sides
+ * resolve on one beat.
+ *
+ * SSR-safe: the settled composition — note with its approved dot, the
+ * task arrived and checked — is the default CSS. The crossing runs once
+ * on mount, motion-safe only. No JS.
  */
 export function OptionTheCrossing() {
   return (
@@ -19,7 +24,7 @@ export function OptionTheCrossing() {
         <header className="ntw-head">
           <p className="ntw-kicker">Signal Notes · the one-way edge</p>
           <h1 className="ntw-headline">
-            Decide what becomes work<span className="ntw-dot" aria-hidden />
+            Decide what becomes&nbsp;work<span className="ntw-dot" aria-hidden />
           </h1>
           <p className="ntw-lede">
             A note is private until you say otherwise. Approve one line and it
@@ -64,7 +69,11 @@ export function OptionTheCrossing() {
               <span className="ntw-card-kind">committed</span>
             </div>
             <div className="ntw-task-row">
-              <span className="ntw-check" />
+              <span className="ntw-check">
+                <svg className="ntw-check-mark" viewBox="0 0 16 16" aria-hidden>
+                  <path d="M3.5 8.5 L6.8 11.6 L12.5 4.8" />
+                </svg>
+              </span>
               <span className="ntw-task-title">Send the revised florals quote</span>
             </div>
             <div className="ntw-task-meta">
@@ -88,6 +97,7 @@ const CSS = `
   --ntw-soft: var(--ink-soft);
   --ntw-faint: var(--ink-faint);
   --ntw-accent: var(--accent);
+  --ntw-glow: var(--accent-glow, rgba(79,70,229,0.32));
   --ntw-paper: var(--paper);
   --ntw-soft-bg: var(--paper-soft);
   --ntw-field: var(--paper-deep);
@@ -110,20 +120,23 @@ const CSS = `
 .ntw-head { max-width: 640px; margin: 0 auto clamp(40px, 6vh, 68px); text-align: center; }
 .ntw-kicker {
   margin: 0 0 20px; font-family: var(--ntw-mono); font-size: 11px;
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ntw-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ntw-faint);
 }
 .ntw-headline {
   margin: 0; font-size: clamp(2rem, 1.4rem + 2.8vw, 3.6rem);
   font-weight: 600; letter-spacing: -0.04em; line-height: 1.02;
+  text-wrap: balance;
 }
 .ntw-dot {
   display: inline-block; width: 0.13em; height: 0.13em; min-width: 8px; min-height: 8px;
-  max-width: 12px; max-height: 12px; margin-left: 0.04em;
+  max-width: 12px; max-height: 12px; margin-left: 0.06em;
   border-radius: 50%; background: var(--ntw-accent); vertical-align: baseline;
+  transform: translateY(-0.02em);
 }
 .ntw-lede {
-  margin: 20px auto 0; max-width: 52ch;
+  margin: 20px auto 0; max-width: 46ch;
   font-size: 16.5px; line-height: 1.6; color: var(--ntw-soft);
+  text-wrap: pretty;
 }
 
 /* ── Diagram ── */
@@ -155,7 +168,7 @@ const CSS = `
 }
 .ntw-card-tag--tasks { color: var(--ntw-soft); }
 .ntw-card-kind {
-  font-family: var(--ntw-mono); font-size: 10px; letter-spacing: 0.1em;
+  font-family: var(--ntw-mono); font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ntw-faint);
 }
 
@@ -203,6 +216,13 @@ const CSS = `
   flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px;
   border: 1.5px solid var(--ntw-accent); border-radius: 5px;
   background: color-mix(in srgb, var(--ntw-accent) 8%, transparent);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ntw-check-mark {
+  width: 11px; height: 11px; fill: none;
+  stroke: var(--ntw-accent); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 15; stroke-dashoffset: 0; /* rest: drawn (committed) */
 }
 .ntw-task-title { font-size: 15px; font-weight: 560; letter-spacing: -0.01em; line-height: 1.35; }
 .ntw-task-meta {
@@ -224,9 +244,9 @@ const CSS = `
 }
 
 /* ─────────────────────────────────────────────────────────────
-   INTRO — motion-safe only. Cards enter; the extract chip lifts off
-   the note, glides across the one-way edge, and lands as the task.
-   The approved dot on the note and the task card resolve on arrival.
+   INTRO — motion-safe only. The extract's highlight pulses as its
+   copy lifts off (then stays — nothing goes back), the chip arcs
+   across the one-way edge, and the task's checkbox draws its check.
    ───────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .ntw-kicker   { animation: ntw-up 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both; }
@@ -235,27 +255,51 @@ const CSS = `
   .ntw-note     { opacity: 0; animation: ntw-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.5s forwards; }
   .ntw-bridge   { opacity: 0; animation: ntw-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.3s forwards; }
 
-  /* task + note-dot resolve as the chip lands (~2.25s) */
-  .ntw-task { opacity: 0; transform: translateY(8px);
-    animation: ntw-in 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.1s forwards; }
-  .ntw-approved-dot { transform: scale(0);
-    animation: ntw-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the approved-dot pop */ 2.15s forwards; }
-  .ntw-approved { opacity: 0; animation: ntw-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.15s forwards; }
-
-  /* the chip glides left → right across the divider */
-  .ntw-chip {
-    animation: ntw-cross 1.3s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 1.1s forwards;
+  /* the extract highlight pulses as the copy lifts off, then stays */
+  .ntw-note-extract {
+    animation: ntw-lift-src 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.05s both;
   }
+  /* a directional nudge on the edge arrow, riding with the chip */
+  .ntw-bridge-arrow {
+    animation: ntw-arrow-pass 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.5s both;
+  }
+
+  /* the chip lifts, arcs across the one-way edge, and lands */
+  .ntw-chip {
+    animation: ntw-cross 1.25s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 1.05s forwards;
+  }
+
+  /* task + commit resolve as the chip lands (~2.3s) */
+  .ntw-task { opacity: 0; transform: translateY(8px);
+    animation: ntw-in 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.0s forwards; }
+  .ntw-check-mark { stroke-dashoffset: 15;
+    animation: ntw-check-draw 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s forwards; }
+  .ntw-approved-dot { transform: scale(0);
+    animation: ntw-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the approved-dot pop */ 2.3s forwards; }
+  .ntw-approved { opacity: 0; animation: ntw-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s forwards; }
 
   @keyframes ntw-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes ntw-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes ntw-fade { to { opacity: 1; } }
   @keyframes ntw-pop { to { transform: scale(1); } }
+  @keyframes ntw-check-draw { to { stroke-dashoffset: 0; } }
+  @keyframes ntw-lift-src {
+    0%   { background: color-mix(in srgb, var(--ntw-accent) 5%, transparent); }
+    40%  { background: color-mix(in srgb, var(--ntw-accent) 15%, transparent); }
+    100% { background: color-mix(in srgb, var(--ntw-accent) 5%, transparent); }
+  }
+  @keyframes ntw-arrow-pass {
+    0%, 100% { transform: translateX(0); }
+    50%      { transform: translateX(4px); }
+  }
   @keyframes ntw-cross {
-    0%   { opacity: 0; left: 26%; transform: translate(-50%, -50%) scale(0.96); }
-    18%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    0%   { opacity: 0; left: 26%; transform: translate(-50%, -50%) translateY(0) scale(0.96);
+           box-shadow: 0 6px 14px -10px var(--ntw-accent); }
+    18%  { opacity: 1; transform: translate(-50%, -50%) translateY(-8px) scale(1); }
+    50%  { box-shadow: 0 26px 50px -18px var(--ntw-glow); }
     82%  { opacity: 1; }
-    100% { opacity: 0; left: 74%; transform: translate(-50%, -50%) scale(0.98); }
+    100% { opacity: 0; left: 74%; transform: translate(-50%, -50%) translateY(0) scale(0.98);
+           box-shadow: 0 6px 14px -10px var(--ntw-accent); }
   }
 }
 
