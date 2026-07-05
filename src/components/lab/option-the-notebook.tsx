@@ -56,7 +56,7 @@ export function OptionTheNotebook() {
           </h1>
           <p className="ntb-lede">
             Catch the thought in three seconds. Find it later. Approve one line
-            and it crosses into Signal Tasks. The rest stays private.
+            and it crosses into Signal Tasks.
           </p>
         </header>
 
@@ -153,6 +153,16 @@ export function OptionTheNotebook() {
             <span className="ntb-chip">Send the caterer the headcount</span>
           </div>
         </div>
+
+        {/* Narration — names each beat as it plays, so a first-time viewer
+            follows the story. Cross-fades through the three beats; rest state
+            (reduced-motion) shows the closing privacy line. */}
+        <p className="ntb-narrate" aria-hidden>
+          <span className="ntb-cap ntb-cap-0">Write it down.</span>
+          <span className="ntb-cap ntb-cap-1">It’s saved. Find it later.</span>
+          <span className="ntb-cap ntb-cap-2">Decide what becomes work.</span>
+          <span className="ntb-cap ntb-cap-3">The rest stays private.</span>
+        </p>
       </div>
     </section>
   );
@@ -199,6 +209,18 @@ const CSS = `
   font-size: 16.5px; line-height: 1.6; color: var(--ntb-soft);
   text-wrap: pretty;
 }
+
+/* ── Narration — the beat captions ── */
+.ntb-narrate {
+  position: relative; display: grid; place-items: center;
+  margin: clamp(28px, 4vh, 44px) auto 0; min-height: 1.5em;
+  font-family: var(--ntb-mono); font-size: 12px; letter-spacing: 0.06em;
+  color: var(--ntb-soft);
+}
+.ntb-cap {
+  grid-area: 1 / 1; white-space: nowrap; opacity: 0;
+}
+.ntb-cap-3 { opacity: 1; } /* rest: the closing line */
 
 /* ── Stage: notebook | edge | tasks ── */
 .ntb-stage {
@@ -418,92 +440,102 @@ const CSS = `
    Rest CSS above is the finished frame, so SSR / reduced-motion is done.
    ───────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
-  .ntb-kicker   { animation: ntb-up 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both; }
-  .ntb-headline { opacity: 0; animation: ntb-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.1s forwards; }
-  .ntb-lede     { opacity: 0; animation: ntb-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.26s forwards; }
-  .ntb-notebook { opacity: 0; animation: ntb-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.5s forwards; }
-  .ntb-tasks    { opacity: 0; animation: ntb-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.52s forwards; }
-  .ntb-edge     { opacity: 0; animation: ntb-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s forwards; }
+  /* Overture — the stage assembles, unhurried */
+  .ntb-kicker   { animation: ntb-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both; }
+  .ntb-headline { opacity: 0; animation: ntb-up 0.8s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.12s forwards; }
+  .ntb-lede     { opacity: 0; animation: ntb-up 0.8s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.3s forwards; }
+  .ntb-notebook { opacity: 0; animation: ntb-in 0.8s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.6s forwards; }
+  .ntb-tasks    { opacity: 0; animation: ntb-in 0.8s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.66s forwards; }
+  .ntb-edge     { opacity: 0; animation: ntb-fade 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.25s forwards; }
 
-  /* BEAT 1 — the caret writes the thought */
-  .ntb-caret-ready {
-    opacity: 0;
-    animation:
-      ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.65s forwards,
-      ntb-blink 1.05s steps(1, end) 1.95s infinite;
+  /* the existing notes are already there, settling in as the notebook fills */
+  .ntb-row:not(.is-fresh):not(.is-source) {
+    opacity: 0; transform: translateY(8px);
+    animation: ntb-row-in 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both;
+    animation-delay: calc(1.0s + var(--i) * 0.09s);
   }
+  .ntb-row.is-source {
+    opacity: 0; transform: translateY(8px);
+    animation:
+      ntb-row-in 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.09s forwards,
+      ntb-source-pulse 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.2s both;
+  }
+
+  /* narration — one line per beat, cross-fading in sync */
+  .ntb-cap-0 { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.55s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.05s forwards; }
+  .ntb-cap-1 { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.15s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.15s forwards; }
+  .ntb-cap-2 { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.25s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.7s forwards; }
+  .ntb-cap-3 { opacity: 0; animation: ntb-fade 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.85s forwards; }
+
+  /* ── BEAT 1 (~1.7s) — the caret writes the thought, at a readable pace ── */
   .ntb-placeholder {
     animation:
-      ntb-out 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.6s forwards,
-      ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.6s forwards;
+      ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.6s forwards,
+      ntb-fade 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.05s forwards;
   }
   .ntb-typed-wrap {
     animation:
-      ntb-fade 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.72s forwards,
-      ntb-out 0.22s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.5s forwards;
+      ntb-fade 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.72s forwards,
+      ntb-out 0.28s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.95s forwards;
   }
   .ntb-typed {
     clip-path: inset(0 100% 0 0);
-    animation: ntb-type 0.6s linear 0.75s forwards;
+    animation: ntb-type 1.1s linear 1.75s forwards;
   }
   .ntb-caret-type {
     left: 0;
     animation:
-      ntb-fade 0.01s linear 0.75s forwards,
-      ntb-ride 0.6s linear 0.75s forwards,
-      ntb-blink 1.05s steps(1, end) 1.35s 2;
+      ntb-fade 0.01s linear 1.75s forwards,
+      ntb-ride 1.1s linear 1.75s forwards,
+      ntb-blink 1.05s steps(1, end) 2.85s 1;
   }
-
-  /* BEAT 2 — the thought joins the stream (the fresh row drops in; 3 → 4) */
-  .ntb-row.is-fresh {
-    opacity: 0; transform: translateY(-6px);
-    animation: ntb-fresh-in 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.5s forwards;
-  }
-  .ntb-count-3 { opacity: 1; animation: ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.62s forwards; }
-  .ntb-count-4 { opacity: 0; animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.62s forwards; }
-  /* the existing notes are already there, settling in as the notebook fills */
-  .ntb-row:not(.is-fresh) {
-    opacity: 0; transform: translateY(8px);
-    animation: ntb-row-in 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both;
-    animation-delay: calc(1.0s + var(--i) * 0.07s);
-  }
-
-  /* BEAT 3 — an older note's line lifts off, crosses, and commits */
-  .ntb-row.is-source {
+  .ntb-caret-ready {
+    opacity: 0;
     animation:
-      ntb-row-in 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.07s both,
-      ntb-source-pulse 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.1s both;
+      ntb-fade 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.05s forwards,
+      ntb-blink 1.05s steps(1, end) 3.4s infinite;
   }
+
+  /* ── BEAT 2 (~3.1s) — the thought joins the stream: the row grows in, 3 → 4 ── */
+  .ntb-row.is-fresh {
+    max-height: 0; opacity: 0; overflow: hidden;
+    padding-top: 0; padding-bottom: 0; border-bottom-color: transparent;
+    animation: ntb-fresh-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.1s forwards;
+  }
+  .ntb-count-3 { opacity: 1; animation: ntb-out 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.35s forwards; }
+  .ntb-count-4 { opacity: 0; animation: ntb-fade 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.35s forwards; }
+
+  /* ── BEAT 3 (~4.2s) — an older note's line lifts, crosses, and commits ── */
   /* the dot is left behind as the line departs */
   .ntb-row-dot {
     transform: scale(0);
-    animation: ntb-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 2.3s forwards;
+    animation: ntb-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 4.55s forwards;
   }
   /* the "in Tasks" label confirms on arrival */
   .ntb-row-crossed-label {
     opacity: 0;
-    animation: ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.1s forwards;
+    animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.7s forwards;
   }
   .ntb-edge::after {
-    animation: ntb-gate 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.55s both;
+    animation: ntb-gate 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.9s both;
   }
   .ntb-edge-arrow {
-    animation: ntb-arrow-pass 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.4s both;
+    animation: ntb-arrow-pass 1.1s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.6s both;
   }
-  /* the extract lifts off the source row, arcs across, and lands — a physical
-     toss: near-constant horizontal velocity, parabolic rise, caught at the task */
+  /* the extract lifts off the source row, floats across the one-way edge, and
+     is caught at the task — slow and deliberate, the cinematic centrepiece */
   .ntb-chip {
     will-change: transform, opacity;
-    animation: ntb-cross 1.05s linear 2.2s forwards;
+    animation: ntb-cross 1.5s linear 4.4s forwards;
   }
-  /* the task commits as the extract lands (~3.1s): it rises and its check draws */
+  /* the task commits as the extract lands (~5.7s): it rises and its check draws */
   .ntb-task.is-arrived {
     opacity: 0; transform: translateY(6px);
-    animation: ntb-in 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.0s forwards;
+    animation: ntb-in 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s forwards;
   }
   .ntb-check-mark {
     stroke-dashoffset: 15;
-    animation: ntb-check-draw 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.15s forwards;
+    animation: ntb-check-draw 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.8s forwards;
   }
 
   @keyframes ntb-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -514,28 +546,31 @@ const CSS = `
   @keyframes ntb-ride { to { left: 100%; } }
   @keyframes ntb-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
   @keyframes ntb-fresh-in {
-    0%   { opacity: 0; transform: translateY(-6px); background: color-mix(in srgb, var(--ntb-accent) 8%, transparent); }
-    100% { opacity: 1; transform: translateY(0); background: transparent; }
+    0%   { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0;
+           border-bottom-color: transparent; background: color-mix(in srgb, var(--ntb-accent) 10%, transparent); }
+    55%  { opacity: 1; }
+    100% { max-height: 84px; opacity: 1; padding-top: 14px; padding-bottom: 14px;
+           border-bottom-color: var(--ntb-line-soft); background: transparent; }
   }
   @keyframes ntb-row-in { to { opacity: 1; transform: translateY(0); } }
   @keyframes ntb-source-pulse {
     0%   { background: transparent; box-shadow: inset 2px 0 0 transparent; }
-    35%  { background: color-mix(in srgb, var(--ntb-accent) 8%, transparent);
+    40%  { background: color-mix(in srgb, var(--ntb-accent) 9%, transparent);
            box-shadow: inset 2px 0 0 var(--ntb-accent); }
     100% { background: transparent; box-shadow: inset 2px 0 0 transparent; }
   }
   @keyframes ntb-pop { to { transform: scale(1); } }
   @keyframes ntb-check-draw { to { stroke-dashoffset: 0; } }
-  @keyframes ntb-gate { 0%,100% { opacity: 0; } 50% { opacity: 0.55; } }
+  @keyframes ntb-gate { 0%,100% { opacity: 0; } 50% { opacity: 0.6; } }
   @keyframes ntb-arrow-pass {
     0%, 100% { transform: translateX(0); }
     50% { transform: translateX(4px); }
   }
   @keyframes ntb-cross {
     0%   { opacity: 0; transform: translate3d(27cqw, calc(-50% + 41px), 0) scale(0.9); }
-    12%  { opacity: 1; transform: translate3d(31cqw, calc(-50% + 12px), 0) scale(1); }
-    50%  { transform: translate3d(56cqw, calc(-50% - 8px), 0) scale(1.02); }
-    88%  { opacity: 1; transform: translate3d(76cqw, calc(-50% + 22px), 0) scale(1); }
+    10%  { opacity: 1; transform: translate3d(30cqw, calc(-50% + 12px), 0) scale(1); }
+    50%  { transform: translate3d(56cqw, calc(-50% - 10px), 0) scale(1.02); }
+    90%  { opacity: 1; transform: translate3d(77cqw, calc(-50% + 24px), 0) scale(1); }
     100% { opacity: 0; transform: translate3d(82cqw, calc(-50% + 33px), 0) scale(0.97); }
   }
 }
