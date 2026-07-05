@@ -41,4 +41,10 @@ No raw hex in lab files (the `ds:check` hex ratchet starts new files at zero) �
 
 ## Status
 
-Round 2 (design-panel pass applied). Heavy iteration expected before anything is chosen. See the session summary for the panel's per-direction scores and the next-round backlog (notably a fifth concept worth exploring: **"Findable, not organised"** — the anti-PKM counter-position from §3.2 / §7).
+Round 5 (five iteration rounds, three review councils: a 3-lens design panel, a 4-lens delight council, and a verification/re-score council). Each direction now lands a signature motion beat and has been through motion, typography, and narrative review:
+- nt1 — a caret that *writes*; the Tasks dot glides in; promoted claim.
+- nt2 — the faintest thought *escapes* (blurred trace at rest); one voice across ghosts + caught line.
+- nt3 — the marker *plants* comfortably under budget; full-width track; "written" flag.
+- ntw — the extract *crosses and commits* (checkbox draws); reduced chrome.
+
+Last director re-score: nt2 ~9.8, nt3 ~9.8, nt1 ~9.6, ntw ~9.4 (ship-grade; remaining gaps are composition/emphasis judgment calls, not defects). Open fork flagged to operator: **nt1 capture→stream loop** (the §9 "note appears in the stream" contract) — trades the bold written-line rest state for the loop motion; awaiting direction. Possible next concept: **"Findable, not organised"** (anti-PKM, §3.2/§7). Nothing promoted.
