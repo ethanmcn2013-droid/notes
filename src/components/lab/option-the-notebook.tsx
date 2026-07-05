@@ -469,7 +469,7 @@ const CSS = `
   .ntb-cap-0 { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.1s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.55s forwards; }
   .ntb-cap-1 { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.65s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.65s forwards; }
   .ntb-cap-2 { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.75s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.35s forwards; }
-  .ntb-cap-3 { opacity: 0; animation: ntb-fade 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.5s forwards; }
+  .ntb-cap-3 { opacity: 0; animation: ntb-fade 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.7s forwards; }
 
   /* ── BEAT 1 (~1.3s) — the caret writes the thought, at a readable pace ── */
   .ntb-placeholder {
@@ -518,7 +518,7 @@ const CSS = `
   /* the "in Tasks" label confirms on arrival */
   .ntb-row-crossed-label {
     opacity: 0;
-    animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.35s forwards;
+    animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s forwards;
   }
   .ntb-edge::after {
     animation: ntb-gate 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 4.45s both;
@@ -532,14 +532,15 @@ const CSS = `
     will-change: transform, opacity;
     animation: ntb-cross 1.5s linear 3.95s forwards;
   }
-  /* the task commits as the extract is placed (~5.15s): it settles and its check draws */
+  /* the task commits only once the extract has cleared (~5.45s), so the
+     payload never shows as a doubled offset copy — it becomes the task */
   .ntb-task.is-arrived {
     opacity: 0; transform: translateY(6px);
-    animation: ntb-task-land 0.55s cubic-bezier(0.22,1.12,0.4,1) /* ds-allow — gentle settle overshoot on the committed task */ 5.15s forwards;
+    animation: ntb-task-land 0.55s cubic-bezier(0.22,1.12,0.4,1) /* ds-allow — gentle settle overshoot on the committed task */ 5.45s forwards;
   }
   .ntb-check-mark {
     stroke-dashoffset: 15;
-    animation: ntb-check-draw 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.35s forwards;
+    animation: ntb-check-draw 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.7s forwards;
   }
 
   @keyframes ntb-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
