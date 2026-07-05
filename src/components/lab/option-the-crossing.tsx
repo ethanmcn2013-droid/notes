@@ -35,10 +35,11 @@ export function OptionTheCrossing() {
               <span className="ntw-card-tag">notes<span className="ntw-tag-dot" /></span>
               <span className="ntw-card-kind">private</span>
             </div>
-            <p className="ntw-note-title">Kickoff call, client asks</p>
-            <p className="ntw-note-line">Wants the deck by Thursday.</p>
+            <p className="ntw-note-title">Venue walk-through</p>
+            <p className="ntw-note-line">Wants the arch moved left.</p>
             <p className="ntw-note-line ntw-note-extract">
-              Send the revised florals quote.
+              <span>Send the revised florals quote.</span>
+              <span className="ntw-extract-tag">your line</span>
             </p>
             <p className="ntw-note-line">Pink, not red. Confirmed.</p>
             <div className="ntw-note-foot">
@@ -67,7 +68,7 @@ export function OptionTheCrossing() {
               <span className="ntw-task-title">Send the revised florals quote</span>
             </div>
             <div className="ntw-task-meta">
-              <span>Due Thursday</span>
+              <span>New in Tasks</span>
               <span className="ntw-task-sep">·</span>
               <span>from a note</span>
             </div>
@@ -163,10 +164,16 @@ const CSS = `
   margin: 0; padding: 5px 0; font-size: 13.5px; line-height: 1.4; color: var(--ntw-soft);
 }
 .ntw-note-extract {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding-left: 12px; margin: 4px 0;
   border-left: 2px solid var(--ntw-accent);
   background: color-mix(in srgb, var(--ntw-accent) 5%, transparent);
   color: var(--ntw-ink); font-weight: 500;
+}
+.ntw-extract-tag {
+  flex: 0 0 auto; font-family: var(--ntw-mono);
+  font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ntw-accent);
 }
 .ntw-note-foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--ntw-line-soft); }
 .ntw-approved {
@@ -228,16 +235,16 @@ const CSS = `
   .ntw-note     { opacity: 0; animation: ntw-in 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.5s forwards; }
   .ntw-bridge   { opacity: 0; animation: ntw-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.3s forwards; }
 
-  /* task + note-dot resolve as the chip lands (~2.5s) */
+  /* task + note-dot resolve as the chip lands (~2.25s) */
   .ntw-task { opacity: 0; transform: translateY(8px);
-    animation: ntw-in 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.45s forwards; }
+    animation: ntw-in 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.1s forwards; }
   .ntw-approved-dot { transform: scale(0);
-    animation: ntw-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the approved-dot pop */ 2.5s forwards; }
-  .ntw-approved { opacity: 0; animation: ntw-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.5s forwards; }
+    animation: ntw-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the approved-dot pop */ 2.15s forwards; }
+  .ntw-approved { opacity: 0; animation: ntw-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.15s forwards; }
 
   /* the chip glides left → right across the divider */
   .ntw-chip {
-    animation: ntw-cross 1.35s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 1.5s forwards;
+    animation: ntw-cross 1.3s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 1.1s forwards;
   }
 
   @keyframes ntw-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

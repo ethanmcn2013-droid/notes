@@ -26,8 +26,8 @@ export function OptionNotebookFirst() {
       crossed: false,
     },
     {
-      title: "Two parents need a call back",
-      preview: "before the end of the week",
+      title: "Client prefers matte over gloss",
+      preview: "mentioned it twice, worth remembering",
       time: "11m",
       crossed: false,
     },
@@ -44,7 +44,7 @@ export function OptionNotebookFirst() {
           {/* Capture field — the always-focused top of the notebook */}
           <div className="nt1-capture">
             <div className="nt1-capture-line">
-              <span className="nt1-typed">Call the caterer about the final count</span>
+              <span className="nt1-typed">Book the tasting for Tuesday</span>
               <span className="nt1-caret" aria-hidden />
             </div>
             <p className="nt1-hint">
@@ -70,7 +70,10 @@ export function OptionNotebookFirst() {
                 </span>
                 <span className="nt1-row-meta">
                   {n.crossed ? (
-                    <span className="nt1-row-dot" aria-label="crossed into Tasks" />
+                    <span className="nt1-row-crossed">
+                      <span className="nt1-row-dot" aria-hidden />
+                      <span className="nt1-row-crossed-label">in Tasks</span>
+                    </span>
                   ) : null}
                   <span className="nt1-row-time">{n.time}</span>
                 </span>
@@ -79,7 +82,7 @@ export function OptionNotebookFirst() {
           </ul>
         </div>
 
-        <p className="nt1-say">Write it down before it becomes work.</p>
+        <h1 className="nt1-say">Write it down before it becomes work.</h1>
       </div>
     </section>
   );
@@ -190,15 +193,21 @@ const CSS = `
   display: inline-flex; align-items: center; gap: 10px;
   color: var(--nt1-faint); font-size: 12px; white-space: nowrap;
 }
+.nt1-row-crossed {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--nt1-mono); font-size: 10.5px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--nt1-accent);
+}
 .nt1-row-dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--nt1-accent); display: inline-block; flex: 0 0 auto;
 }
+.nt1-row-crossed-label { white-space: nowrap; }
 
 .nt1-say {
-  margin: 26px auto 0; max-width: 34ch; text-align: center;
-  font-size: clamp(16px, 1.6vw, 19px); letter-spacing: -0.01em;
-  color: var(--nt1-soft);
+  margin: 30px auto 0; max-width: 24ch; text-align: center;
+  font-size: clamp(20px, 2vw, 26px); font-weight: 500;
+  letter-spacing: -0.02em; line-height: 1.15; color: var(--nt1-ink);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -212,13 +221,13 @@ const CSS = `
   .nt1-kicker { animation: nt1-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) both; }
   .nt1-say {
     opacity: 0;
-    animation: nt1-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.9s forwards;
+    animation: nt1-fade 0.6s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.15s forwards;
   }
 
   /* captured line wipes in like typing */
   .nt1-typed {
     clip-path: inset(0 100% 0 0);
-    animation: nt1-type 0.95s steps(38, end) 0.5s forwards;
+    animation: nt1-type 0.9s steps(28, end) 0.5s forwards;
   }
   .nt1-caret {
     opacity: 0;
@@ -236,7 +245,7 @@ const CSS = `
   /* the crossed dot lands last */
   .nt1-row-dot {
     transform: scale(0);
-    animation: nt1-dot-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) /* ds-allow — spring overshoot for the Tasks-dot arrival; no contract ease overshoots */ 2.35s forwards;
+    animation: nt1-dot-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) /* ds-allow — spring overshoot for the Tasks-dot arrival; no contract ease overshoots */ 2.05s forwards;
   }
 
   @keyframes nt1-rise {

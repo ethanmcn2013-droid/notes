@@ -24,7 +24,7 @@ export function OptionThreeSeconds() {
 
         <p className="nt3-lede">
           Open the notebook, write it down, done. Findable later by search and
-          recency. No folders, no fields, no friction on the thought.
+          recency. No folders, no fields, nothing between you and the thought.
         </p>
 
         {/* The capture-time track: 0 → 3s, marker lands inside the budget */}
@@ -164,7 +164,7 @@ const CSS = `
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--nt3-accent) 30%, transparent);
     animation: nt3-ping 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.75s forwards;
   }
-  .nt3-mark { opacity: 0; animation: nt3-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.0s forwards; }
+  .nt3-mark { opacity: 0; animation: nt3-up 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.7s forwards; }
 
   @keyframes nt3-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes nt3-fade { to { opacity: 1; } }

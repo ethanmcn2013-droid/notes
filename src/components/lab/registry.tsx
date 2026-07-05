@@ -38,7 +38,7 @@ export const OPTIONS: LabOption[] = [
     lens: "Product truth · the surface",
     headline: "The hero is the notebook.",
     blurb:
-      "The marketing surface is the product surface. A focused capture field, the private empty line, and a stream that fills newest-first. One thought crosses into Tasks and earns the indigo dot. This is the PRODUCT.md §9 Notebook First contract made literal.",
+      "The marketing surface is the product surface. A focused capture field, the private empty line, and a stream that fills newest-first. One thought crosses into Tasks and earns the indigo dot. The Notebook First contract, made literal.",
     Component: OptionNotebookFirst,
   },
   {
@@ -46,9 +46,9 @@ export const OPTIONS: LabOption[] = [
     name: "Before It Fades",
     role: "polished",
     lens: "Editorial · the feeling",
-    headline: "Catch it before it's gone.",
+    headline: "Catch it before it’s gone.",
     blurb:
-      "The emotional truth of capture: the difference between remembered and lost. A held indigo caret sits where you write it down, while the thoughts you didn't catch fade at the margin. Swiss, quiet, typographic.",
+      "The emotional truth of capture: the difference between remembered and lost. A held indigo caret sits where you write it down, while the thoughts you didn’t catch fade at the margin. Swiss, quiet, typographic.",
     Component: OptionBeforeItFades,
   },
   {

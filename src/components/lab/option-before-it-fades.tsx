@@ -96,8 +96,8 @@ const CSS = `
 .nt2-caught {
   position: relative; margin: 8px 0 0;
   display: inline-flex; align-items: baseline; justify-content: center;
-  font-size: clamp(26px, 4.6vw, 50px); font-weight: 600;
-  letter-spacing: -0.03em; line-height: 1.05; color: var(--nt2-ink);
+  font-size: clamp(20px, 2.6vw, 30px); font-weight: 500;
+  letter-spacing: -0.02em; line-height: 1.1; color: var(--nt2-ink);
 }
 .nt2-caught-text { display: inline-block; }
 .nt2-caught-caret {
@@ -106,9 +106,9 @@ const CSS = `
 }
 
 .nt2-headline {
-  margin: 0; font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
-  font-weight: 600; letter-spacing: -0.03em; line-height: 1.05;
-  color: var(--nt2-ink);
+  margin: 0; font-size: clamp(2rem, 1.4rem + 2.8vw, 3.6rem);
+  font-weight: 600; letter-spacing: -0.04em; line-height: 1.02;
+  color: var(--nt2-ink); text-wrap: balance;
 }
 .nt2-dot {
   display: inline-block; width: 0.13em; height: 0.13em; min-width: 8px; min-height: 8px;
