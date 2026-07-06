@@ -147,7 +147,7 @@ export function OptionTheNotebook() {
         {/* Narration → resolves onto the signal wordmark and a closing line */}
         <div className="ntb-narrate" aria-hidden>
           <span className="ntb-cap ntb-cap-0">Each thought, down in seconds.</span>
-          <span className="ntb-cap ntb-cap-1">What you’d forget stays where you’ll find it.</span>
+          <span className="ntb-cap ntb-cap-1">All of it, one search away.</span>
           <span className="ntb-cap ntb-cap-2">You send the one that becomes work to Signal Tasks.</span>
           <span className="ntb-cap ntb-cap-3">The rest stays private.</span>
           <span className="ntb-signoff">
@@ -208,26 +208,26 @@ const CSS = `
 /* ── Narration → sign-off ── */
 .ntb-narrate {
   position: relative; display: grid; place-items: center;
-  margin: clamp(26px, 3.6vh, 42px) auto 0; min-height: 3em;
+  margin: clamp(40px, 5.2vh, 66px) auto 0; min-height: 3em;
   font-family: var(--ntb-mono); font-size: 12px; letter-spacing: 0.06em;
   color: var(--ntb-soft); text-align: center;
 }
 .ntb-cap { grid-area: 1 / 1; white-space: nowrap; opacity: 0; }
 .ntb-signoff {
   grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center;
-  gap: 10px; opacity: 1; /* rest: the sign-off */
+  gap: 13px; opacity: 1; /* rest: the sign-off owns the close */
 }
 .ntb-wordmark {
-  display: inline-flex; align-items: baseline; gap: 1px;
+  display: inline-flex; align-items: baseline; gap: 0;
   font-family: var(--ntb-sans); font-weight: 500;
-  font-size: 30px; letter-spacing: -0.04em; color: var(--ntb-ink);
+  font-size: 38px; letter-spacing: -0.04em; color: var(--ntb-ink);
 }
 .ntb-wm-dot {
-  width: 5px; height: 5px; border-radius: 50%; background: var(--ntb-accent);
-  display: inline-block; margin-left: 1px; align-self: flex-end; margin-bottom: 3px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--ntb-accent);
+  display: inline-block; margin-left: 0.5px; align-self: flex-end; margin-bottom: 1px;
 }
 .ntb-catch {
-  font-family: var(--ntb-sans); font-size: 14px; letter-spacing: -0.01em;
+  font-family: var(--ntb-sans); font-size: 15px; letter-spacing: -0.01em;
   color: var(--ntb-soft);
 }
 
@@ -252,7 +252,7 @@ const CSS = `
 .ntb-capture-line {
   position: relative; display: block;
   min-height: 1.15em; white-space: nowrap;
-  font-size: clamp(17px, 1.7vw, 22px); font-weight: 560;
+  font-size: clamp(17px, 1.7vw, 22px); font-weight: 620;
   letter-spacing: -0.025em; line-height: 1.05; color: var(--ntb-ink);
 }
 .ntb-caret {
@@ -529,12 +529,15 @@ const CSS = `
   .ntb-row--source::before { opacity: 0; animation: ntb-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.55s forwards; }
   .ntb-row-dot { transform: scale(0); animation: ntb-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 6.95s forwards; }
   .ntb-row-crossed-label { opacity: 0; animation: ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.6s forwards; }
+  /* privacy shown, not just said: the "private" tag catches the eye as
+     "The rest stays private" reads (cap-3), then settles back to rest */
+  .ntb-streamhead-kind { animation: ntb-privacy 1.0s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.9s; }
   .ntb-edge::after { animation: ntb-gate 0.34s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.0s both; }
   .ntb-edge-arrow { animation: ntb-arrow-pass 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.98s both; }
   .ntb-chip { will-change: transform, opacity; animation: ntb-cross 0.5s linear 6.9s forwards; }
   .ntb-task.is-arrived {
     opacity: 0; transform: translateY(5px) scale(0.985);
-    animation: ntb-task-land 0.3s cubic-bezier(0.2,1.15,0.4,1) /* ds-allow — crisp snap as the swipe lands */ 7.36s forwards;
+    animation: ntb-task-land 0.32s cubic-bezier(0.2,1.15,0.4,1) /* ds-allow — crisp snap as the swipe lands */ 7.28s forwards;
   }
   .ntb-check--committed { transform: scale(0.4); animation: ntb-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the committed checkbox snaps in as the extract lands */ 7.52s forwards; }
 
@@ -555,6 +558,7 @@ const CSS = `
            border-bottom-color: var(--ntb-line-soft); background: transparent; }
   }
   @keyframes ntb-tap { 0% { transform: scale(0.3); opacity: 0; } 28% { opacity: 0.5; } 100% { transform: scale(1.9); opacity: 0; } }
+  @keyframes ntb-privacy { 0%,100% { color: var(--ntb-faint); } 40% { color: var(--ntb-accent); } }
   @keyframes ntb-source-pulse {
     0%   { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--ntb-accent) 40%, transparent); background: transparent; }
     40%  { box-shadow: inset 2px 0 0 var(--ntb-accent); background: color-mix(in srgb, var(--ntb-accent) 9%, transparent); }
@@ -572,10 +576,10 @@ const CSS = `
      lob — a decisive one-way commit. Linear timing; the curve is in the stops. */
   @keyframes ntb-cross {
     0%   { opacity: 0; transform: translate3d(27cqw, calc(-50% + 41px), 0) rotate(0deg) scaleX(1); }
-    8%   { opacity: 1; transform: translate3d(41cqw, calc(-50% + 39px), 0) rotate(-1.5deg) scaleX(1.1); }
-    40%  { opacity: 1; transform: translate3d(72cqw, calc(-50% + 35px), 0) rotate(-0.8deg) scaleX(1.04); }
-    72%  { opacity: 1; transform: translate3d(80cqw, calc(-50% + 33px), 0) rotate(-0.2deg) scaleX(1); }
-    100% { opacity: 0; transform: translate3d(82cqw, calc(-50% + 33px), 0) rotate(0deg) scaleX(1); }
+    8%   { opacity: 1; transform: translate3d(41cqw, calc(-50% + 47px), 0) rotate(-1.5deg) scaleX(1.1); }
+    40%  { opacity: 1; transform: translate3d(67cqw, calc(-50% + 63px), 0) rotate(-0.8deg) scaleX(1.04); }
+    72%  { opacity: 1; transform: translate3d(75cqw, calc(-50% + 71px), 0) rotate(-0.2deg) scaleX(1); }
+    100% { opacity: 0; transform: translate3d(76cqw, calc(-50% + 71px), 0) rotate(0deg) scaleX(1); }
   }
 }
 
