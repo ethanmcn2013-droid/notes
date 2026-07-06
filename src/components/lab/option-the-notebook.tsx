@@ -189,7 +189,7 @@ const CSS = `
 .ntb-frame { width: min(1080px, 100%); }
 
 /* ── Head ── */
-.ntb-head { max-width: 680px; margin: 0 auto clamp(32px, 4.5vh, 54px); text-align: center; }
+.ntb-head { max-width: 680px; margin: 0 auto clamp(22px, 3.2vh, 40px); text-align: center; }
 .ntb-kicker {
   margin: 0 0 18px; font-family: var(--ntb-mono); font-size: 11px;
   letter-spacing: 0.18em; text-transform: uppercase; color: var(--ntb-faint);
@@ -208,7 +208,7 @@ const CSS = `
 /* ── Narration → sign-off ── */
 .ntb-narrate {
   position: relative; display: grid; place-items: center;
-  margin: clamp(44px, 5.4vh, 78px) auto 0; min-height: 3em;
+  margin: clamp(52px, 6vh, 88px) auto 0; min-height: 3em;
   font-family: var(--ntb-mono); font-size: 12px; letter-spacing: 0.06em;
   color: var(--ntb-soft); text-align: center;
 }
@@ -237,7 +237,7 @@ const CSS = `
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 1fr);
   align-items: stretch; gap: clamp(10px, 1.9vw, 26px);
-  opacity: 0.93; /* resolved frame: the demo settles a touch so the name leads */
+  opacity: 0.87; /* resolved frame: the demo settles a touch so the name leads */
 }
 
 /* ── Notebook ── */
@@ -466,7 +466,7 @@ const CSS = `
 
   /* Act 1 holds the notebook centred under the header; at the reveal the stage
      slides to its resting position so Signal Tasks arrives into the space held
-     for it (desktop only). At the sign-off the stage eases back a touch (to 0.93,
+     for it (desktop only). At the sign-off the stage eases back a touch (to 0.87,
      still fully legible — never dimmed to dark) so the wordmark leads the close. */
   .ntb-stage { opacity: 1; animation: ntb-recede 1.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.0s forwards; }
   @media (min-width: 861px) {
@@ -475,7 +475,7 @@ const CSS = `
                  ntb-recede 1.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.0s forwards; }
   }
   @keyframes ntb-recenter { to { transform: translateX(0); } }
-  @keyframes ntb-recede { to { opacity: 0.93; } }
+  @keyframes ntb-recede { to { opacity: 0.87; } }
 
   /* the ready caret shows in the overture, hides while notes type, and
      returns (blinking) once the three notes are in — matching rest */
