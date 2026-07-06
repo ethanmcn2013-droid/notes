@@ -20,7 +20,7 @@ export function OptionTheNotebook() {
       role: "n1",
     },
     {
-      title: "The marquee company still hasn’t confirmed Saturday",
+      title: "The marquee company hasn’t confirmed Saturday",
       preview: "chased them once already",
       time: "2m",
       role: "source",
@@ -61,7 +61,7 @@ export function OptionTheNotebook() {
                   <span className="ntb-caret ntb-caret-type" />
                 </span>
                 <span className="ntb-tw ntb-tw-2">
-                  <span className="ntb-typed">The marquee company still hasn’t confirmed Saturday</span>
+                  <span className="ntb-typed">The marquee company hasn’t confirmed Saturday</span>
                   <span className="ntb-caret ntb-caret-type" />
                 </span>
                 <span className="ntb-tw ntb-tw-3">
@@ -86,20 +86,23 @@ export function OptionTheNotebook() {
             <ul className="ntb-stream">
               {stream.map((n) => (
                 <li key={n.title} className={"ntb-row ntb-row--" + n.role}>
-                  <span className="ntb-row-main">
-                    <span className="ntb-row-title">{n.title}</span>
-                    <span className="ntb-row-preview">{n.preview}</span>
+                  <span className="ntb-row-inner">
+                    <span className="ntb-row-main">
+                      <span className="ntb-row-title">{n.title}</span>
+                      <span className="ntb-row-preview">{n.preview}</span>
+                    </span>
+                    <span className="ntb-row-meta">
+                      {n.role === "source" ? (
+                        <span className="ntb-row-crossed">
+                          <span className="ntb-row-dot" />
+                          <span className="ntb-row-crossed-label">in Tasks</span>
+                        </span>
+                      ) : (
+                        <span className="ntb-row-time">{n.time}</span>
+                      )}
+                    </span>
                   </span>
-                  <span className="ntb-row-meta">
-                    {n.role === "source" ? (
-                      <span className="ntb-row-crossed">
-                        <span className="ntb-row-dot" />
-                        <span className="ntb-row-crossed-label">in Tasks</span>
-                      </span>
-                    ) : (
-                      <span className="ntb-row-time">{n.time}</span>
-                    )}
-                  </span>
+                  {n.role === "source" ? <span className="ntb-approve" /> : null}
                 </li>
               ))}
             </ul>
@@ -147,13 +150,13 @@ export function OptionTheNotebook() {
 
         {/* Narration → resolves onto the signal wordmark and a closing line */}
         <div className="ntb-narrate" aria-hidden>
-          <span className="ntb-cap ntb-cap-0">Catch each thought in three seconds.</span>
-          <span className="ntb-cap ntb-cap-1">Everything you’d forget, kept where you’ll find it.</span>
-          <span className="ntb-cap ntb-cap-2">Send the one that becomes work to Tasks.</span>
+          <span className="ntb-cap ntb-cap-0">Each thought, down in seconds.</span>
+          <span className="ntb-cap ntb-cap-1">What you’d forget stays where you’ll find it.</span>
+          <span className="ntb-cap ntb-cap-2">You send the one that becomes work to Signal Tasks.</span>
           <span className="ntb-cap ntb-cap-3">The rest stays private.</span>
           <span className="ntb-signoff">
             <span className="ntb-wordmark">
-              <span className="ntb-wm-word">signal</span>
+              <span className="ntb-wm-word">notes</span>
               <span className="ntb-wm-dot" />
             </span>
             <span className="ntb-catch">Nothing worth keeping gets lost.</span>
@@ -307,12 +310,23 @@ const CSS = `
 .ntb-stream { list-style: none; margin: 0; padding: 0; flex: 1 1 auto; }
 .ntb-row {
   position: relative;
-  display: grid; grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center; gap: 14px;
-  padding: 14px clamp(20px, 2.6vw, 32px);
+  display: grid; grid-template-rows: 1fr;
   border-bottom: 1px solid var(--ntb-line-soft);
 }
 .ntb-row:last-child { border-bottom: 0; }
+.ntb-row-inner {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center; gap: 14px;
+  min-width: 0; min-height: 0; overflow: hidden;
+  padding: 14px clamp(20px, 2.6vw, 32px);
+}
+/* the approval tap — a deliberate act before the extract crosses; invisible at rest */
+.ntb-approve {
+  position: absolute; top: 50%; right: clamp(20px, 2.6vw, 32px);
+  width: 17px; height: 17px; margin-top: -8.5px; border-radius: 50%;
+  border: 1.5px solid var(--ntb-accent);
+  transform: scale(0.3); opacity: 0; pointer-events: none;
+}
 /* the crossed note and its task share a faint indigo edge on both sides */
 .ntb-row--source::before,
 .ntb-task.is-arrived::before {
@@ -449,8 +463,10 @@ const CSS = `
   .ntb-headline { opacity: 0; animation: ntb-up 0.8s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.12s forwards; }
   .ntb-lede     { opacity: 0; animation: ntb-up 0.8s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.3s forwards; }
   .ntb-notebook { opacity: 0; animation: ntb-in 0.75s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.45s forwards; }
-  .ntb-tasks    { opacity: 0; animation: ntb-in 0.75s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.5s forwards; }
-  .ntb-edge     { opacity: 0; animation: ntb-fade 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.9s forwards; }
+  /* Act 2 opens: Signal Tasks and the one-way edge are held back until a
+     thought is approved to cross, so Act 1 reads as pure Notes capture */
+  .ntb-tasks    { opacity: 0; animation: ntb-in 0.75s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.3s forwards; }
+  .ntb-edge     { opacity: 0; animation: ntb-fade 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.2s forwards; }
 
   /* the ready caret shows in the overture, hides while notes type, and
      returns (blinking) once the three notes are in — matching rest */
@@ -458,12 +474,12 @@ const CSS = `
     opacity: 0;
     animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 0.9s forwards,
                ntb-out 0.15s linear 1.2s forwards,
-               ntb-fade 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.4s forwards,
-               ntb-blink 1.06s steps(1, end) 5.75s infinite;
+               ntb-fade 0.35s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s forwards,
+               ntb-blink 1.06s steps(1, end) 5.95s infinite;
   }
   .ntb-placeholder {
     animation: ntb-out 0.2s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.1s forwards,
-               ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.4s forwards;
+               ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.6s forwards;
   }
 
   /* narration — the capture caption covers all three notes; the payoff
@@ -486,7 +502,7 @@ const CSS = `
   .ntb-tw-2 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.28s linear 2.6s forwards; }
   .ntb-tw-2 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 2.6s forwards, ntb-ride 1.28s linear 2.6s forwards, ntb-out 0.15s linear 3.88s forwards; }
 
-  .ntb-tw-3 { animation: ntb-fade 0.2s linear 4.15s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s forwards; }
+  .ntb-tw-3 { animation: ntb-fade 0.2s linear 4.15s forwards, ntb-out 0.18s linear 5.3s forwards; }
   .ntb-tw-3 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.0s linear 4.25s forwards; }
   .ntb-tw-3 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 4.25s forwards, ntb-ride 1.0s linear 4.25s forwards, ntb-out 0.15s linear 5.25s forwards; }
 
@@ -503,7 +519,8 @@ const CSS = `
   .ntb-count-2 { animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.95s forwards, ntb-out 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s forwards; }
   .ntb-count-3 { opacity: 0; animation: ntb-fade 0.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.35s forwards; }
 
-  /* ── Promote: the marquee note crosses to Tasks (~6.6s) ── */
+  /* ── Promote: the user approves the marquee note, then it crosses (~6.5s) ── */
+  .ntb-approve { animation: ntb-tap 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.5s both; }
   .ntb-row-dot { transform: scale(0); animation: ntb-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 6.95s forwards; }
   .ntb-row-crossed-label { opacity: 0; animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.35s forwards; }
   .ntb-edge::after { animation: ntb-gate 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.25s both; }
@@ -522,13 +539,16 @@ const CSS = `
   @keyframes ntb-type { to { clip-path: inset(0 0 0 0); } }
   @keyframes ntb-ride { to { left: 100%; } }
   @keyframes ntb-blink { 0%,53% { opacity: 1; } 53.01%,100% { opacity: 0; } }
+  /* row collapse via grid-template-rows 0fr→1fr — ends exactly at natural
+     height (== rest), no magic max-height; padding rides on .ntb-row-inner */
   @keyframes ntb-grow {
-    0%   { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0;
+    0%   { grid-template-rows: 0fr; opacity: 0;
            border-bottom-color: transparent; background: color-mix(in srgb, var(--ntb-accent) 10%, transparent); }
     70%  { opacity: 1; }
-    100% { max-height: 74px; opacity: 1; padding-top: 14px; padding-bottom: 14px;
+    100% { grid-template-rows: 1fr; opacity: 1;
            border-bottom-color: var(--ntb-line-soft); background: transparent; }
   }
+  @keyframes ntb-tap { 0% { transform: scale(0.3); opacity: 0; } 28% { opacity: 0.5; } 100% { transform: scale(1.9); opacity: 0; } }
   @keyframes ntb-source-pulse {
     0%   { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--ntb-accent) 40%, transparent); background: transparent; }
     40%  { box-shadow: inset 2px 0 0 var(--ntb-accent); background: color-mix(in srgb, var(--ntb-accent) 9%, transparent); }
