@@ -501,19 +501,21 @@ const CSS = `
   .ntb-wm-dot  { transform: scale(0);
     animation: ntb-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the caret settles as the wordmark dot */ 9.5s forwards; }
 
-  /* ── Notes 1–3: each types (speed scaled to length so it reads as a
-     hand, not a wipe), then logs (its row grows in; count ticks) ── */
+  /* ── Notes 1–3: each is TYPED character by character — the reveal and the
+     riding caret both advance in stepped increments (steps() = one keystroke
+     at a time, a hand at a keyboard), not a smooth wipe. Step count ≈ the
+     note's character count; then the note logs (its row grows in; count ticks) ── */
   .ntb-tw-1 { animation: ntb-fade 0.2s linear 1.1s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s forwards; }
-  .ntb-tw-1 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.05s linear 1.2s forwards; }
-  .ntb-tw-1 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 1.2s forwards, ntb-ride 1.05s linear 1.2s forwards, ntb-out 0.15s linear 2.25s forwards; }
+  .ntb-tw-1 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.05s steps(42, end) 1.2s forwards; }
+  .ntb-tw-1 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 1.2s forwards, ntb-ride 1.05s steps(42, end) 1.2s forwards, ntb-out 0.15s linear 2.25s forwards; }
 
   .ntb-tw-2 { animation: ntb-fade 0.2s linear 2.5s forwards, ntb-out 0.25s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.9s forwards; }
-  .ntb-tw-2 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.28s linear 2.6s forwards; }
-  .ntb-tw-2 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 2.6s forwards, ntb-ride 1.28s linear 2.6s forwards, ntb-out 0.15s linear 3.88s forwards; }
+  .ntb-tw-2 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.28s steps(45, end) 2.6s forwards; }
+  .ntb-tw-2 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 2.6s forwards, ntb-ride 1.28s steps(45, end) 2.6s forwards, ntb-out 0.15s linear 3.88s forwards; }
 
   .ntb-tw-3 { animation: ntb-fade 0.2s linear 4.15s forwards, ntb-out 0.18s linear 5.3s forwards; }
-  .ntb-tw-3 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.0s linear 4.25s forwards; }
-  .ntb-tw-3 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 4.25s forwards, ntb-ride 1.0s linear 4.25s forwards, ntb-out 0.15s linear 5.25s forwards; }
+  .ntb-tw-3 .ntb-typed { clip-path: inset(0 100% 0 0); animation: ntb-type 1.0s steps(40, end) 4.25s forwards; }
+  .ntb-tw-3 .ntb-caret-type { left: 0; animation: ntb-fade 0.01s linear 4.25s forwards, ntb-ride 1.0s steps(40, end) 4.25s forwards, ntb-out 0.15s linear 5.25s forwards; }
 
   /* rows grow into the stream as each note logs */
   .ntb-row--n1     { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s both; }
