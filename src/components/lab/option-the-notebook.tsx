@@ -122,11 +122,7 @@ export function OptionTheNotebook() {
             </div>
             <ul className="ntb-tasklist">
               <li className="ntb-task is-arrived">
-                <span className="ntb-check">
-                  <svg className="ntb-check-mark" viewBox="0 0 16 16">
-                    <path d="M3.5 8.5 L6.8 11.6 L12.5 4.8" />
-                  </svg>
-                </span>
+                <span className="ntb-check ntb-check--committed" />
                 <span className="ntb-task-body">
                   <span className="ntb-task-title">Chase the marquee company for Saturday</span>
                   <span className="ntb-task-meta">from a note</span>
@@ -227,8 +223,8 @@ const CSS = `
   font-size: 30px; letter-spacing: -0.04em; color: var(--ntb-ink);
 }
 .ntb-wm-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--ntb-accent);
-  display: inline-block; margin-left: 2px; align-self: flex-end; margin-bottom: 5px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--ntb-accent);
+  display: inline-block; margin-left: 1px; align-self: flex-end; margin-bottom: 3px;
 }
 .ntb-catch {
   font-family: var(--ntb-sans); font-size: 14px; letter-spacing: -0.01em;
@@ -256,7 +252,7 @@ const CSS = `
 .ntb-capture-line {
   position: relative; display: block;
   min-height: 1.15em; white-space: nowrap;
-  font-size: clamp(18px, 1.95vw, 26px); font-weight: 560;
+  font-size: clamp(17px, 1.7vw, 22px); font-weight: 560;
   letter-spacing: -0.025em; line-height: 1.05; color: var(--ntb-ink);
 }
 .ntb-caret {
@@ -420,11 +416,10 @@ const CSS = `
   display: inline-flex; align-items: center; justify-content: center;
 }
 .ntb-check--open { border-color: var(--ntb-line); background: transparent; }
-.ntb-check-mark {
-  width: 11px; height: 11px; fill: none;
-  stroke: var(--ntb-accent); stroke-width: 2;
-  stroke-linecap: round; stroke-linejoin: round;
-  stroke-dasharray: 15; stroke-dashoffset: 0; /* rest: drawn */
+/* the arrived task lands as newly committed and OPEN (accent box, no tick):
+   a fresh extract is work to be done, not work already finished (§8 open→done) */
+.ntb-check--committed {
+  background: color-mix(in srgb, var(--ntb-accent) 14%, transparent);
 }
 .ntb-task-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .ntb-task-title {
@@ -468,6 +463,14 @@ const CSS = `
   .ntb-tasks    { opacity: 0; animation: ntb-in 0.75s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.3s forwards; }
   .ntb-edge     { opacity: 0; animation: ntb-fade 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.2s forwards; }
 
+  /* Act 1 holds the notebook centred under the header; at the reveal the stage
+     slides to its resting position so Signal Tasks arrives into the space held
+     for it. Desktop only — the stacked layout has no void to fill. */
+  @media (min-width: 861px) {
+    .ntb-stage { transform: translateX(21.5%); animation: ntb-recenter 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.0s forwards; }
+  }
+  @keyframes ntb-recenter { to { transform: translateX(0); } }
+
   /* the ready caret shows in the overture, hides while notes type, and
      returns (blinking) once the three notes are in — matching rest */
   .ntb-caret-ready {
@@ -485,8 +488,8 @@ const CSS = `
   /* narration — the capture caption covers all three notes; the payoff
      line ("kept where you'll find it") is given room to breathe */
   .ntb-cap-0   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s forwards; }
-  .ntb-cap-1   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.6s forwards; }
-  .ntb-cap-2   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.7s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.5s forwards; }
+  .ntb-cap-1   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.4s forwards; }
+  .ntb-cap-2   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.5s forwards; }
   .ntb-cap-3   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.6s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.7s forwards; }
   .ntb-signoff { opacity: 0; animation: ntb-signoff-in 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.8s forwards; }
   .ntb-wm-dot  { transform: scale(0);
@@ -509,7 +512,7 @@ const CSS = `
   /* rows grow into the stream as each note logs */
   .ntb-row--n1     { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 2.3s both; }
   .ntb-row--source { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 3.9s both,
-                                ntb-source-pulse 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.6s both; }
+                                ntb-source-pulse 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.6s forwards; }
   .ntb-row--n3     { animation: ntb-grow 0.55s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s both; }
   .ntb-row--source .ntb-row-title { animation: ntb-peel 0.5s var(--ease-in-out, cubic-bezier(0.77,0,0.175,1)) 6.6s both; }
 
@@ -521,6 +524,9 @@ const CSS = `
 
   /* ── Promote: the user approves the marquee note, then it crosses (~6.5s) ── */
   .ntb-approve { animation: ntb-tap 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.5s both; }
+  /* the indigo edge marker is held back until approval — during Act 1 the note
+     sits unflagged like any other, so nothing telegraphs the choice */
+  .ntb-row--source::before { opacity: 0; animation: ntb-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.55s forwards; }
   .ntb-row-dot { transform: scale(0); animation: ntb-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 6.95s forwards; }
   .ntb-row-crossed-label { opacity: 0; animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.35s forwards; }
   .ntb-edge::after { animation: ntb-gate 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.25s both; }
@@ -530,7 +536,7 @@ const CSS = `
     opacity: 0; transform: translateY(6px);
     animation: ntb-task-land 0.55s cubic-bezier(0.22,1.12,0.4,1) /* ds-allow — gentle settle on the committed task */ 8.25s forwards;
   }
-  .ntb-check-mark { stroke-dashoffset: 15; animation: ntb-check-draw 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.5s forwards; }
+  .ntb-check--committed { transform: scale(0.4); animation: ntb-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the committed checkbox snaps in as the extract lands */ 8.5s forwards; }
 
   @keyframes ntb-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes ntb-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -556,7 +562,6 @@ const CSS = `
   }
   @keyframes ntb-peel { 0% { transform: translateY(0); } 40% { transform: translateY(-2px); } 100% { transform: translateY(0); } }
   @keyframes ntb-pop { to { transform: scale(1); } }
-  @keyframes ntb-check-draw { to { stroke-dashoffset: 0; } }
   @keyframes ntb-gate { 0%,100% { opacity: 0; } 50% { opacity: 0.6; } }
   @keyframes ntb-arrow-pass { 0%,100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
   @keyframes ntb-task-land { to { opacity: 1; transform: translateY(0); } }
