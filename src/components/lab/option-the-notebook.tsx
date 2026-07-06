@@ -489,11 +489,11 @@ const CSS = `
      line ("kept where you'll find it") is given room to breathe */
   .ntb-cap-0   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 1.0s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.3s forwards; }
   .ntb-cap-1   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 5.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.4s forwards; }
-  .ntb-cap-2   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.5s forwards; }
-  .ntb-cap-3   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.6s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.7s forwards; }
-  .ntb-signoff { opacity: 0; animation: ntb-signoff-in 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.8s forwards; }
+  .ntb-cap-2   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.5s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.8s forwards; }
+  .ntb-cap-3   { animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.9s forwards, ntb-out 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.0s forwards; }
+  .ntb-signoff { opacity: 0; animation: ntb-signoff-in 0.9s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.1s forwards; }
   .ntb-wm-dot  { transform: scale(0);
-    animation: ntb-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the caret settles as the wordmark dot */ 10.2s forwards; }
+    animation: ntb-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the caret settles as the wordmark dot */ 9.5s forwards; }
 
   /* ── Notes 1–3: each types (speed scaled to length so it reads as a
      hand, not a wipe), then logs (its row grows in; count ticks) ── */
@@ -528,15 +528,15 @@ const CSS = `
      sits unflagged like any other, so nothing telegraphs the choice */
   .ntb-row--source::before { opacity: 0; animation: ntb-fade 0.5s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.55s forwards; }
   .ntb-row-dot { transform: scale(0); animation: ntb-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — spring overshoot for the crossed-dot arrival */ 6.95s forwards; }
-  .ntb-row-crossed-label { opacity: 0; animation: ntb-fade 0.45s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 8.35s forwards; }
-  .ntb-edge::after { animation: ntb-gate 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.25s both; }
-  .ntb-edge-arrow { animation: ntb-arrow-pass 1.1s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.95s both; }
-  .ntb-chip { will-change: transform, opacity; animation: ntb-cross 1.5s linear 6.75s forwards; }
+  .ntb-row-crossed-label { opacity: 0; animation: ntb-fade 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.6s forwards; }
+  .ntb-edge::after { animation: ntb-gate 0.34s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 7.0s both; }
+  .ntb-edge-arrow { animation: ntb-arrow-pass 0.4s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.98s both; }
+  .ntb-chip { will-change: transform, opacity; animation: ntb-cross 0.5s linear 6.9s forwards; }
   .ntb-task.is-arrived {
-    opacity: 0; transform: translateY(6px);
-    animation: ntb-task-land 0.55s cubic-bezier(0.22,1.12,0.4,1) /* ds-allow — gentle settle on the committed task */ 8.25s forwards;
+    opacity: 0; transform: translateY(5px) scale(0.985);
+    animation: ntb-task-land 0.3s cubic-bezier(0.2,1.15,0.4,1) /* ds-allow — crisp snap as the swipe lands */ 7.36s forwards;
   }
-  .ntb-check--committed { transform: scale(0.4); animation: ntb-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the committed checkbox snaps in as the extract lands */ 8.5s forwards; }
+  .ntb-check--committed { transform: scale(0.4); animation: ntb-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) /* ds-allow — the committed checkbox snaps in as the extract lands */ 7.52s forwards; }
 
   @keyframes ntb-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes ntb-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -562,18 +562,20 @@ const CSS = `
   }
   @keyframes ntb-peel { 0% { transform: translateY(0); } 40% { transform: translateY(-2px); } 100% { transform: translateY(0); } }
   @keyframes ntb-pop { to { transform: scale(1); } }
-  @keyframes ntb-gate { 0%,100% { opacity: 0; } 50% { opacity: 0.6; } }
-  @keyframes ntb-arrow-pass { 0%,100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
-  @keyframes ntb-task-land { to { opacity: 1; transform: translateY(0); } }
+  @keyframes ntb-gate { 0%,100% { opacity: 0; } 45% { opacity: 0.9; } }
+  @keyframes ntb-arrow-pass { 0% { transform: translateX(0); } 45% { transform: translateX(7px); } 100% { transform: translateX(0); } }
+  @keyframes ntb-task-land { to { opacity: 1; transform: translateY(0) scale(1); } }
   @keyframes ntb-signoff-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  /* decelerating catch: the last third slows and lands at unit scale */
+  /* a sharp one-way swipe: the extract is released with momentum and flicked
+     across the edge (front-loaded distance = explosive launch, then a crisp
+     settle), a brief horizontal smear + slight tilt reading as velocity. Not a
+     lob — a decisive one-way commit. Linear timing; the curve is in the stops. */
   @keyframes ntb-cross {
-    0%   { opacity: 0; transform: translate3d(27cqw, calc(-50% + 41px), 0) scale(0.90); }
-    8%   { opacity: 1; transform: translate3d(29cqw, calc(-50% + 10px), 0) scale(1); }
-    46%  {             transform: translate3d(54cqw, calc(-50% - 10px), 0) scale(1.02); }
-    82%  { opacity: 1; transform: translate3d(76cqw, calc(-50% + 26px), 0) scale(1); }
-    95%  {             transform: translate3d(81cqw, calc(-50% + 33px), 0) scale(1); }
-    100% { opacity: 0; transform: translate3d(82cqw, calc(-50% + 33px), 0) scale(1); }
+    0%   { opacity: 0; transform: translate3d(27cqw, calc(-50% + 41px), 0) rotate(0deg) scaleX(1); }
+    8%   { opacity: 1; transform: translate3d(41cqw, calc(-50% + 39px), 0) rotate(-1.5deg) scaleX(1.1); }
+    40%  { opacity: 1; transform: translate3d(72cqw, calc(-50% + 35px), 0) rotate(-0.8deg) scaleX(1.04); }
+    72%  { opacity: 1; transform: translate3d(80cqw, calc(-50% + 33px), 0) rotate(-0.2deg) scaleX(1); }
+    100% { opacity: 0; transform: translate3d(82cqw, calc(-50% + 33px), 0) rotate(0deg) scaleX(1); }
   }
 }
 
