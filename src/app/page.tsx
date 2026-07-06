@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { NotesHeroVoice } from "@/components/marketing/notes-hero-voice";
+import { NotesHeroNotebook } from "@/components/marketing/notes-hero-notebook";
 import { NotesDemo } from "@/components/marketing/notes-demo";
 import { NotesHeader } from "@/components/marketing/notes-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
@@ -16,12 +16,11 @@ export default async function HomePage() {
       <NotesHeader isSignedIn={isSignedIn} />
 
       {/*
-        Page order (Caravaggio walkover, row 1): animated wordmark hero ->
-        one-sentence promise -> "Open the notebook". The second hero
-        (live notebook demo) and the animated NoteAnatomy were cut from
-        the home. NoteAnatomy now lives at /anatomy as a deep-link.
+        Homepage hero: The Notebook — a ~10s SSR-safe, pure-CSS film of the whole
+        product in one surface (capture -> find -> swipe one way to Tasks), resolving
+        on the notes. wordmark. Reduced-motion / no-JS render the finished frame.
       */}
-      <NotesHeroVoice />
+      <NotesHeroNotebook />
 
       <main className="mx-auto max-w-[860px] px-7 pt-0 pb-32">
         <section
@@ -51,7 +50,7 @@ export default async function HomePage() {
               margin: 0,
             }}
           >
-            Capture it before it becomes work.
+            Findable later, never filed.
           </h2>
           <p
             style={{
