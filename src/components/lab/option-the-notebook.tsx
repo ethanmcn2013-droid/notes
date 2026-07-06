@@ -44,8 +44,8 @@ export function OptionTheNotebook() {
             Write it down before it becomes&nbsp;work.
           </h1>
           <p className="ntb-lede">
-            A private place to catch a thought in three seconds, before it
-            slips.
+            A private place to catch a thought in three seconds, while you
+            still have it.
           </p>
         </header>
 
@@ -208,7 +208,7 @@ const CSS = `
 /* ── Narration → sign-off ── */
 .ntb-narrate {
   position: relative; display: grid; place-items: center;
-  margin: clamp(40px, 5.2vh, 66px) auto 0; min-height: 3em;
+  margin: clamp(44px, 5.4vh, 78px) auto 0; min-height: 3em;
   font-family: var(--ntb-mono); font-size: 12px; letter-spacing: 0.06em;
   color: var(--ntb-soft); text-align: center;
 }
@@ -220,11 +220,11 @@ const CSS = `
 .ntb-wordmark {
   display: inline-flex; align-items: baseline; gap: 0;
   font-family: var(--ntb-sans); font-weight: 500;
-  font-size: 38px; letter-spacing: -0.04em; color: var(--ntb-ink);
+  font-size: 44px; letter-spacing: -0.04em; color: var(--ntb-ink);
 }
 .ntb-wm-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--ntb-accent);
-  display: inline-block; margin-left: 0.5px; align-self: flex-end; margin-bottom: 1px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--ntb-accent);
+  display: inline-block; margin-left: 0; align-self: flex-end; margin-bottom: 1px;
 }
 .ntb-catch {
   font-family: var(--ntb-sans); font-size: 15px; letter-spacing: -0.01em;
@@ -237,6 +237,7 @@ const CSS = `
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 1fr);
   align-items: stretch; gap: clamp(10px, 1.9vw, 26px);
+  opacity: 0.93; /* resolved frame: the demo settles a touch so the name leads */
 }
 
 /* ── Notebook ── */
@@ -465,11 +466,16 @@ const CSS = `
 
   /* Act 1 holds the notebook centred under the header; at the reveal the stage
      slides to its resting position so Signal Tasks arrives into the space held
-     for it. Desktop only — the stacked layout has no void to fill. */
+     for it (desktop only). At the sign-off the stage eases back a touch (to 0.93,
+     still fully legible — never dimmed to dark) so the wordmark leads the close. */
+  .ntb-stage { opacity: 1; animation: ntb-recede 1.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.0s forwards; }
   @media (min-width: 861px) {
-    .ntb-stage { transform: translateX(21.5%); animation: ntb-recenter 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.0s forwards; }
+    .ntb-stage { transform: translateX(21.5%);
+      animation: ntb-recenter 0.7s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 6.0s forwards,
+                 ntb-recede 1.3s var(--ease-out, cubic-bezier(0.23,1,0.32,1)) 9.0s forwards; }
   }
   @keyframes ntb-recenter { to { transform: translateX(0); } }
+  @keyframes ntb-recede { to { opacity: 0.93; } }
 
   /* the ready caret shows in the overture, hides while notes type, and
      returns (blinking) once the three notes are in — matching rest */
