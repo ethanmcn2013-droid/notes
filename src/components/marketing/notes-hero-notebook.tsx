@@ -226,7 +226,7 @@ const CSS = `
 }
 .ntb-wm-dot {
   width: 7px; height: 7px; border-radius: 50%; background: var(--ntb-accent);
-  display: inline-block; margin-left: 0; align-self: flex-end; margin-bottom: 1px;
+  display: inline-block; margin-left: 0.06em; align-self: flex-end; margin-bottom: 0.08em;
 }
 .ntb-catch {
   font-family: var(--ntb-sans); font-size: 15px; letter-spacing: -0.01em;
