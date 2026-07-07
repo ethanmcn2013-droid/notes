@@ -225,8 +225,12 @@ const CSS = `
   font-size: 44px; letter-spacing: -0.04em; color: var(--ntb-ink);
 }
 .ntb-wm-dot {
+  /* Baseline-seated like the canonical wordmark period: the empty
+     inline-block's baseline is its bottom edge, so under the parent's
+     align-items: baseline the dot ENDS the word instead of hanging
+     below it in the descender space (the old flex-end put it there). */
   width: 7px; height: 7px; border-radius: 50%; background: var(--ntb-accent);
-  display: inline-block; margin-left: 0; align-self: flex-end; margin-bottom: 1px;
+  display: inline-block; margin-left: 3px;
 }
 .ntb-catch {
   font-family: var(--ntb-sans); font-size: 15px; letter-spacing: -0.01em;
