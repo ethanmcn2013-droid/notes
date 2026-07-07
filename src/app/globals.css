@@ -248,8 +248,10 @@ button, input, textarea { font: inherit; }
   /* Hard px ceiling so the dot can never balloon during font-swap
      or unhydrated windows where em resolves to a large fallback.
      R3-mount fix — mirrors the suite's loading boundary contract. */
-  width: min(0.16em, 10px);
-  height: min(0.16em, 10px);
+  /* Floor at 4px: below that, border-radius stops reading as a circle
+     at fractional device-pixel ratios and the dot rasterises square. */
+  width: clamp(4px, 0.16em, 10px);
+  height: clamp(4px, 0.16em, 10px);
   max-width: 10px;
   max-height: 10px;
   border-radius: 50%;
@@ -460,8 +462,10 @@ button, input, textarea { font: inherit; }
 .wordmark .dot {
   /* Same hard ceiling as .notes-mark .dot — prevents balloon during
      font-swap before Geist resolves. R3-mount fix. */
-  width: min(0.16em, 10px);
-  height: min(0.16em, 10px);
+  /* Floor at 4px: below that, border-radius stops reading as a circle
+     at fractional device-pixel ratios and the dot rasterises square. */
+  width: clamp(4px, 0.16em, 10px);
+  height: clamp(4px, 0.16em, 10px);
   max-width: 10px;
   max-height: 10px;
   border-radius: 50%;
