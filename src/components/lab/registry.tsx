@@ -4,6 +4,8 @@ import { OptionNotebookFirst } from "./option-notebook-first";
 import { OptionBeforeItFades } from "./option-before-it-fades";
 import { OptionThreeSeconds } from "./option-three-seconds";
 import { OptionTheCrossing } from "./option-the-crossing";
+import { OptionBeforeItLeaves } from "./option-before-it-leaves";
+import { OptionTheBlankLine } from "./option-the-blank-line";
 
 /**
  * Notes hero showroom — registry.
@@ -32,6 +34,26 @@ export type LabOption = {
 };
 
 export const OPTIONS: LabOption[] = [
+  {
+    slug: "before-it-leaves",
+    name: "Before It Leaves",
+    role: "polished",
+    lens: "Playbook · loss reversed by capture",
+    headline: "Catch it before it leaves.",
+    blurb:
+      "A thought arrives and it does not wait for you. Three spoken lines land on the word gone, an indigo caret catches it the instant before it is lost, and the word snaps back to ink and files into a private stream of real timestamped notes. The near-loss reversed by capture, the caret gesture at rest. One move, and it is the thesis.",
+    Component: OptionBeforeItLeaves,
+  },
+  {
+    slug: "the-blank-line",
+    name: "The Blank Line",
+    role: "polished",
+    lens: "Playbook · the caret is the product",
+    headline: "The blank line is ready.",
+    blurb:
+      "The blank page is not empty, it is ready. The whole hero is one indigo caret. Three lines type themselves out of it, the caret drops on the word write, and a capture field materialises around it. The blank line becomes the notebook. Swiss, minimal, more air than the flagship.",
+    Component: OptionTheBlankLine,
+  },
   {
     slug: "the-notebook",
     name: "The Notebook",

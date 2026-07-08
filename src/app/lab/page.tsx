@@ -17,14 +17,13 @@ export default function LabIndexPage() {
       <header className="lab-index-head">
         <p className="lab-index-kicker">Signal Notes · hero showroom</p>
         <h1 className="lab-index-title">
-          Four ways into the notebook<span className="lab-index-dot" aria-hidden />
+          Ways into the notebook<span className="lab-index-dot" aria-hidden />
         </h1>
         <p className="lab-index-lede">
-          A review-only lab of hero directions for the Signal Notes homepage.
-          Three polished routes and one wildcard, each grounded in what Notes
-          really is: capture before it becomes work, findable not organised,
-          one-way into Tasks. Nothing here ships. Open one, then press 1–
-          {OPTIONS.length} to jump or R to replay.
+          A review-only lab of hero directions for the Signal Notes homepage,
+          each grounded in what Notes really is: capture before it becomes work,
+          findable not organised, one-way into Tasks. Nothing here ships. Open
+          one, then press 1–{OPTIONS.length} to jump or R to replay.
         </p>
       </header>
 
