@@ -63,7 +63,7 @@ export function OptionBeforeItLeaves() {
         <div
           className="bil-artifact"
           role="img"
-          aria-label="Signal Notes. A capture field with a live caret, ready. A private stream of three notes with timestamps: ask the venue about the earlier ceremony slot, 9:02; Maeve's case study angle, the refund week, 8:41; move the rehearsal dinner if the shuttle can't do 6pm, yesterday. Nothing worth keeping gets lost."
+          aria-label="Signal Notes. A capture field with a live caret, ready. A private stream of three notes with timestamps: ask the venue about the earlier ceremony slot, 9:02; Maeve's case study angle, the refund week, 8:41; move the rehearsal dinner if the shuttle can't do 6pm, yesterday. The one that is work crosses one way into Signal Tasks, sent as an open task, while the note stays private. Nothing worth keeping gets lost."
         >
           <p className="bil-kicker">Signal Notes</p>
 
@@ -91,6 +91,22 @@ export function OptionBeforeItLeaves() {
               </li>
             ))}
           </ol>
+
+          {/* The one-way crossing — the freshest note becomes work in Signal
+              Tasks. The note stays private in the stream; only the extract
+              crosses, and it lands OPEN (a fresh task to do, not done). */}
+          <div className="bil-cross">
+            <span className="bil-cross-flight" aria-hidden />
+            <div className="bil-cross-head">
+              <span className="bil-cross-arrow" aria-hidden>&rarr;</span>
+              <span className="bil-cross-label">Sent to Signal Tasks</span>
+            </div>
+            <div className="bil-cross-task">
+              <span className="bil-cross-box" aria-hidden />
+              <span className="bil-cross-text">Ask the venue about the earlier ceremony slot</span>
+              <span className="bil-cross-tag">To do</span>
+            </div>
+          </div>
 
           {/* Honest line + wordmark + one CTA. */}
           <div className="bil-foot">
@@ -170,7 +186,7 @@ const CSS = `
 }
 .bil-headline{
   margin:0 0 clamp(28px,5vh,44px);
-  font-size:clamp(2.1rem,1.3rem+3vw,3.7rem);font-weight:600;
+  font-size:clamp(34px,4.6vw,60px);font-weight:600;
   letter-spacing:-0.045em;line-height:1;color:var(--ink);text-wrap:balance;
   max-width:16ch;
 }
@@ -218,6 +234,37 @@ const CSS = `
 .bil-item-time{
   flex:0 0 auto;font-family:var(--mono);font-size:11px;letter-spacing:.03em;
   color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+
+/* ── The one-way crossing into Signal Tasks (DEFAULT = rest) ── */
+.bil-cross{
+  position:relative;margin:0 0 clamp(30px,5vh,52px);padding:15px 18px;
+  border:1px solid var(--hair);border-left:2px solid var(--accent);border-radius:8px;
+  background:var(--paper);
+}
+.bil-cross-head{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--faint);
+}
+.bil-cross-arrow{color:var(--accent);font-family:var(--sans);font-size:14px;line-height:1;}
+.bil-cross-task{display:flex;align-items:center;gap:12px;}
+.bil-cross-box{
+  flex:0 0 auto;width:16px;height:16px;border:1.5px solid var(--faint);border-radius:5px;
+}
+.bil-cross-text{
+  flex:1;font-size:clamp(14px,.5rem+.6vw,16px);font-weight:500;
+  letter-spacing:-0.01em;color:var(--ink);line-height:1.35;
+}
+.bil-cross-tag{
+  flex:0 0 auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);
+  border-radius:999px;padding:2px 8px;white-space:nowrap;
+}
+/* the extract that drops into the task on intro; hidden at rest */
+.bil-cross-flight{
+  position:absolute;left:18px;top:14px;width:8px;height:8px;border-radius:50%;
+  background:var(--accent);opacity:0;pointer-events:none;
 }
 
 /* Foot — honest line, wordmark, CTA. */
@@ -291,7 +338,21 @@ const CSS = `
   .bil-item .bil-item-mark{transform:scaleY(0);transform-origin:top center;
     animation:bil-mark-in .5s var(--ease-rack) both;
     animation-delay:calc(5.85s + var(--i) * .28s);}
-  .bil-foot{opacity:0;animation:bil-rise .6s var(--ease-soft) 6.9s both;}
+  /* the extract crosses one way into Tasks: a flight drops into the task, the
+     card rises in, the checkbox pops OPEN (a fresh task to do, not done). */
+  .bil-cross{opacity:0;animation:bil-rise .6s var(--ease-rack) 7.0s both;}
+  .bil-cross-flight{animation:bil-flight .62s var(--ease-rack) 6.78s both;}
+  .bil-cross-box{transform:scale(0);animation:bil-pop .45s var(--ease-pencil) 7.4s both;}
+  .bil-foot{opacity:0;animation:bil-rise .6s var(--ease-soft) 7.7s both;}
+
+  @keyframes bil-flight{
+    0%{opacity:0;transform:translateY(-34px) scale(.6);}
+    30%{opacity:1;}
+    100%{opacity:0;transform:translateY(0) scale(1);}
+  }
+  @keyframes bil-pop{
+    0%{transform:scale(0);}60%{transform:scale(1.18);}100%{transform:scale(1);}
+  }
 
   @keyframes bil-ov-inout{
     0%{opacity:0;transform:translateY(12px);}
