@@ -7,11 +7,13 @@ import { OPTIONS } from "./registry";
 
 /**
  * Sticky lab switcher. Keys 1..N jump between options; R replays the
- * intro (router.refresh re-mounts the option so its pure-CSS intro runs
- * again). Dev-only chrome; never ships.
+ * intro with a full lab-page reload so pure-CSS timelines reliably restart.
+ * Review-only chrome; never ships with a public hero.
  */
 export function Switcher({ current }: { current: string }) {
   const router = useRouter();
+
+  const replay = () => window.location.reload();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -20,7 +22,7 @@ export function Switcher({ current }: { current: string }) {
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
       if (e.key.toLowerCase() === "r") {
-        router.refresh();
+        window.location.reload();
         return;
       }
       const n = Number(e.key);
@@ -49,6 +51,7 @@ export function Switcher({ current }: { current: string }) {
                 ? "lab-switcher-item is-active"
                 : "lab-switcher-item"
             }
+            aria-current={o.slug === current ? "page" : undefined}
           >
             <span className="lab-switcher-key">{i + 1}</span>
             <span className="lab-switcher-name">{o.name}</span>
@@ -58,6 +61,10 @@ export function Switcher({ current }: { current: string }) {
           </Link>
         ))}
       </nav>
+      <button className="lab-switcher-replay" type="button" onClick={replay}>
+        Replay
+        <span aria-hidden>↻</span>
+      </button>
       <span className="lab-switcher-hint" aria-hidden>
         1–{OPTIONS.length} jump · R replays
       </span>
@@ -88,7 +95,7 @@ const CSS = `
 }
 .lab-switcher-nav {
   display: flex; align-items: center; gap: 4px;
-  flex-wrap: wrap; min-width: 0;
+  flex: 1; flex-wrap: nowrap; min-width: 0; overflow-x: auto;
 }
 .lab-switcher-item {
   display: inline-flex; align-items: center; gap: 8px;
@@ -99,6 +106,12 @@ const CSS = `
 }
 .lab-switcher-item:hover { color: var(--ink); background: var(--paper-deep); }
 .lab-switcher-item.is-active { color: var(--ink); background: var(--paper-deep); }
+.lab-switcher-home:focus-visible,
+.lab-switcher-item:focus-visible,
+.lab-switcher-replay:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .lab-switcher-key {
   display: inline-flex; align-items: center; justify-content: center;
   width: 16px; height: 16px; border-radius: 4px;
@@ -116,6 +129,16 @@ const CSS = `
   font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em;
   color: var(--accent);
 }
+.lab-switcher-replay {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 30px; padding: 5px 10px; flex: 0 0 auto;
+  border: 1px solid var(--hairline); border-radius: 7px;
+  background: var(--paper); color: var(--ink-soft);
+  font: inherit; font-size: 10.5px; letter-spacing: 0.04em;
+  text-transform: uppercase; cursor: pointer;
+  transition: color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.lab-switcher-replay:hover { color: var(--ink); border-color: var(--ink-faint); }
 .lab-switcher-hint {
   margin-left: auto; font-size: 10.5px; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--ink-faint); white-space: nowrap;
@@ -124,5 +147,6 @@ const CSS = `
   .lab-switcher { gap: 12px; padding: 9px 14px; }
   .lab-switcher-hint { display: none; }
   .lab-switcher-name { display: none; }
+  .lab-switcher-replay { padding-inline: 8px; }
 }
 `;

@@ -1,11 +1,14 @@
-# The Notebook — handoff (state as of 2026-07-06)
+# The Notebook — historical handoff (state as of 2026-07-06)
 
-Continuation notes for the Signal Notes hero lab, focused on the flagship hybrid **The Notebook**. Everything below is committed on branch **`feat/notes-hero-lab`** (pushed; NOT merged, NOT deployed).
+This records the council pass that produced **The Notebook**. The feature branch
+later placed that component on its homepage, but it remains unmerged. Current
+operator-review work on **Before It Leaves** and **Three Seconds** is documented
+in `docs/HERO_LAB.md`; nothing in that work changes the homepage hero.
 
-> **Status: world-class. All four Apple-grade council lenses ≥ 9.5** (storytelling 9.5, motion 9.6, editorial 9.5, product-truth 9.6), verified 2026-07-06. Do not promote/merge — awaiting operator direction.
+> **Historical score:** all four council lenses ≥ 9.5, verified 2026-07-06.
 
 ## Where to look
-- Component: `src/components/lab/option-the-notebook.tsx` (prefix `ntb-`, self-contained scoped CSS).
+- Component: `src/components/marketing/notes-hero-notebook.tsx` (prefix `ntb-`, self-contained scoped CSS), re-exported by `src/components/lab/option-the-notebook.tsx`.
 - Registry (featured first option): `src/components/lab/registry.tsx` (`slug: "the-notebook"`).
 - View: `npm run dev` → `http://localhost:3999/lab/the-notebook` (keys 1–5 jump, **R** replays).
 - Screenshot harness (Playwright lives in `../collateral`, not `notes`): `../collateral/scripts/shot-ntb-frames.mjs` (17-frame seek sweep), `shot-swipe.mjs` (s00–s10, the 6.9–7.4s swipe frame-by-frame), `shot-ntb-long.mjs` (rest + beats), `seek-extra.mjs` (5.7s placeholder / 6.4s reveal / 6.6s approval), `shot-wordmark.mjs` (2× wordmark close-up). Verify motion with the deterministic WAAPI seek pattern (pause every animation, set `currentTime`) — wall-clock capture in dev mode is unreliable. Use `deviceScaleFactor: 1`.

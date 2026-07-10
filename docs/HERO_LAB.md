@@ -1,51 +1,76 @@
 # Notes hero lab
 
-A review-only showroom of homepage hero directions for Signal Notes. Not shipped, not linked from any live surface. Explore, iterate, decide — nothing here is promoted to `/`.
+A review-only showroom for Signal Notes homepage directions. The route is built
+with the app and protected by the normal product access layer, but it is not
+linked from the public marketing surface.
 
-## Relaunch
+The feature branch homepage currently uses **The Notebook**. Lab work does not
+replace that hero until an operator-approved direction wins a rendered review.
+
+## Open the room
 
 ```bash
 cd notes
-npm run dev            # then open http://localhost:3999/lab  (or whatever port prints)
+npm run dev
 ```
 
-- `/lab` — the index: one card per direction.
-- `/lab/<slug>` — a single direction on a clean field, with a sticky switcher.
-- Keys **1–4** jump between directions; **R** replays the intro (`router.refresh`).
+- `/lab` lists all seven directions.
+- `/lab/<slug>` shows one direction on a clean field.
+- Keys **1-7** jump between directions.
+- The visible **Replay** control, or **R**, restarts the intro.
 
-The `/lab` route is dev-only. Its `layout.tsx` hides Clerk keyless + Next dev chrome so directions review on a clean field. `ds:check`, `npm test`, and `tsc --noEmit` stay clean for everything here.
+## Operator review pair
 
-## The four directions
-
-Each is grounded in `docs/PRODUCT.md`. Every option is a fully scoped hero: the settled **rest state is the default CSS**, and the intro animation plays **only** inside `@media (prefers-reduced-motion: no-preference)`, so SSR, no-JS, and reduced-motion all render the finished composition. Pure CSS, no JS motion (the switcher is the only client component). Unique class prefix per option (`ntb-`, `nt1-`, `nt2-`, `nt3-`, `ntw-`).
-
-| Slug | Name | Role | Concept (PRODUCT.md anchor) |
+| Order | Slug | Direction | Product proof |
 |---|---|---|---|
-| `the-notebook` | **The Notebook** (hybrid, featured) | polished | Notebook First × The Crossing. The whole story in one surface, three beats: a caret **writes** a thought → it **joins the stream** (count 3→4) → an older note's approved line **crosses one way** into Signal Tasks and commits. Crossing legible at rest (tether on one baseline). §3, §6, §8, §9. Prefix `ntb-`. |
-| `notebook-first` | Notebook First | polished | The marketing surface **is** the product surface — a live capture field + stream, one note crossed to Tasks. §9 "Notebook First" contract made literal. |
-| `before-it-fades` | Before It Fades | polished | The feeling under capture: the gap between remembered and lost. Thoughts drift and fade; the one you caught sits solid with the indigo caret. §3. |
-| `three-seconds` | Three Seconds | polished | The locked design budget as proof: a 0→3s capture-time track, marker landing inside budget. §3, §9. |
-| `the-crossing` | The Crossing | **wildcard** | The one move no capture tool has: a private note, user-approved, crossing **one way** into Signal Tasks. Raw note stays; only the extract travels. §6, §8. |
+| 1 | `before-it-leaves` | **Before It Leaves** | The notebook is fixed from frame one. A thought moves into the live caret, is caught, and joins the private stream in under a second. A visible approval sends only its action to Signal Tasks. The desktop crossing becomes a vertical crossing on mobile rather than disappearing. Rest lands at roughly 3.2 seconds. |
+| 2 | `three-seconds` | **Three Seconds** | A literal three-second rail runs inside the notebook. One thought types and is recorded at 1.8 seconds. A separate approval then sends its action to Signal Tasks. Rest lands just under four seconds. |
+
+Both directions keep the Notes motion identity: **caret, capture, private
+stream, deliberate extraction**. They borrow Signal's artifact-first playbook,
+not its visual metaphor or its longer overture.
+
+## Reference directions
+
+| Slug | Direction | Role |
+|---|---|---|
+| `the-blank-line` | The Blank Line | Minimal caret-led counterpoint. |
+| `the-notebook` | The Notebook | Current feature-branch homepage hero and full capture-to-commit story. |
+| `notebook-first` | Notebook First | Literal product-surface direction. |
+| `before-it-fades` | Before It Fades | Emotional remembered-versus-lost direction. |
+| `the-crossing` | The Crossing | One-way extraction wildcard. |
+
+## Motion and accessibility contract
+
+- The semantic DOM and default CSS are the finished state.
+- Intro motion exists only inside `prefers-reduced-motion: no-preference`.
+- Reduced motion, SSR, and no-JS render the complete settled artifact directly.
+- Animated duplicates are decorative; the settled notebook, note, task, proof,
+  and CTA remain semantic.
+- CTAs link to `/app` and provide visible keyboard focus.
+- No lab option may remove its signature proof on mobile.
+- Use suite tokens and `--ease-out` / `--ease-in-out`; do not add raw colors or
+  undocumented easing curves.
+- Transform and opacity carry movement. Do not leave `will-change` active after
+  the film.
 
 ## Files
 
-- `src/app/lab/layout.tsx` — dev-chrome hide.
-- `src/app/lab/page.tsx` — index (robots noindex).
-- `src/app/lab/[slug]/page.tsx` — `generateStaticParams()` over the registry.
-- `src/components/lab/registry.tsx` — the `OPTIONS` array (slug, name, role, lens, headline, blurb, Component).
-- `src/components/lab/switcher.tsx` — sticky bar, 1–N jump, R replay.
-- `src/components/lab/option-*.tsx` — one scoped hero per direction.
+- `src/app/lab/layout.tsx` keeps the review field clean.
+- `src/app/lab/page.tsx` renders the noindex index.
+- `src/app/lab/[slug]/page.tsx` renders a registry direction.
+- `src/components/lab/registry.tsx` owns order, labels, and descriptions.
+- `src/components/lab/switcher.tsx` owns navigation and replay.
+- `src/components/lab/option-*.tsx` contains each scoped direction.
 
-## Gate discipline
+## Verification
 
-No raw hex in lab files (the `ds:check` hex ratchet starts new files at zero) — tokens are aliased into scoped `--ntX-*` custom properties; globals.css always loads via the root layout, so tokens resolve. Non-contract easings carry a `ds-allow` comment with a reason (spring overshoots only). Voice: no em dashes, no exclamation marks, full name "Signal Notes".
+```bash
+npm run typecheck
+npm run ds:check
+npm run build
+```
 
-## Status
-
-Round 5 (five iteration rounds, three review councils: a 3-lens design panel, a 4-lens delight council, and a verification/re-score council). Each direction now lands a signature motion beat and has been through motion, typography, and narrative review:
-- nt1 — a caret that *writes*; the Tasks dot glides in; promoted claim.
-- nt2 — the faintest thought *escapes* (blurred trace at rest); one voice across ghosts + caught line.
-- nt3 — the marker *plants* comfortably under budget; full-width track; "written" flag.
-- ntw — the extract *crosses and commits* (checkbox draws); reduced chrome.
-
-Last director re-score: nt2 ~9.8, nt3 ~9.8, nt1 ~9.6, ntw ~9.4 (ship-grade; remaining gaps are composition/emphasis judgment calls, not defects). Open fork flagged to operator: **nt1 capture→stream loop** (the §9 "note appears in the stream" contract) — trades the bold written-line rest state for the loop motion; awaiting direction. Possible next concept: **"Findable, not organised"** (anti-PKM, §3.2/§7). Nothing promoted.
+Review both preferred directions at desktop and phone widths in their first
+frame, capture beat, approval/crossing beat, and settled state. Also review the
+settled state with reduced motion enabled.

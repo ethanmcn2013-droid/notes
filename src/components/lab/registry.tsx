@@ -10,9 +10,10 @@ import { OptionTheBlankLine } from "./option-the-blank-line";
 /**
  * Notes hero showroom — registry.
  *
- * Review-only. Dev route (`/lab`). Never linked from shipped surfaces,
- * never promoted to `/`. Each option is a fully scoped hero: its rest
- * state is the settled composition, the intro plays once on mount inside
+ * Review-only and never linked from the public marketing surface. The current
+ * feature-branch homepage hero remains independent from work in this room.
+ * Each option is a fully scoped hero: its rest state is the settled
+ * composition, the intro plays once on mount inside
  * `@media (prefers-reduced-motion: no-preference)` only, so SSR, no-JS,
  * and reduced-motion all render the finished frame.
  *
@@ -38,11 +39,21 @@ export const OPTIONS: LabOption[] = [
     slug: "before-it-leaves",
     name: "Before It Leaves",
     role: "polished",
-    lens: "Playbook · loss reversed by capture",
+    lens: "Operator pick · loss reversed by capture",
     headline: "Catch it before it leaves.",
     blurb:
-      "A thought arrives and it does not wait for you. Three spoken lines land on the word gone, an indigo caret catches it the instant before it is lost, and the word snaps back to ink and files into a private stream of real timestamped notes. The near-loss reversed by capture, the caret gesture at rest. One move, and it is the thesis.",
+      "The notebook is fixed from frame one. A thought moves toward the live indigo caret, is caught, and joins the private stream in under a second. Only after a visible approval does its action cross one way into Signal Tasks. One capture-native transformation, settled in just over three seconds.",
     Component: OptionBeforeItLeaves,
+  },
+  {
+    slug: "three-seconds",
+    name: "Three Seconds",
+    role: "polished",
+    lens: "Operator pick · the promise made literal",
+    headline: "Written before the third second.",
+    blurb:
+      "A real notebook and a literal three-second rail. One thought types, logs at 1.8 seconds, and becomes findable before the budget closes. A separate approval then sends only its action to Signal Tasks. The timing is the proof, with rest just under four seconds.",
+    Component: OptionThreeSeconds,
   },
   {
     slug: "the-blank-line",
@@ -83,16 +94,6 @@ export const OPTIONS: LabOption[] = [
     blurb:
       "The emotional truth of capture: the difference between remembered and lost. A held indigo caret sits where you write it down, while the thoughts you didn’t catch fade at the margin. Swiss, quiet, typographic.",
     Component: OptionBeforeItFades,
-  },
-  {
-    slug: "three-seconds",
-    name: "Three Seconds",
-    role: "polished",
-    lens: "The promise · the budget",
-    headline: "Three seconds from thought to written.",
-    blurb:
-      "The locked design budget as the whole story. A calm editorial headline, the notes. wordmark, and a monospace proof line that settles the capture time. No spectacle. The claim is the restraint.",
-    Component: OptionThreeSeconds,
   },
   {
     slug: "the-crossing",

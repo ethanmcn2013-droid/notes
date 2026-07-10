@@ -22,8 +22,9 @@ export default function LabIndexPage() {
         <p className="lab-index-lede">
           A review-only lab of hero directions for the Signal Notes homepage,
           each grounded in what Notes really is: capture before it becomes work,
-          findable not organised, one-way into Tasks. Nothing here ships. Open
-          one, then press 1–{OPTIONS.length} to jump or R to replay.
+          findable not organised, one-way into Tasks. Lab changes do not replace
+          the current homepage hero. Open one, then press 1–{OPTIONS.length} to
+          jump or use Replay.
         </p>
       </header>
 
@@ -99,6 +100,10 @@ const CSS = `
   transition: background 160ms var(--ease-out);
 }
 .lab-card:hover { background: var(--paper-soft); }
+.lab-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
 .lab-card-top {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 22px;

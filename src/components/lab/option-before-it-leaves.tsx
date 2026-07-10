@@ -1,397 +1,666 @@
 /**
- * Direction N1 — "Before It Leaves" (flagship; slug `before-it-leaves`).
+ * Notes hero lab direction: Before It Leaves.
  *
- * The thesis: a thought arrives, and it does not wait for you. The single
- * distinctive move is a caret that CATCHES it the instant before it is gone.
- * Loss reversed by capture.
+ * The notebook is the fixed anchor from the first frame. One thought arrives,
+ * the Notes caret catches it, and the note joins the private stream in under a
+ * second. A visible approval follows; only the approved extract crosses into
+ * Signal Tasks. The film settles by roughly 3.2 seconds.
  *
- * Shape (Signal Hero Playbook):
- *   OVERTURE (~0–4.6s) — three plain lines, one at a time, in the centre:
- *     1. "A thought arrives."
- *     2. "It doesn't wait for you."
- *     3. "Write it down before it's gone."  — seed word = "gone".
- *   TRANSMUTATION (~4.4–5.2s) — the word "gone" lifts and fades toward faint
- *     grey (leaving); an indigo caret blinks into being just left of it; the
- *     word snaps back to solid ink and drops onto a capture line. The near-loss
- *     is visibly reversed — the one delight, and it IS the thesis.
- *   MECHANISM (~5.2–7.6s) — the caught line files into a private stream as a
- *     timestamped note; two more thoughts are already caught below it.
- *   REST — a clean capture field with a live blinking caret (ready for you), a
- *     private stream of three real notes with mono timestamps, the notes.
- *     wordmark with the caret gesture, one honest line, and one CTA.
- *
- * Pure CSS, zero JS, default-is-rest. The DEFAULT styles render the SETTLED
- * artifact (real copy, caret, stream, wordmark), so SSR / no-JS / reduced-motion
- * all paint the finished frame. The overture layer defaults to display:none.
- * ALL intro motion lives inside `@media (prefers-reduced-motion: no-preference)`.
- * The only permitted infinite loop is the resting caret blink (the Notes
- * wordmark gesture). Scoped prefix `bil-`. No project imports except React.
+ * The settled artifact is the default CSS and the semantic DOM. The intro is a
+ * decorative enhancement inside prefers-reduced-motion: no-preference, so SSR,
+ * no-JS, reduced motion, and assistive technology all receive the complete
+ * product story without waiting for animation.
  */
 
-type Note = { text: string; time: string };
-
-// Three real thoughts, newest-first (the stream fills top-down as they are caught).
-const STREAM: Note[] = [
-  { text: "Ask the venue about the earlier ceremony slot", time: "9:02" },
-  { text: "Maeve’s case study angle: the refund week", time: "8:41" },
-  { text: "Move rehearsal dinner if the shuttle can’t do 6pm", time: "yesterday" },
+const STREAM = [
+  {
+    title: "Venue can open the side room after six",
+    detail: "caught just now",
+    source: true,
+  },
+  {
+    title: "Maeve's case study angle: the refund week",
+    detail: "8:41",
+    source: false,
+  },
+  {
+    title: "Move the rehearsal dinner if the shuttle can't do 6pm",
+    detail: "yesterday",
+    source: false,
+  },
 ];
 
 export function OptionBeforeItLeaves() {
   return (
-    <section className="bil" aria-label="Notes hero — Before It Leaves">
+    <section className="bil" aria-labelledby="bil-title">
       <style>{CSS}</style>
 
-      <div className="bil-wrap">
-        {/* The overture — the idea, spoken before the interface. Decorative and
-            aria-hidden; the settled artifact below carries the same meaning for
-            assistive tech and no-JS. Default display:none; shown only in motion. */}
-        <div className="bil-overture" aria-hidden>
-          <p className="bil-ov bil-ov-1">A thought arrives.</p>
-          <p className="bil-ov bil-ov-2">It doesn’t wait for you.</p>
-          <p className="bil-ov bil-ov-3">
-            Write it down before it’s{" "}
-            <span className="bil-seed">
-              <span className="bil-caret-catch" aria-hidden />
-              <span className="bil-seed-word">gone</span>
-            </span>
-            .
-          </p>
-        </div>
-
-        {/* The settled artifact. role=img + a full aria-label describing the rest. */}
-        <div
-          className="bil-artifact"
-          role="img"
-          aria-label="Signal Notes. A capture field with a live caret, ready. A private stream of three notes with timestamps: ask the venue about the earlier ceremony slot, 9:02; Maeve's case study angle, the refund week, 8:41; move the rehearsal dinner if the shuttle can't do 6pm, yesterday. The one that is work crosses one way into Signal Tasks, sent as an open task, while the note stays private. Nothing worth keeping gets lost."
-        >
+      <div className="bil-frame">
+        <header className="bil-head">
           <p className="bil-kicker">Signal Notes</p>
-
-          <h1 className="bil-headline">
-            Catch it before it leaves<span className="bil-dot" aria-hidden />
+          <h1 className="bil-title" id="bil-title">
+            Catch it before it leaves
+            <span className="bil-title-caret" aria-hidden />
           </h1>
+          <p className="bil-lede">
+            A private place for the thought you have now, and the work you
+            choose later.
+          </p>
+        </header>
 
-          {/* Capture field — the live line, waiting, with the blinking caret. */}
-          <div className="bil-capture">
-            <span className="bil-capture-caret" aria-hidden />
-            <span className="bil-capture-hint">Write it down</span>
+        <div className="bil-stage">
+          <article className="bil-notebook" aria-labelledby="bil-stream-title">
+            <div className="bil-capture">
+              <div className="bil-capture-labels">
+                <span>Capture</span>
+                <span>Private</span>
+              </div>
+              <div className="bil-capture-line">
+                <span className="bil-capture-caret" aria-hidden />
+                <span className="bil-placeholder">Catch the next one.</span>
+                <span className="bil-incoming" aria-hidden>
+                  Venue can open the side room after six
+                </span>
+              </div>
+              <p className="bil-capture-hint">
+                <kbd>⌘↵</kbd> save <span aria-hidden>·</span> <kbd>esc</kbd> discard
+              </p>
+            </div>
+
+            <div className="bil-stream-head">
+              <h2 id="bil-stream-title">Private stream</h2>
+              <span>3 notes</span>
+            </div>
+
+            <ol className="bil-stream">
+              {STREAM.map((note) => (
+                <li
+                  className={note.source ? "bil-item bil-item-source" : "bil-item"}
+                  key={note.title}
+                >
+                  <div className="bil-item-inner">
+                    <span className="bil-item-copy">
+                      <span className="bil-item-title">{note.title}</span>
+                      <span className="bil-item-detail">{note.detail}</span>
+                    </span>
+                    {note.source ? (
+                      <span className="bil-item-state">
+                        <span className="bil-state-dot" aria-hidden />
+                        In Tasks
+                      </span>
+                    ) : null}
+                  </div>
+                  {note.source ? (
+                    <span className="bil-approval" aria-hidden>
+                      <span className="bil-approval-ring" />
+                      <span className="bil-approval-full">Send to Tasks</span>
+                      <span className="bil-approval-short">Approve</span>
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          </article>
+
+          <div className="bil-bridge" aria-hidden>
+            <span className="bil-bridge-label">Approved</span>
+            <span className="bil-bridge-rule" />
+            <span className="bil-bridge-arrow">→</span>
+            <span className="bil-flight">extract</span>
           </div>
 
-          {/* The private stream — real notes, newest first, mono timestamps. */}
-          <ol className="bil-stream">
-            {STREAM.map((n, i) => (
-              <li
-                key={n.text}
-                className="bil-item"
-                style={{ ["--i" as string]: i }}
-              >
-                <span className="bil-item-mark" aria-hidden />
-                <span className="bil-item-text">{n.text}</span>
-                <span className="bil-item-time">{n.time}</span>
-              </li>
-            ))}
-          </ol>
-
-          {/* The one-way crossing — the freshest note becomes work in Signal
-              Tasks. The note stays private in the stream; only the extract
-              crosses, and it lands OPEN (a fresh task to do, not done). */}
-          <div className="bil-cross">
-            <span className="bil-cross-flight" aria-hidden />
-            <div className="bil-cross-head">
-              <span className="bil-cross-arrow" aria-hidden>&rarr;</span>
-              <span className="bil-cross-label">Sent to Signal Tasks</span>
+          <article className="bil-tasks" aria-labelledby="bil-tasks-title">
+            <div className="bil-tasks-head">
+              <h2 id="bil-tasks-title">Signal Tasks</h2>
+              <span>Committed</span>
             </div>
-            <div className="bil-cross-task">
-              <span className="bil-cross-box" aria-hidden />
-              <span className="bil-cross-text">Ask the venue about the earlier ceremony slot</span>
-              <span className="bil-cross-tag">To do</span>
-            </div>
-          </div>
-
-          {/* Honest line + wordmark + one CTA. */}
-          <div className="bil-foot">
-            <p className="bil-honest">Nothing worth keeping gets lost.</p>
-            <div className="bil-foot-row">
-              <span className="bil-wordmark" aria-hidden>
-                notes<span className="bil-wordmark-caret" />
+            <div className="bil-task-row">
+              <span className="bil-task-box" aria-hidden />
+              <span className="bil-task-copy">
+                <span className="bil-task-title">
+                  Ask the venue to hold the side room after six
+                </span>
+                <span className="bil-task-detail">from a note · open</span>
               </span>
-              <a className="bil-cta" href="/">
-                Start a notebook
-              </a>
             </div>
-          </div>
+          </article>
         </div>
+
+        <footer className="bil-foot">
+          <p>
+            The note stays private. Only the line you approve becomes work.
+          </p>
+          <a className="bil-cta" href="/app">
+            Start a notebook
+          </a>
+        </footer>
       </div>
     </section>
   );
 }
 
 const CSS = `
-.bil{
-  --ink:#111;--soft:#3f3f46;--faint:#71717a;--accent:#4f46e5;--paper:#fff;
-  --hair:rgba(17,17,17,.12);--hair-soft:rgba(17,17,17,.07);
-  --sans:var(--font-geist-sans,"Geist",system-ui,sans-serif);
-  --mono:var(--font-geist-mono,"Geist Mono",ui-monospace,monospace);
-  /* Signal easing dialect */
-  --ease-rack:cubic-bezier(0.22,0.61,0.18,1);
-  --ease-soft:cubic-bezier(0.16,1,0.3,1);
-  --ease-draw:cubic-bezier(0.22,0.61,0.36,1);
-  --ease-pencil:cubic-bezier(0.7,0,0.3,1);
+.bil {
+  --bil-ink: var(--ink);
+  --bil-soft: var(--ink-soft);
+  --bil-faint: var(--ink-faint);
+  --bil-ghost: var(--ink-ghost);
+  --bil-accent: var(--accent);
+  --bil-accent-soft: var(--accent-soft);
+  --bil-paper: var(--paper);
+  --bil-paper-soft: var(--paper-soft);
+  --bil-paper-deep: var(--paper-deep);
+  --bil-line: var(--hairline);
+  --bil-line-soft: var(--hairline-soft);
+  --bil-sans: var(--font-geist-sans), "Geist", system-ui, sans-serif;
+  --bil-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
+  --bil-cross-x0: -108px;
+  --bil-cross-y0: -50%;
+  --bil-cross-x1: 34px;
+  --bil-cross-y1: -50%;
 
-  position:relative;overflow:hidden;
-  min-height:92svh;display:flex;align-items:center;
-  background:var(--paper);color:var(--ink);
-  font-family:var(--sans);
-  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(680px, 92svh, 940px);
+  display: flex;
+  align-items: center;
+  padding: clamp(48px, 7svh, 88px) clamp(20px, 5vw, 72px);
+  background: var(--bil-paper);
+  color: var(--bil-ink);
+  font-family: var(--bil-sans);
 }
-.bil *{box-sizing:border-box;}
+.bil * { box-sizing: border-box; }
+.bil-frame { width: min(1080px, 100%); margin-inline: auto; }
 
-.bil-wrap{
-  position:relative;width:min(760px,100%);margin:0 auto;
-  padding:clamp(56px,9vh,120px) 28px clamp(56px,8vh,96px);
+.bil-head { max-width: 720px; }
+.bil-kicker {
+  margin: 0 0 18px;
+  font-family: var(--bil-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bil-faint);
 }
-
-/* ── Overture — default hidden; the idea spoken before the interface ── */
-.bil-overture{
-  display:none;
-  position:absolute;inset:0;z-index:3;
-  place-items:center;padding:0 clamp(20px,6vw,64px);
-  pointer-events:none;
+.bil-title {
+  margin: 0;
+  max-width: 15ch;
+  font-size: clamp(2.35rem, 1.55rem + 3.6vw, 4.8rem);
+  font-weight: 630;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+  text-wrap: balance;
 }
-.bil-ov{
-  grid-column:1;grid-row:1;margin:0;max-width:20ch;text-align:center;
-  text-wrap:balance;
-  font-size:clamp(28px,4.6vw,50px);font-weight:600;line-height:1.06;
-  letter-spacing:-0.035em;color:var(--ink);opacity:0;
+.bil-title-caret {
+  display: inline-block;
+  width: 0.045em;
+  height: 0.76em;
+  margin-left: 0.08em;
+  border-radius: 1px;
+  background: var(--bil-accent);
+  vertical-align: -0.02em;
 }
-.bil-ov-3{color:var(--soft);}
-
-/* The seed word "gone" — leaves, then is caught. */
-.bil-seed{position:relative;display:inline-block;color:var(--ink);font-weight:640;}
-.bil-seed-word{display:inline-block;}
-/* The catching caret — indigo bar just left of the seed word. Hidden at rest. */
-.bil-caret-catch{
-  position:absolute;left:-0.14em;top:0.08em;bottom:0.06em;width:0.06em;
-  border-radius:0.02em;background:var(--accent);
-  transform:scaleY(0);transform-origin:center bottom;opacity:0;
-}
-
-/* ── The settled artifact (DEFAULT = rest) ── */
-.bil-artifact{position:relative;z-index:1;}
-
-.bil-kicker{
-  margin:0 0 clamp(22px,4vh,40px);
-  font-family:var(--mono);font-size:11px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--faint);
-}
-.bil-headline{
-  margin:0 0 clamp(28px,5vh,44px);
-  font-size:clamp(34px,4.6vw,60px);font-weight:600;
-  letter-spacing:-0.045em;line-height:1;color:var(--ink);text-wrap:balance;
-  max-width:16ch;
-}
-.bil-dot{
-  display:inline-block;width:0.13em;height:0.13em;min-width:8px;min-height:8px;
-  max-width:12px;max-height:12px;margin-left:0.06em;border-radius:50%;
-  background:var(--accent);vertical-align:baseline;
-}
-
-/* Capture field — the live line, ready, with the blinking caret. */
-.bil-capture{
-  display:flex;align-items:center;gap:10px;
-  padding:16px 18px;margin:0 0 clamp(20px,3vh,30px);
-  border:1px solid var(--hair);border-radius:8px;background:var(--paper);
-}
-.bil-capture-caret{
-  flex:0 0 auto;width:2px;height:20px;border-radius:1px;background:var(--accent);
-  /* the ONE allowed infinite loop: the resting caret gesture */
-  animation:bil-blink 1.05s steps(1,end) infinite;
-}
-.bil-capture-hint{
-  font-size:15px;letter-spacing:-0.005em;color:var(--faint);
+.bil-lede {
+  margin: 22px 0 0;
+  max-width: 52ch;
+  color: var(--bil-soft);
+  font-size: 16.5px;
+  line-height: 1.6;
+  text-wrap: pretty;
 }
 
-/* The private stream. */
-.bil-stream{
-  list-style:none;margin:0 0 clamp(30px,5vh,52px);padding:0;
-  border-top:1px solid var(--hair-soft);
+.bil-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) 72px minmax(230px, 0.8fr);
+  align-items: center;
+  gap: 0;
+  margin-top: clamp(34px, 5vh, 54px);
 }
-.bil-item{
-  position:relative;display:flex;align-items:baseline;gap:14px;
-  padding:14px 6px 14px 18px;border-bottom:1px solid var(--hair-soft);
+.bil-notebook,
+.bil-tasks {
+  position: relative;
+  border: 1px solid var(--bil-line);
+  border-radius: 14px;
+  background: var(--bil-paper);
+  overflow: hidden;
 }
-.bil-item-mark{
-  position:absolute;left:2px;top:16px;bottom:16px;width:2px;border-radius:1px;
-  background:var(--hair);
+.bil-notebook {
+  box-shadow: 0 1px 0 var(--bil-line-soft), var(--shadow-float);
 }
-/* Newest note carries the one indigo — the freshest catch. */
-.bil-item:first-child .bil-item-mark{background:var(--accent);}
-.bil-item-text{
-  flex:1;font-size:clamp(15px,.5rem+.7vw,18px);font-weight:500;
-  letter-spacing:-0.01em;line-height:1.35;color:var(--ink);
+.bil-capture { padding: clamp(19px, 2.4vw, 28px); }
+.bil-capture-labels,
+.bil-stream-head,
+.bil-tasks-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
-.bil-item:not(:first-child) .bil-item-text{color:var(--soft);}
-.bil-item-time{
-  flex:0 0 auto;font-family:var(--mono);font-size:11px;letter-spacing:.03em;
-  color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;
+.bil-capture-labels {
+  margin-bottom: 15px;
+  font-family: var(--bil-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--bil-faint);
+}
+.bil-capture-line {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-height: 1.45em;
+  padding-left: 13px;
+  font-size: clamp(16px, 1.7vw, 21px);
+  font-weight: 610;
+  letter-spacing: -0.025em;
+  line-height: 1.28;
+}
+.bil-capture-caret {
+  position: absolute;
+  left: 0;
+  top: 0.12em;
+  width: 2px;
+  height: 0.92em;
+  border-radius: 1px;
+  background: var(--bil-accent);
+}
+.bil-placeholder { color: var(--bil-faint); font-weight: 520; }
+.bil-incoming {
+  position: absolute;
+  inset: 0 0 auto 13px;
+  color: var(--bil-ink);
+  opacity: 0;
+  overflow-wrap: anywhere;
+}
+.bil-capture-hint {
+  margin: 14px 0 0;
+  color: var(--bil-faint);
+  font-family: var(--bil-mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+.bil-capture-hint kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--bil-line);
+  border-radius: 4px;
+  background: var(--bil-paper-deep);
+  font: inherit;
+}
+.bil-stream-head,
+.bil-tasks-head {
+  padding: 12px clamp(19px, 2.4vw, 28px);
+  border-top: 1px solid var(--bil-line);
+  border-bottom: 1px solid var(--bil-line);
+}
+.bil-stream-head h2,
+.bil-tasks-head h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+}
+.bil-stream-head > span,
+.bil-tasks-head > span {
+  color: var(--bil-faint);
+  font-family: var(--bil-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.bil-stream { margin: 0; padding: 0; list-style: none; }
+.bil-item {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr;
+  border-bottom: 1px solid var(--bil-line-soft);
+}
+.bil-item:last-child { border-bottom: 0; }
+.bil-item-inner {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px clamp(19px, 2.4vw, 28px);
+}
+.bil-item-source::before,
+.bil-task-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--bil-accent);
+}
+.bil-item-copy,
+.bil-task-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.bil-item-title,
+.bil-task-title {
+  color: var(--bil-ink);
+  font-size: 14px;
+  font-weight: 590;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.bil-item-detail,
+.bil-task-detail {
+  color: var(--bil-faint);
+  font-family: var(--bil-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+}
+.bil-item-state {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--bil-accent);
+  font-family: var(--bil-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.bil-state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bil-accent);
+}
+.bil-approval {
+  position: absolute;
+  right: clamp(19px, 2.4vw, 28px);
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border: 1px solid var(--bil-accent);
+  border-radius: 5px;
+  background: var(--bil-paper);
+  color: var(--bil-accent);
+  font-family: var(--bil-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.bil-approval-ring {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--bil-accent);
+  border-radius: inherit;
+  opacity: 0;
+}
+.bil-approval-short { display: none; }
+
+.bil-bridge {
+  --bil-cross-x0: -108px;
+  --bil-cross-y0: -50%;
+  --bil-cross-x1: 34px;
+  --bil-cross-y1: -50%;
+  position: relative;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: visible;
+  color: var(--bil-faint);
+}
+.bil-bridge-rule {
+  position: absolute;
+  inset: 16px auto 16px 50%;
+  width: 1px;
+  background: var(--bil-line);
+}
+.bil-bridge-label,
+.bil-bridge-arrow {
+  position: relative;
+  z-index: 1;
+  background: var(--bil-paper);
+}
+.bil-bridge-label {
+  padding: 3px 0;
+  font-family: var(--bil-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.bil-bridge-arrow {
+  padding: 2px 0;
+  color: var(--bil-accent);
+  font-size: 18px;
+  rotate: 0deg;
+}
+.bil-flight {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  min-width: 62px;
+  padding: 5px 8px;
+  border: 1px solid var(--bil-accent);
+  border-radius: 5px;
+  background: var(--bil-paper);
+  color: var(--bil-accent);
+  font-family: var(--bil-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0;
+}
+.bil-tasks {
+  background: var(--bil-paper-soft);
+  box-shadow: 0 1px 0 var(--bil-line-soft);
+}
+.bil-tasks-head { border-top: 0; }
+.bil-task-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 15px clamp(17px, 2vw, 23px) 17px;
+}
+.bil-task-box {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border: 1.5px solid var(--bil-accent);
+  border-radius: 5px;
+  background: var(--bil-accent-soft);
 }
 
-/* ── The one-way crossing into Signal Tasks (DEFAULT = rest) ── */
-.bil-cross{
-  position:relative;margin:0 0 clamp(30px,5vh,52px);padding:15px 18px;
-  border:1px solid var(--hair);border-left:2px solid var(--accent);border-radius:8px;
-  background:var(--paper);
+.bil-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: clamp(28px, 4vh, 42px);
+  padding-top: 18px;
+  border-top: 1px solid var(--bil-line);
 }
-.bil-cross-head{
-  display:flex;align-items:center;gap:8px;margin-bottom:12px;
-  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--faint);
+.bil-foot p {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--bil-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
 }
-.bil-cross-arrow{color:var(--accent);font-family:var(--sans);font-size:14px;line-height:1;}
-.bil-cross-task{display:flex;align-items:center;gap:12px;}
-.bil-cross-box{
-  flex:0 0 auto;width:16px;height:16px;border:1.5px solid var(--faint);border-radius:5px;
+.bil-cta {
+  display: inline-flex;
+  min-height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border: 1px solid var(--bil-ink);
+  border-radius: 5px;
+  background: var(--bil-ink);
+  color: var(--bil-paper);
+  font-size: 13px;
+  font-weight: 560;
+  text-decoration: none;
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
 }
-.bil-cross-text{
-  flex:1;font-size:clamp(14px,.5rem+.6vw,16px);font-weight:500;
-  letter-spacing:-0.01em;color:var(--ink);line-height:1.35;
-}
-.bil-cross-tag{
-  flex:0 0 auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);
-  border-radius:999px;padding:2px 8px;white-space:nowrap;
-}
-/* the extract that drops into the task on intro; hidden at rest */
-.bil-cross-flight{
-  position:absolute;left:18px;top:14px;width:8px;height:8px;border-radius:50%;
-  background:var(--accent);opacity:0;pointer-events:none;
-}
-
-/* Foot — honest line, wordmark, CTA. */
-.bil-foot{display:flex;flex-direction:column;gap:22px;}
-.bil-honest{
-  margin:0;font-size:clamp(15px,.6rem+.5vw,17px);line-height:1.5;
-  color:var(--soft);max-width:40ch;
-}
-.bil-foot-row{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
-.bil-wordmark{
-  display:inline-flex;align-items:baseline;
-  font-size:19px;font-weight:600;letter-spacing:-0.03em;color:var(--ink);
-}
-.bil-wordmark-caret{
-  width:2px;height:0.86em;margin-left:1px;align-self:center;border-radius:1px;
-  background:var(--accent);
-  animation:bil-blink 1.05s steps(1,end) infinite;
-}
-.bil-cta{
-  display:inline-flex;align-items:center;padding:10px 18px;
-  background:var(--ink);color:var(--paper);border:1px solid var(--ink);
-  border-radius:6px;font-size:14px;font-weight:540;letter-spacing:-0.005em;
-  text-decoration:none;transition:opacity 160ms var(--ease-soft);
-}
-.bil-cta:hover{opacity:.86;}
-
-/* ── Narrow collapse ── */
-@media (max-width:720px){
-  .bil-wrap{padding:clamp(48px,7vh,88px) 20px 64px;}
-  .bil-item{gap:10px;padding-left:16px;}
-  .bil-foot-row{gap:16px;}
+.bil-cta:hover { opacity: 0.86; }
+.bil-cta:active { transform: translateY(1px); }
+.bil-cta:focus-visible {
+  outline: 2px solid var(--bil-accent);
+  outline-offset: 3px;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   INTRO — motion-safe only. Default above IS the rest state.
-   Overture speaks (3 lines), the seed word "gone" leaves and is
-   caught by an indigo caret and snaps back to ink, then the
-   artifact reveals beat by beat. Plays once, then rest forever.
-   ───────────────────────────────────────────────────────────── */
-@media (prefers-reduced-motion:no-preference){
-  /* show + centre the overture layer while it plays */
-  .bil-overture{display:grid;animation:bil-ov-clear .5s var(--ease-soft) 5.05s both;}
+@media (prefers-reduced-motion: no-preference) {
+  .bil-kicker { animation: bil-rise 420ms var(--ease-out) both; }
+  .bil-title { animation: bil-rise 520ms var(--ease-out) 60ms both; }
+  .bil-lede { animation: bil-rise 520ms var(--ease-out) 120ms both; }
 
-  .bil-ov-1{animation:bil-ov-inout 2.15s var(--ease-soft) .15s both;}
-  .bil-ov-2{animation:bil-ov-inout 2.15s var(--ease-soft) 2.05s both;}
-  /* line 3 sets and holds; carried out by the seed catch + the layer clear */
-  .bil-ov-3{animation:bil-ov-in 1s var(--ease-soft) 3.7s both;}
-
-  /* the seed word leaves (lifts + fades to faint), then snaps back to ink */
-  .bil-seed-word{
-    animation:bil-seed-catch 1.1s var(--ease-rack) 4.35s both;
+  .bil-placeholder {
+    animation: bil-placeholder 1.18s var(--ease-out) both;
   }
-  /* the catching caret blinks into being just before the snap-back */
-  .bil-caret-catch{
-    animation:
-      bil-caret-in .28s steps(1,end) 4.55s both,
-      bil-caret-hold .4s var(--ease-rack) 4.8s forwards;
+  .bil-incoming {
+    animation: bil-catch 760ms var(--ease-out) 120ms both;
   }
-
-  /* the artifact starts hidden and reveals after the overture hands off */
-  .bil-artifact{opacity:0;animation:bil-fade .5s var(--ease-soft) 5.15s both;}
-  .bil-kicker{opacity:0;animation:bil-rise .6s var(--ease-soft) 5.2s both;}
-  .bil-headline{opacity:0;animation:bil-rise .7s var(--ease-rack) 5.3s both;}
-  .bil-capture{opacity:0;animation:bil-rise .6s var(--ease-rack) 5.5s both;}
-  /* the stream fills newest-first, beat by beat, as the thoughts are caught */
-  .bil-item{
-    opacity:0;
-    animation:bil-catch-in .55s var(--ease-rack) both;
-    animation-delay:calc(5.75s + var(--i) * .28s);
+  .bil-capture-caret {
+    animation: bil-caret-catch 360ms var(--ease-out) 300ms both,
+      bil-blink 1.05s steps(1, end) 1.2s infinite;
   }
-  .bil-item .bil-item-mark{transform:scaleY(0);transform-origin:top center;
-    animation:bil-mark-in .5s var(--ease-rack) both;
-    animation-delay:calc(5.85s + var(--i) * .28s);}
-  /* the extract crosses one way into Tasks: a flight drops into the task, the
-     card rises in, the checkbox pops OPEN (a fresh task to do, not done). */
-  .bil-cross{opacity:0;animation:bil-rise .6s var(--ease-rack) 7.0s both;}
-  .bil-cross-flight{animation:bil-flight .62s var(--ease-rack) 6.78s both;}
-  .bil-cross-box{transform:scale(0);animation:bil-pop .45s var(--ease-pencil) 7.4s both;}
-  .bil-foot{opacity:0;animation:bil-rise .6s var(--ease-soft) 7.7s both;}
-
-  @keyframes bil-flight{
-    0%{opacity:0;transform:translateY(-34px) scale(.6);}
-    30%{opacity:1;}
-    100%{opacity:0;transform:translateY(0) scale(1);}
+  .bil-item-source {
+    animation: bil-log 440ms var(--ease-out) 720ms both,
+      bil-source-pulse 520ms var(--ease-out) 1.52s both;
   }
-  @keyframes bil-pop{
-    0%{transform:scale(0);}60%{transform:scale(1.18);}100%{transform:scale(1);}
+  .bil-item-source::before { animation: bil-accent-in 340ms var(--ease-out) 2.3s both; }
+  .bil-item-state { animation: bil-state-in 360ms var(--ease-out) 2.45s both; }
+  .bil-approval {
+    animation: bil-approve-in 260ms var(--ease-out) 1.35s both,
+      bil-approve-out 220ms var(--ease-out) 1.92s forwards;
   }
-
-  @keyframes bil-ov-inout{
-    0%{opacity:0;transform:translateY(12px);}
-    16%{opacity:1;transform:translateY(0);}
-    74%{opacity:1;transform:translateY(0);}
-    100%{opacity:0;transform:translateY(-9px);}
+  .bil-approval-ring { animation: bil-tap 520ms var(--ease-out) 1.56s both; }
+  .bil-flight { animation: bil-cross 620ms var(--ease-in-out) 1.86s both; }
+  .bil-bridge-arrow { animation: bil-arrow 440ms var(--ease-out) 1.94s both; }
+  .bil-tasks { animation: bil-task-panel 440ms var(--ease-out) 2.12s both; }
+  .bil-task-row { animation: bil-task-row 360ms var(--ease-out) 2.32s both; }
+  .bil-task-box { animation: bil-box 320ms var(--ease-out) 2.5s both; }
+  @keyframes bil-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes bil-ov-in{
-    from{opacity:0;transform:translateY(12px);}
-    to{opacity:1;transform:translateY(0);}
+  @keyframes bil-placeholder {
+    0%, 76% { opacity: 0; }
+    100% { opacity: 1; }
   }
-  @keyframes bil-ov-clear{from{opacity:1;}to{opacity:0;}}
-  /* the seed "gone": begins to lift + fade to faint (leaving), then the caret
-     catches it and it snaps back to solid ink and settles down onto the line. */
-  @keyframes bil-seed-catch{
-    0%{color:var(--ink);transform:translateY(0);opacity:1;}
-    38%{color:var(--faint);transform:translateY(-10px);opacity:.35;}
-    56%{color:var(--faint);transform:translateY(-11px);opacity:.3;}
-    74%{color:var(--ink);transform:translateY(2px);opacity:1;}
-    100%{color:var(--ink);transform:translateY(0);opacity:1;}
+  @keyframes bil-catch {
+    0% { opacity: 0; transform: translateX(18px); color: var(--bil-faint); }
+    38% { opacity: 0.42; transform: translateX(8px); color: var(--bil-faint); }
+    62% { opacity: 1; transform: translateX(0); color: var(--bil-ink); }
+    84% { opacity: 1; transform: translateX(0); color: var(--bil-ink); }
+    100% { opacity: 0; transform: translateY(5px); color: var(--bil-ink); }
   }
-  @keyframes bil-caret-in{
-    0%{transform:scaleY(0);opacity:0;}
-    50%{transform:scaleY(1);opacity:0;}
-    50.01%{opacity:1;}
-    100%{transform:scaleY(1);opacity:1;}
+  @keyframes bil-caret-catch {
+    0% { opacity: 0.3; transform: scaleY(0.45); }
+    62% { opacity: 1; transform: scaleY(1.14); }
+    100% { opacity: 1; transform: scaleY(1); }
   }
-  @keyframes bil-caret-hold{
-    0%{transform:scaleY(1);opacity:1;}
-    100%{transform:scaleY(1);opacity:0;}
+  @keyframes bil-log {
+    0% { grid-template-rows: 0fr; opacity: 0; background: var(--bil-accent-soft); }
+    72% { opacity: 1; }
+    100% { grid-template-rows: 1fr; opacity: 1; background: transparent; }
   }
-  @keyframes bil-fade{from{opacity:0;}to{opacity:1;}}
-  @keyframes bil-rise{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
-  @keyframes bil-catch-in{
-    0%{opacity:0;transform:translateY(-8px) scale(.99);}
-    100%{opacity:1;transform:none;}
+  @keyframes bil-source-pulse {
+    0%, 100% { background: transparent; }
+    46% { background: var(--bil-accent-soft); }
   }
-  @keyframes bil-mark-in{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+  @keyframes bil-accent-in {
+    from { opacity: 0; transform: scaleY(0); }
+    to { opacity: 1; transform: scaleY(1); }
+  }
+  @keyframes bil-state-in {
+    from { opacity: 0; transform: translateX(-5px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes bil-approve-in {
+    from { opacity: 0; transform: translateY(-50%) scale(0.96); }
+    to { opacity: 1; transform: translateY(-50%) scale(1); }
+  }
+  @keyframes bil-approve-out {
+    from { opacity: 1; transform: translateY(-50%) scale(1); }
+    to { opacity: 0; transform: translateY(-50%) scale(0.98); }
+  }
+  @keyframes bil-tap {
+    0% { opacity: 0; transform: scale(0.92); }
+    35% { opacity: 0.8; }
+    100% { opacity: 0; transform: scale(1.45); }
+  }
+  @keyframes bil-cross {
+    0% { opacity: 0; transform: translate3d(var(--bil-cross-x0), var(--bil-cross-y0), 0) scaleX(0.96); }
+    18% { opacity: 1; }
+    66% { opacity: 1; transform: translate3d(var(--bil-cross-x1), var(--bil-cross-y1), 0) scaleX(1.04); }
+    100% { opacity: 0; transform: translate3d(var(--bil-cross-x1), var(--bil-cross-y1), 0) scaleX(1); }
+  }
+  @keyframes bil-arrow {
+    0%, 100% { transform: translateX(0); }
+    52% { transform: translateX(7px); }
+  }
+  @keyframes bil-task-panel {
+    from { opacity: 0.18; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes bil-task-row {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bil-box {
+    from { opacity: 0; transform: scale(0.55); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes bil-blink {
+    0%, 52% { opacity: 1; }
+    52.01%, 100% { opacity: 0; }
+  }
 }
 
-@keyframes bil-blink{0%,50%{opacity:1;}50.01%,100%{opacity:0;}}
+@media (max-width: 760px) {
+  .bil {
+    min-height: auto;
+    padding: 42px 16px 56px;
+  }
+  .bil-title { max-width: 12ch; }
+  .bil-stage { grid-template-columns: minmax(0, 1fr); }
+  .bil-bridge {
+    --bil-cross-x0: -50%;
+    --bil-cross-y0: -48px;
+    --bil-cross-x1: -50%;
+    --bil-cross-y1: 24px;
+    min-height: 74px;
+    flex-direction: row;
+    gap: 10px;
+  }
+  .bil-bridge-rule {
+    inset: 50% 14% auto;
+    width: auto;
+    height: 1px;
+  }
+  .bil-bridge-arrow { rotate: 90deg; }
+  .bil-foot { align-items: flex-start; flex-direction: column; }
+  .bil-cta { width: 100%; }
+  .bil-item-title,
+  .bil-task-title { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 430px) {
+  .bil-capture { padding: 18px 16px; }
+  .bil-stream-head,
+  .bil-tasks-head,
+  .bil-item-inner { padding-left: 16px; padding-right: 16px; }
+  .bil-item-inner { align-items: flex-start; }
+  .bil-item-state { margin-top: 2px; }
+  .bil-approval { right: 16px; }
+  .bil-approval-full { display: none; }
+  .bil-approval-short { display: inline; }
+}
 `;
