@@ -54,3 +54,9 @@ All rounds frame-verified against the deterministic seek sweep (`shot-ntb-frames
 
 ## The other four directions (kept for reference, /lab/2–5)
 Notebook First, Before It Fades, Three Seconds, The Crossing — polished in earlier rounds (director scores 9.4–9.8). The Notebook (this hybrid) is the recommended flagship.
+
+## Preview access
+
+The review branch is intentionally public at its Vercel preview URL so HQ rows
+open the rendered lab surface directly. Preview uses the repository's explicit
+demo access mode; Production authentication and the homepage hero are unchanged.
