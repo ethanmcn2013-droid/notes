@@ -58,7 +58,18 @@ function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 function AuthShell({ children }: Readonly<{ children: React.ReactNode }>) {
-  if (isUxAssuranceMode() || isDemoMode()) {
+  if (isDemoMode()) {
+    // Demo/review uses an inert publishable key, but still needs a provider:
+    // the reviewable account surface mounts Clerk hooks even though it never
+    // contacts the Clerk backend or reads a real user session.
+    return (
+      <ClerkProvider publishableKey={clerkPublishableKey()}>
+        <AppShell>{children}</AppShell>
+      </ClerkProvider>
+    );
+  }
+
+  if (isUxAssuranceMode()) {
     return <AppShell>{children}</AppShell>;
   }
 
