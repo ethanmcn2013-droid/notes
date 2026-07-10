@@ -1,10 +1,10 @@
 /**
  * Notes hero lab direction: Before It Leaves.
  *
- * The notebook is the fixed anchor from the first frame. One thought arrives,
- * the Notes caret catches it, and the note joins the private stream in under a
- * second. A visible approval follows; only the approved extract crosses into
- * Signal Tasks. The film settles by roughly 3.2 seconds.
+ * The notebook is the fixed anchor from the first frame. Three thoughts arrive
+ * at a human pace; one old note swipes left into archive, while the newest
+ * approved extract crosses right into Signal Tasks. The film settles by roughly
+ * 6.6 seconds.
  *
  * The settled artifact is the default CSS and the semantic DOM. The intro is a
  * decorative enhancement inside prefers-reduced-motion: no-preference, so SSR,
@@ -14,19 +14,19 @@
 
 const STREAM = [
   {
-    title: "Venue can open the side room after six",
-    detail: "caught just now",
-    source: true,
+    title: "Move the rehearsal dinner if the shuttle can't do 6pm",
+    detail: "archived just now",
+    state: "archived",
   },
   {
     title: "Maeve's case study angle: the refund week",
-    detail: "8:41",
-    source: false,
+    detail: "private · 8:41",
+    state: "private",
   },
   {
-    title: "Move the rehearsal dinner if the shuttle can't do 6pm",
-    detail: "yesterday",
-    source: false,
+    title: "Venue can open the side room after six",
+    detail: "caught just now",
+    state: "source",
   },
 ];
 
@@ -58,7 +58,13 @@ export function OptionBeforeItLeaves() {
               <div className="bil-capture-line">
                 <span className="bil-capture-caret" aria-hidden />
                 <span className="bil-placeholder">Catch the next one.</span>
-                <span className="bil-incoming" aria-hidden>
+                <span className="bil-incoming bil-incoming-one" aria-hidden>
+                  Move the rehearsal dinner if the shuttle can't do 6pm
+                </span>
+                <span className="bil-incoming bil-incoming-two" aria-hidden>
+                  Maeve's case study angle: the refund week
+                </span>
+                <span className="bil-incoming bil-incoming-three" aria-hidden>
                   Venue can open the side room after six
                 </span>
               </div>
@@ -75,7 +81,7 @@ export function OptionBeforeItLeaves() {
             <ol className="bil-stream">
               {STREAM.map((note) => (
                 <li
-                  className={note.source ? "bil-item bil-item-source" : "bil-item"}
+                  className={`bil-item bil-item-${note.state}`}
                   key={note.title}
                 >
                   <div className="bil-item-inner">
@@ -83,14 +89,24 @@ export function OptionBeforeItLeaves() {
                       <span className="bil-item-title">{note.title}</span>
                       <span className="bil-item-detail">{note.detail}</span>
                     </span>
-                    {note.source ? (
+                    {note.state === "archived" ? (
+                      <span className="bil-item-state bil-item-state-archived">
+                        <span className="bil-state-dot" aria-hidden />
+                        Archived
+                      </span>
+                    ) : note.state === "source" ? (
                       <span className="bil-item-state">
                         <span className="bil-state-dot" aria-hidden />
                         In Tasks
                       </span>
                     ) : null}
                   </div>
-                  {note.source ? (
+                  {note.state === "archived" ? (
+                    <span className="bil-archive-swipe" aria-hidden>
+                      ← archive
+                    </span>
+                  ) : null}
+                  {note.state === "source" ? (
                     <span className="bil-approval" aria-hidden>
                       <span className="bil-approval-ring" />
                       <span className="bil-approval-full">Send to Tasks</span>
@@ -101,6 +117,10 @@ export function OptionBeforeItLeaves() {
               ))}
             </ol>
           </article>
+
+          <span className="bil-promote-swipe" aria-hidden>
+            promote →
+          </span>
 
           <div className="bil-bridge" aria-hidden>
             <span className="bil-bridge-label">Approved</span>
@@ -361,12 +381,31 @@ const CSS = `
   text-transform: uppercase;
   white-space: nowrap;
 }
+.bil-item-state-archived { color: var(--bil-faint); }
 .bil-state-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--bil-accent);
 }
+.bil-archive-swipe,
+.bil-promote-swipe {
+  position: absolute;
+  z-index: 3;
+  padding: 4px 7px;
+  border: 1px solid var(--bil-accent);
+  border-radius: 4px;
+  background: var(--bil-paper);
+  color: var(--bil-accent);
+  font-family: var(--bil-mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+}
+.bil-archive-swipe { right: 18px; top: 50%; }
+.bil-promote-swipe { left: 42%; top: 52%; }
 .bil-approval {
   position: absolute;
   right: clamp(19px, 2.4vw, 28px);
@@ -520,32 +559,31 @@ const CSS = `
   .bil-title { animation: bil-rise 520ms var(--ease-out) 60ms both; }
   .bil-lede { animation: bil-rise 520ms var(--ease-out) 120ms both; }
 
-  .bil-placeholder {
-    animation: bil-placeholder 1.18s var(--ease-out) both;
-  }
-  .bil-incoming {
-    animation: bil-catch 760ms var(--ease-out) 120ms both;
-  }
+  .bil-placeholder { animation: bil-placeholder 6.15s var(--ease-out) both; }
+  .bil-incoming-one { animation: bil-note-type 1.1s steps(18, end) .28s both; }
+  .bil-incoming-two { animation: bil-note-type 1.1s steps(18, end) 1.72s both; }
+  .bil-incoming-three { animation: bil-note-type 1.1s steps(18, end) 3.16s both; }
   .bil-capture-caret {
     animation: bil-caret-catch 360ms var(--ease-out) 300ms both,
       bil-blink 1.05s steps(1, end) 1.2s infinite;
   }
-  .bil-item-source {
-    animation: bil-log 440ms var(--ease-out) 720ms both,
-      bil-source-pulse 520ms var(--ease-out) 1.52s both;
-  }
-  .bil-item-source::before { animation: bil-accent-in 340ms var(--ease-out) 2.3s both; }
-  .bil-item-state { animation: bil-state-in 360ms var(--ease-out) 2.45s both; }
+  .bil-item-archived { animation: bil-log 440ms var(--ease-out) .8s both, bil-archive-row 760ms var(--ease-out) 4.05s both; }
+  .bil-item-private { animation: bil-log 440ms var(--ease-out) 2.1s both; }
+  .bil-item-source { animation: bil-log 440ms var(--ease-out) 3.45s both, bil-source-pulse 520ms var(--ease-out) 4.3s both; }
+  .bil-item-source::before { animation: bil-accent-in 340ms var(--ease-out) 4.78s both; }
+  .bil-item-source .bil-item-state { animation: bil-state-in 360ms var(--ease-out) 4.92s both; }
+  .bil-item-archived .bil-archive-swipe { animation: bil-archive-swipe 760ms var(--ease-in-out) 4.02s both; }
+  .bil-promote-swipe { animation: bil-promote-swipe 760ms var(--ease-in-out) 4.68s both; }
   .bil-approval {
-    animation: bil-approve-in 260ms var(--ease-out) 1.35s both,
-      bil-approve-out 220ms var(--ease-out) 1.92s forwards;
+    animation: bil-approve-in 260ms var(--ease-out) 4.48s both,
+      bil-approve-out 220ms var(--ease-out) 5.04s forwards;
   }
-  .bil-approval-ring { animation: bil-tap 520ms var(--ease-out) 1.56s both; }
-  .bil-flight { animation: bil-cross 620ms var(--ease-in-out) 1.86s both; }
-  .bil-bridge-arrow { animation: bil-arrow 440ms var(--ease-out) 1.94s both; }
-  .bil-tasks { animation: bil-task-panel 440ms var(--ease-out) 2.12s both; }
-  .bil-task-row { animation: bil-task-row 360ms var(--ease-out) 2.32s both; }
-  .bil-task-box { animation: bil-box 320ms var(--ease-out) 2.5s both; }
+  .bil-approval-ring { animation: bil-tap 520ms var(--ease-out) 4.7s both; }
+  .bil-flight { animation: bil-cross 620ms var(--ease-in-out) 5.02s both; }
+  .bil-bridge-arrow { animation: bil-arrow 440ms var(--ease-out) 5.12s both; }
+  .bil-tasks { animation: bil-task-panel 440ms var(--ease-out) 5.24s both; }
+  .bil-task-row { animation: bil-task-row 360ms var(--ease-out) 5.46s both; }
+  .bil-task-box { animation: bil-box 320ms var(--ease-out) 5.66s both; }
   @keyframes bil-rise {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -560,6 +598,12 @@ const CSS = `
     62% { opacity: 1; transform: translateX(0); color: var(--bil-ink); }
     84% { opacity: 1; transform: translateX(0); color: var(--bil-ink); }
     100% { opacity: 0; transform: translateY(5px); color: var(--bil-ink); }
+  }
+  @keyframes bil-note-type {
+    0% { opacity: 0; clip-path: inset(0 100% 0 0); transform: translateY(3px); }
+    20% { opacity: 1; }
+    78% { opacity: 1; clip-path: inset(0 0 0 0); transform: none; }
+    100% { opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(-4px); }
   }
   @keyframes bil-caret-catch {
     0% { opacity: 0.3; transform: scaleY(0.45); }
@@ -582,6 +626,21 @@ const CSS = `
   @keyframes bil-state-in {
     from { opacity: 0; transform: translateX(-5px); }
     to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes bil-archive-row {
+    0% { transform: translateX(0); background: transparent; }
+    40% { transform: translateX(-18px); background: var(--bil-accent-soft); }
+    100% { transform: translateX(0); background: transparent; }
+  }
+  @keyframes bil-archive-swipe {
+    0% { opacity: 0; transform: translateX(16px); }
+    24% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-34px); }
+  }
+  @keyframes bil-promote-swipe {
+    0% { opacity: 0; transform: translateX(-18px); }
+    24% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(28px); }
   }
   @keyframes bil-approve-in {
     from { opacity: 0; transform: translateY(-50%) scale(0.96); }
