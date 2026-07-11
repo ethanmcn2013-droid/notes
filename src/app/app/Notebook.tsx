@@ -31,6 +31,7 @@ import {
   type ExtractSendResult,
   type NoteRead,
 } from "@/server/actions/notes";
+import type { TasksWorkspaceDestination } from "@/server/tasks-personalization";
 import { TASKS_URL } from "@/lib/product-urls";
 
 // The Tasks app entry, the destination of the one-way edge. Used as the
@@ -136,9 +137,10 @@ type PromoteToast =
 interface NotebookProps {
   initialNotes: NoteRead[];
   initialArchivedNotes: NoteRead[];
+  tasksWorkspaces: TasksWorkspaceDestination[];
 }
 
-export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) {
+export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }: NotebookProps) {
   const [notes, setNotes] = useState<NoteRead[]>(initialNotes);
   const [archivedNotes, setArchivedNotes] = useState<NoteRead[]>(initialArchivedNotes);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -150,6 +152,9 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
   }, [openId]);
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
+  const [selectedTasksWorkspaceId, setSelectedTasksWorkspaceId] = useState(
+    tasksWorkspaces[0]?.id ?? "",
+  );
   const [error, setError] = useState<string | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
   // The one signature moment, fires once, ever, on the first note a
@@ -481,7 +486,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
 
       startTransition(async () => {
         try {
-          const { note: updated, result } = await promoteNoteToTasks(noteId);
+          const { note: updated, result } = await promoteNoteToTasks(noteId, selectedTasksWorkspaceId);
           // Merge the server result into archivedNotes for the "In Tasks" section.
           setArchivedNotes((prev) => {
             const without = prev.filter((n) => n.id !== noteId);
@@ -523,7 +528,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [selectedTasksWorkspaceId]
   );
 
   // ── Long-press gesture (touch) ───────────────────────────────────
@@ -918,7 +923,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       setExtractError(null);
       startTransition(async () => {
         try {
-          const { note: updated, result } = await sendExtractToTasks(noteId);
+          const { note: updated, result } = await sendExtractToTasks(noteId, selectedTasksWorkspaceId);
           // sendExtractToTasks now also archives the note (D1 semantics).
           // Remove from active stream, add to archived. Panel close is
           // deferred to beginOpenNoteConfirm so the extract path has the
@@ -956,7 +961,7 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [selectedTasksWorkspaceId]
   );
 
   const onCaptureKeyDown = useCallback(
@@ -1280,7 +1285,8 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveTrayId(null);
-                        executePromote(note.id);
+                        if (tasksWorkspaces.length > 1) setOpenId(note.id);
+                        else executePromote(note.id);
                       }}
                       title={`Will add: ${firstLine(note.body).slice(0, 40)}${firstLine(note.body).length > 40 ? "…" : ""}`}
                       aria-label={`Send to Tasks: ${firstLine(note.body)}`}
@@ -1319,7 +1325,8 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                       onClick={() => {
                         if (isPromoting) return;
                         setActiveTrayId(null);
-                        executePromote(note.id);
+                        if (tasksWorkspaces.length > 1) setOpenId(note.id);
+                        else executePromote(note.id);
                       }}
                     >
                       Send to Tasks
@@ -1385,6 +1392,22 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                   role="group"
                   aria-label="Send or shape this note"
                 >
+                  {tasksWorkspaces.length > 1 && (
+                    <label className="extract-drafted-destination">
+                      <span>Send to</span>
+                      <select
+                        value={selectedTasksWorkspaceId}
+                        onChange={(event) => setSelectedTasksWorkspaceId(event.target.value)}
+                        aria-label="Tasks destination workspace"
+                      >
+                        {tasksWorkspaces.map((workspace) => (
+                          <option key={workspace.id} value={workspace.id}>
+                            {workspace.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   <button
                     type="button"
                     className="btn-draft-action btn-draft-action--primary"
@@ -1467,6 +1490,23 @@ export function Notebook({ initialNotes, initialArchivedNotes }: NotebookProps) 
                 )}
                 <p className="extract-drafted-body">{openNote.extractBody}</p>
                 <div className="extract-drafted-controls">
+                  {tasksWorkspaces.length > 1 && !openNote.promotedTaskId && (
+                    <label className="extract-drafted-destination">
+                      <span>Send to</span>
+                      <select
+                        value={selectedTasksWorkspaceId}
+                        onChange={(event) => setSelectedTasksWorkspaceId(event.target.value)}
+                        aria-label="Tasks destination workspace"
+                        disabled={sendingExtractFor === openNote.id}
+                      >
+                        {tasksWorkspaces.map((workspace) => (
+                          <option key={workspace.id} value={workspace.id}>
+                            {workspace.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   {openNote.promotedTaskId ? (
                     (() => {
                       const sent = sentResults.get(openNote.id);
