@@ -19,9 +19,10 @@ export type TasksWorkspaceDestination = {
 export async function fetchTasksWorkspaces(
   clerkId: string,
 ): Promise<TasksWorkspaceDestination[]> {
-  const base =
-    process.env.TASKS_API_URL?.replace(/\/+$/, "") ??
-    "https://tasks.signalstudio.ie";
+  const baseRaw = process.env.TASKS_API_URL ??
+    (process.env.VERCEL_ENV === "production" ? "https://tasks.signalstudio.ie" : null);
+  if (!baseRaw) return [];
+  const base = baseRaw.replace(/\/+$/, "");
   const secret = process.env.NOTES_TO_TASKS_SECRET;
   if (!secret) return [];
   try {
