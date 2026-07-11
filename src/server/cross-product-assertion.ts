@@ -54,6 +54,25 @@ export function createTasksAssertion(
   return `${encoded}.${signature}`;
 }
 
+export function createTasksPersonalizationAssertion(
+  subject: string,
+  secret: string,
+  now = Math.floor(Date.now() / 1000),
+): string {
+  const claims = {
+    v: 1 as const,
+    iss: "signal-notes" as const,
+    aud: "signal-tasks.workspace-personalization" as const,
+    sub: subject,
+    iat: now,
+    exp: now + MAX_TTL_SECONDS,
+    jti: randomUUID(),
+    traceId: randomUUID(),
+  };
+  const encoded = encode(claims);
+  return `${encoded}.${createHmac("sha256", secret).update(encoded).digest("base64url")}`;
+}
+
 /** Verify shape and signature locally before sending the assertion onward. */
 export function assertTasksAssertion(
   assertion: string,

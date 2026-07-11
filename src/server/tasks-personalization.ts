@@ -1,4 +1,5 @@
 import "server-only";
+import { createTasksPersonalizationAssertion } from "./cross-product-assertion";
 
 export type TasksPersonalization = {
   headline: string;
@@ -13,7 +14,7 @@ export type TasksPersonalization = {
  * Uses the same bearer secret as notes-extract cross-repo calls.
  */
 export async function fetchTasksPersonalization(
-  email: string,
+  clerkId: string,
 ): Promise<TasksPersonalization | null> {
   const base =
     process.env.TASKS_API_URL?.replace(/\/+$/, "") ??
@@ -22,10 +23,11 @@ export async function fetchTasksPersonalization(
   if (!secret) return null;
 
   try {
+    const assertion = createTasksPersonalizationAssertion(clerkId, secret);
     const res = await fetch(
-      `${base}/api/internal/workspace-personalization?email=${encodeURIComponent(email)}`,
+      `${base}/api/internal/workspace-personalization`,
       {
-        headers: { authorization: `Bearer ${secret}` },
+        headers: { authorization: `Bearer ${assertion}` },
         next: { revalidate: 300 },
       },
     );
