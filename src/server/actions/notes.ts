@@ -2,6 +2,7 @@
 
 import { and, desc, eq, isNull, isNotNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { createTasksAssertion } from "@/server/cross-product-assertion";
 
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db/client";
@@ -299,7 +300,7 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
  * Privacy guardrail: only extract_body crosses the boundary. The raw
  * note body never leaves Notes.
  *
- * Idempotency: Tasks keys on (userId, noteId), a repeat call returns
+ * Idempotency: Tasks keys on (subject, noteId), a repeat call returns
  * the same task instead of creating a duplicate. Safe to retry.
  */
 export type ExtractSendResult = {
@@ -364,9 +365,9 @@ export async function sendExtractToTasks(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${secret}`,
+        authorization: `Bearer ${createTasksAssertion(userId, noteId, secret)}`,
       },
-      body: JSON.stringify({ userId, noteId, body: extract }),
+      body: JSON.stringify({ noteId, body: extract }),
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
@@ -519,9 +520,9 @@ export async function promoteNoteToTasks(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${secret}`,
+        authorization: `Bearer ${createTasksAssertion(userId, noteId, secret)}`,
       },
-      body: JSON.stringify({ userId, noteId, body: taskTitle }),
+      body: JSON.stringify({ noteId, body: taskTitle }),
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
