@@ -59,8 +59,16 @@
     "hex": 23,
     "ease": 0
   },
+  "src/app/waitlist/page.tsx": {
+    "hex": 5,
+    "ease": 0
+  },
   "src/app/wedding-planning/page.tsx": {
     "hex": 24,
+    "ease": 0
+  },
+  "src/components/chrome/suite-header.tsx": {
+    "hex": 4,
     "ease": 0
   },
   "src/components/dev-banner.tsx": {
@@ -77,7 +85,7 @@
   },
   "src/components/marketing/notes-hero-voice.tsx": {
     "hex": 6,
-    "ease": 10
+    "ease": 6
   },
   "src/components/showcase/notes-demo.tsx": {
     "hex": 1,
@@ -93,7 +101,7 @@
   },
   "src/components/suite-switcher-pills.tsx": {
     "hex": 9,
-    "ease": 2
+    "ease": 1
   },
   "src/components/system/long-wait-status.tsx": {
     "hex": 1,
