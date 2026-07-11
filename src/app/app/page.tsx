@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isDemoMode } from "@/lib/access-mode";
 import { listArchivedNotes, listNotes } from "@/server/actions/notes";
 import { getCaptureEmail } from "@/server/actions/capture-email";
+import { fetchTasksWorkspaces } from "@/server/tasks-personalization";
 import { Notebook } from "./Notebook";
 import { CaptureEmailRow } from "./CaptureEmailRow";
 
@@ -33,10 +34,12 @@ export default async function NotebookPage() {
     }
   }
 
-  const [initialNotes, initialArchivedNotes, captureEmail] = await Promise.all([
+  const { userId } = await auth();
+  const [initialNotes, initialArchivedNotes, captureEmail, tasksWorkspaces] = await Promise.all([
     listNotes(),
     listArchivedNotes(),
     getCaptureEmail(),
+    userId && !isDemoMode() ? fetchTasksWorkspaces(userId) : Promise.resolve([]),
   ]);
   // Three rendering branches:
   //   - tier=entitled: workspace+ user, inbound is wired → show address.
@@ -53,7 +56,11 @@ export default async function NotebookPage() {
   }
   return (
     <>
-      <Notebook initialNotes={initialNotes} initialArchivedNotes={initialArchivedNotes} />
+      <Notebook
+        initialNotes={initialNotes}
+        initialArchivedNotes={initialArchivedNotes}
+        tasksWorkspaces={tasksWorkspaces}
+      />
       {captureState ? <CaptureEmailRow state={captureState} /> : null}
     </>
   );

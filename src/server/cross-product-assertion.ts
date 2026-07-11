@@ -18,6 +18,7 @@ export type CrossProductAssertion = {
   aud: "signal-tasks.notes-extract";
   sub: string;
   noteId: string;
+  workspaceId: string;
   iat: number;
   exp: number;
   jti: string;
@@ -33,6 +34,7 @@ function encode(value: unknown): string {
 export function createTasksAssertion(
   subject: string,
   noteId: string,
+  workspaceId: string,
   secret: string,
   now = Math.floor(Date.now() / 1000),
 ): string {
@@ -42,6 +44,7 @@ export function createTasksAssertion(
     aud: "signal-tasks.notes-extract",
     sub: subject,
     noteId,
+    workspaceId,
     iat: now,
     exp: now + MAX_TTL_SECONDS,
     jti: randomUUID(),
@@ -79,6 +82,7 @@ export function assertTasksAssertion(
   secret: string,
   expectedSubject: string,
   expectedNoteId: string,
+  expectedWorkspaceId: string,
   now = Math.floor(Date.now() / 1000),
 ): CrossProductAssertion {
   const [encoded, presented] = assertion.split(".");
@@ -106,6 +110,8 @@ export function assertTasksAssertion(
     claims.sub !== expectedSubject ||
     typeof claims.noteId !== "string" ||
     claims.noteId !== expectedNoteId ||
+    typeof claims.workspaceId !== "string" ||
+    claims.workspaceId !== expectedWorkspaceId ||
     typeof claims.iat !== "number" ||
     typeof claims.exp !== "number" ||
     typeof claims.jti !== "string" ||
