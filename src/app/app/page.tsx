@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { isDemoMode } from "@/lib/access-mode";
 import { listArchivedNotes, listNotes } from "@/server/actions/notes";
 import { getCaptureEmail } from "@/server/actions/capture-email";
-import { fetchTasksWorkspaces } from "@/server/tasks-personalization";
+import {
+  fetchTasksWorkspaceCatalog,
+  selectAuthorizedWorkspaceHint,
+} from "@/server/tasks-personalization";
 import { Notebook } from "./Notebook";
 import { CaptureEmailRow } from "./CaptureEmailRow";
 
@@ -17,7 +20,11 @@ export const metadata = {
 // Server component, fetches the user's notes once, hands the initial
 // stream to the client Notebook. Subsequent edits flow through server
 // actions; the client applies optimistic updates and reconciles.
-export default async function NotebookPage() {
+export default async function NotebookPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   // Fail open to sign-in, never to a 500. The proxy middleware gates
   // /app when Clerk keys are configured, but it bypasses entirely in
   // keyless/dev mode (see proxy.ts), and listNotes()/requireUser()
@@ -35,12 +42,27 @@ export default async function NotebookPage() {
   }
 
   const { userId } = await auth();
-  const [initialNotes, initialArchivedNotes, captureEmail, tasksWorkspaces] = await Promise.all([
+  const planningPeriodsEnabled =
+    process.env.SIGNAL_PLANNING_PERIODS_ENABLED === "1" ||
+    process.env.SIGNAL_PLANNING_PERIODS_ENABLED === "true";
+  const params = await searchParams;
+  const workspaceHint = typeof params.workspaceId === "string" ? params.workspaceId : null;
+  const periodHint =
+    typeof params.planningPeriodId === "string" ? params.planningPeriodId : null;
+
+  const [initialNotes, initialArchivedNotes, captureEmail, tasksCatalog] = await Promise.all([
     listNotes(),
     listArchivedNotes(),
     getCaptureEmail(),
-    userId && !isDemoMode() ? fetchTasksWorkspaces(userId) : Promise.resolve([]),
+    userId && !isDemoMode()
+      ? fetchTasksWorkspaceCatalog(userId)
+      : Promise.resolve({ status: "unavailable" as const, planningPeriods: [], workspaces: [] }),
   ]);
+  // URL context is navigation state, never authorization. Only select a hint
+  // when the current subject's freshly-read Tasks catalog contains it.
+  const hintedWorkspace = planningPeriodsEnabled
+    ? selectAuthorizedWorkspaceHint(tasksCatalog, workspaceHint, periodHint)
+    : null;
   // Three rendering branches:
   //   - tier=entitled: workspace+ user, inbound is wired → show address.
   //   - tier=free: free-tier user → show upgrade nudge.
@@ -59,7 +81,10 @@ export default async function NotebookPage() {
       <Notebook
         initialNotes={initialNotes}
         initialArchivedNotes={initialArchivedNotes}
-        tasksWorkspaces={tasksWorkspaces}
+        tasksWorkspaces={tasksCatalog.workspaces}
+        tasksCatalogAvailable={tasksCatalog.status === "ready"}
+        planningPeriodsEnabled={planningPeriodsEnabled}
+        initialWorkspaceId={hintedWorkspace?.id ?? null}
       />
       {captureState ? <CaptureEmailRow state={captureState} /> : null}
     </>
