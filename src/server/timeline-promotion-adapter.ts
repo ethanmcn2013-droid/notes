@@ -11,7 +11,11 @@ export async function sendTimelinePromotionCommand(
   command: TimelinePromotionCommand,
   subject: string,
 ): Promise<TimelinePromotionReceipt> {
-  const endpoint = process.env.TIMELINE_PROMOTION_API_URL?.trim();
+  const endpoint =
+    process.env.TIMELINE_PROMOTION_API_URL?.trim() ??
+    (process.env.VERCEL_ENV === "production"
+      ? "https://timeline.signalstudio.ie/api/internal/notes-timeline"
+      : null);
   const secret = process.env.NOTES_TO_TIMELINE_SECRET;
   if (!endpoint || !secret) {
     return {

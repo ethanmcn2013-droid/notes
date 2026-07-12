@@ -10,8 +10,10 @@ Membership. Notes stores one nullable `notes.workspace_id` projection only.
   Note id and body and leaves existing rows Unfiled.
 - Set `SIGNAL_PLANNING_PERIODS_ENABLED=true` to show contextual selection.
 - Configure `TASKS_API_URL` and `NOTES_TO_TASKS_SECRET` for the signed Tasks
-  workspace catalog. Reads time out after two seconds and fail closed; capture
-  continues Unfiled.
+  v2 workspace catalog at `/api/internal/workspaces?contractVersion=2`.
+  The response is membership-first, excludes archived destinations, and groups
+  owned Workspaces under finite Planning Period DTOs. Reads time out after two
+  seconds and fail closed; capture continues Unfiled.
 - A URL `workspaceId` or `planningPeriodId` is a navigation hint only. Notes
   selects it only when the fresh catalog for the Clerk subject contains it.
 - Moving a note always rechecks current Membership and updates one owner-scoped
@@ -20,7 +22,11 @@ Membership. Notes stores one nullable `notes.workspace_id` projection only.
 ## Timeline boundary
 
 Notes prepares only `{title,date,completion,named audience}`. The command shape
-cannot serialize the raw Note body. Until Timeline exposes the audience-bound
-endpoint, the UI returns an unavailable receipt and performs no write. Enable
-the adapter later with `TIMELINE_PROMOTION_API_URL` and
-`NOTES_TO_TIMELINE_SECRET`; do not replace it with a direct database write.
+cannot serialize the raw Note body. Timeline now exposes the audience-bound
+`POST /api/internal/notes-timeline` receiver. It verifies the short-lived
+`signal-timeline.note-projection` assertion, rechecks current Tasks membership,
+creates a frozen public-safe projection, publishes a one-time token, and
+returns the public URL. Configure `NOTES_TO_TIMELINE_SECRET`; preview/staging
+may override `TIMELINE_PROMOTION_API_URL`, while production defaults to the
+canonical Timeline endpoint. Duplicate Note promotions are rejected rather
+than creating a second public link.
