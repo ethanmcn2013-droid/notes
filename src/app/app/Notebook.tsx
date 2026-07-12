@@ -26,12 +26,14 @@ import {
   promoteNoteToTasks,
   searchNotes,
   sendExtractToTasks,
+  setNoteWorkspace,
   setNoteExtract,
   unPromoteNote,
   type ExtractSendResult,
   type NoteRead,
 } from "@/server/actions/notes";
 import type { TasksWorkspaceDestination } from "@/server/tasks-personalization";
+import { promoteSelectedExtractToTimeline } from "@/server/actions/timeline";
 import { TASKS_URL } from "@/lib/product-urls";
 
 // The Tasks app entry, the destination of the one-way edge. Used as the
@@ -138,9 +140,19 @@ interface NotebookProps {
   initialNotes: NoteRead[];
   initialArchivedNotes: NoteRead[];
   tasksWorkspaces: TasksWorkspaceDestination[];
+  tasksCatalogAvailable: boolean;
+  planningPeriodsEnabled: boolean;
+  initialWorkspaceId: string | null;
 }
 
-export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }: NotebookProps) {
+export function Notebook({
+  initialNotes,
+  initialArchivedNotes,
+  tasksWorkspaces,
+  tasksCatalogAvailable,
+  planningPeriodsEnabled,
+  initialWorkspaceId,
+}: NotebookProps) {
   const [notes, setNotes] = useState<NoteRead[]>(initialNotes);
   const [archivedNotes, setArchivedNotes] = useState<NoteRead[]>(initialArchivedNotes);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -153,8 +165,23 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
   const [selectedTasksWorkspaceId, setSelectedTasksWorkspaceId] = useState(
-    tasksWorkspaces[0]?.id ?? "",
+    initialWorkspaceId ?? tasksWorkspaces[0]?.id ?? "",
   );
+  const [selectedNotebookWorkspaceId, setSelectedNotebookWorkspaceId] =
+    useState(initialWorkspaceId ?? "");
+  const [workspaceMessage, setWorkspaceMessage] = useState<string | null>(null);
+  const [timelineDraft, setTimelineDraft] = useState({
+    title: "",
+    date: "",
+    completion: 0,
+    audienceLabel: "",
+  });
+  const [timelineReceipt, setTimelineReceipt] = useState<string | null>(null);
+  const [timelineSending, setTimelineSending] = useState(false);
+  useEffect(() => {
+    setTimelineDraft({ title: "", date: "", completion: 0, audienceLabel: "" });
+    setTimelineReceipt(null);
+  }, [openId]);
   const [error, setError] = useState<string | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
   // The one signature moment, fires once, ever, on the first note a
@@ -225,6 +252,36 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
   const longPressConfirmTimerRef = useRef<Map<string, number>>(new Map());
   // Touch start coords for move-threshold check
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (!planningPeriodsEnabled || typeof window === "undefined") return;
+    const workspace = tasksWorkspaces.find(
+      (candidate) => candidate.id === selectedNotebookWorkspaceId,
+    );
+    const url = new URL(window.location.href);
+    url.searchParams.set("contextVersion", "2");
+    if (workspace) {
+      url.searchParams.set("workspaceId", workspace.id);
+      if (workspace.planningPeriodId) {
+        url.searchParams.set("planningPeriodId", workspace.planningPeriodId);
+      } else {
+        url.searchParams.delete("planningPeriodId");
+      }
+    } else {
+      url.searchParams.delete("workspaceId");
+      url.searchParams.delete("planningPeriodId");
+    }
+    window.history.replaceState(window.history.state, "", url);
+    window.dispatchEvent(
+      new CustomEvent("signal-suite-context-change", {
+        detail: {
+          version: 2,
+          workspaceId: workspace?.id ?? null,
+          planningPeriodId: workspace?.planningPeriodId ?? null,
+        },
+      }),
+    );
+  }, [planningPeriodsEnabled, selectedNotebookWorkspaceId, tasksWorkspaces]);
 
   // P3-1: Deterministic first-paint focus, cursor ready, nothing highlighted.
   useEffect(() => {
@@ -415,14 +472,23 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
     return () => clearTimeout(handle);
   }, [query]);
 
+  const workspaceNotes = useMemo(
+    () => notes.filter(
+      (note) => (note.workspaceId ?? "") === selectedNotebookWorkspaceId,
+    ),
+    [notes, selectedNotebookWorkspaceId],
+  );
+
   const filteredNotes = useMemo(() => {
-    if (!query.trim()) return notes;
+    if (!query.trim()) return workspaceNotes;
     if (searchResults === null) {
       const q = normalizeForSearch(query.trim());
-      return notes.filter((n) => normalizeForSearch(n.body).includes(q));
+      return workspaceNotes.filter((n) => normalizeForSearch(n.body).includes(q));
     }
-    return searchResults;
-  }, [notes, query, searchResults]);
+    return searchResults.filter(
+      (note) => (note.workspaceId ?? "") === selectedNotebookWorkspaceId,
+    );
+  }, [workspaceNotes, query, searchResults, selectedNotebookWorkspaceId]);
 
   const lastSavedTs = notes[0]?.createdAt ?? null;
   const draftIsEmpty = draft.trim().length === 0;
@@ -687,6 +753,9 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
       promotedTaskId: null,
       archivedAt: null,
       source: null,
+      workspaceId: planningPeriodsEnabled
+        ? selectedNotebookWorkspaceId || null
+        : null,
     };
     setNotes((prev) => [optimistic, ...prev]);
     setFreshIds((prev) => new Set(prev).add(tempId));
@@ -708,7 +777,10 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
 
     startTransition(async () => {
       try {
-        const saved = await createNote(body);
+        const saved = await createNote(
+          body,
+          planningPeriodsEnabled ? selectedNotebookWorkspaceId || null : null,
+        );
         setNotes((prev) => prev.map((n) => (n.id === tempId ? saved : n)));
         setFreshIds((prev) => {
           const next = new Set(prev);
@@ -738,7 +810,7 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
         setError(friendlyError(err, "Could not save"));
       }
     });
-  }, [draft, executePromote]);
+  }, [draft, executePromote, planningPeriodsEnabled, selectedNotebookWorkspaceId]);
 
   const commitDelete = useCallback((noteToDelete: NoteRead) => {
     startTransition(async () => {
@@ -753,6 +825,51 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
       }
     });
   }, []);
+
+  const moveNoteToWorkspace = useCallback(
+    (noteId: string, workspaceId: string) => {
+      setWorkspaceMessage(null);
+      startTransition(async () => {
+        try {
+          const updated = await setNoteWorkspace(noteId, workspaceId || null);
+          setNotes((current) =>
+            current.map((note) => (note.id === noteId ? updated : note)),
+          );
+          setWorkspaceMessage(
+            workspaceId ? "Note moved to this workspace." : "Note returned to Unfiled.",
+          );
+        } catch (err) {
+          setWorkspaceMessage(friendlyError(err, "Could not move note"));
+        }
+      });
+    },
+    [],
+  );
+
+  const sendTimelinePreview = useCallback(
+    (noteId: string) => {
+      setTimelineReceipt(null);
+      setTimelineSending(true);
+      startTransition(async () => {
+        try {
+          const receipt = await promoteSelectedExtractToTimeline({
+            noteId,
+            ...timelineDraft,
+          });
+          setTimelineReceipt(
+            receipt.status === "sent"
+              ? `Shared exactly as previewed. ${receipt.url}`
+              : receipt.message,
+          );
+        } catch (err) {
+          setTimelineReceipt(friendlyError(err, "Timeline is unavailable right now"));
+        } finally {
+          setTimelineSending(false);
+        }
+      });
+    },
+    [timelineDraft],
+  );
 
   const undoDelete = useCallback(() => {
     setUndoTarget((current) => {
@@ -1096,6 +1213,35 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
               autoComplete="off"
             />
           </label>
+          {planningPeriodsEnabled ? (
+            <label className="workspace-selector">
+              <span>Workspace</span>
+              <select
+                value={selectedNotebookWorkspaceId}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setSelectedNotebookWorkspaceId(next);
+                  if (next) setSelectedTasksWorkspaceId(next);
+                  setWorkspaceMessage(null);
+                }}
+                aria-describedby="workspace-selector-status"
+              >
+                <option value="">Unfiled</option>
+                {tasksWorkspaces.map((workspace) => (
+                  <option key={workspace.id} value={workspace.id}>
+                    {workspace.planningPeriodName
+                      ? `${workspace.planningPeriodName} · ${workspace.name}`
+                      : workspace.name}
+                  </option>
+                ))}
+              </select>
+              <span id="workspace-selector-status" className="workspace-selector-status">
+                {tasksCatalogAvailable
+                  ? "Private notes in this workspace"
+                  : "Tasks unavailable, capture stays Unfiled"}
+              </span>
+            </label>
+          ) : null}
         </div>
 
         <label className="capture">
@@ -1162,11 +1308,11 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
               Filtered:   "N of M", only shown when filter is active AND
               the result count differs from total (kill the identity case
               "X of X" which adds noise without information). */}
-          {notes.length > 0 && (
+          {workspaceNotes.length > 0 && (
             <span aria-hidden>
-              {query.trim() && filteredNotes.length !== notes.length
-                ? `${filteredNotes.length} of ${notes.length}`
-                : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
+              {query.trim() && filteredNotes.length !== workspaceNotes.length
+                ? `${filteredNotes.length} of ${workspaceNotes.length}`
+                : `${workspaceNotes.length} ${workspaceNotes.length === 1 ? "note" : "notes"}`}
             </span>
           )}
         </div>
@@ -1179,20 +1325,20 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
           aria-atomic="true"
           className="sr-only"
         >
-          {query.trim() && filteredNotes.length !== notes.length
-            ? `${filteredNotes.length} of ${notes.length} notes`
-            : notes.length === 0
+          {query.trim() && filteredNotes.length !== workspaceNotes.length
+            ? `${filteredNotes.length} of ${workspaceNotes.length} notes`
+            : workspaceNotes.length === 0
               ? "No notes yet"
-              : `${notes.length} ${notes.length === 1 ? "note" : "notes"}`}
+              : `${workspaceNotes.length} ${workspaceNotes.length === 1 ? "note" : "notes"}`}
         </span>
 
-        {notes.length === 0 && (
+        {workspaceNotes.length === 0 && (
           <p className="empty-state">
             <em>Nothing here yet.</em> Start typing.
           </p>
         )}
 
-        {notes.length > 0 && filteredNotes.length === 0 && query.trim() && (
+        {workspaceNotes.length > 0 && filteredNotes.length === 0 && query.trim() && (
           <p className="empty-state">
             No notes match <em>"{query.trim()}"</em>.
           </p>
@@ -1371,12 +1517,125 @@ export function Notebook({ initialNotes, initialArchivedNotes, tasksWorkspaces }
                 Captured <RelativeTime ts={openNote.createdAt} />
               </span>
               <div className="open-note-head-controls">
+                {planningPeriodsEnabled ? (
+                  <label className="open-note-workspace">
+                    <span className="sr-only">Workspace for this note</span>
+                    <select
+                      value={openNote.workspaceId ?? ""}
+                      onChange={(event) =>
+                        moveNoteToWorkspace(openNote.id, event.target.value)
+                      }
+                      aria-label="Workspace for this note"
+                    >
+                      <option value="">Unfiled</option>
+                      {tasksWorkspaces.map((workspace) => (
+                        <option key={workspace.id} value={workspace.id}>
+                          {workspace.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
                 {openNote.promotedTaskId ? (
                   <span className="open-note-promoted-label">In Tasks</span>
                 ) : null}
               </div>
             </div>
+            {workspaceMessage ? (
+              <p className="workspace-message" role="status">
+                {workspaceMessage}
+              </p>
+            ) : null}
             <p className="open-note-body">{openNote.body}</p>
+
+            {planningPeriodsEnabled ? (
+              <details className="timeline-promotion">
+                <summary>Prepare a Timeline share</summary>
+                <p className="timeline-promotion-copy">
+                  Choose the exact safe extract. The private note body is never included.
+                </p>
+                <div className="timeline-promotion-fields">
+                  <label>
+                    <span>Selected extract</span>
+                    <input
+                      value={timelineDraft.title}
+                      onChange={(event) =>
+                        setTimelineDraft((current) => ({ ...current, title: event.target.value }))
+                      }
+                      maxLength={180}
+                    />
+                  </label>
+                  <label>
+                    <span>Date</span>
+                    <input
+                      type="date"
+                      value={timelineDraft.date}
+                      onChange={(event) =>
+                        setTimelineDraft((current) => ({ ...current, date: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    <span>Completion</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={timelineDraft.completion}
+                      onChange={(event) =>
+                        setTimelineDraft((current) => ({
+                          ...current,
+                          completion: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    <span>Named audience</span>
+                    <input
+                      value={timelineDraft.audienceLabel}
+                      onChange={(event) =>
+                        setTimelineDraft((current) => ({
+                          ...current,
+                          audienceLabel: event.target.value,
+                        }))
+                      }
+                      placeholder="Maeve and Dara"
+                      maxLength={80}
+                    />
+                  </label>
+                </div>
+                <div className="timeline-promotion-preview" aria-label="Exact Timeline preview">
+                  <strong>Exact preview</strong>
+                  <span>
+                    {timelineDraft.title.trim() || "Selected extract"} ·{" "}
+                    {timelineDraft.date || "Choose a date"} · {timelineDraft.completion}% · for{" "}
+                    {timelineDraft.audienceLabel.trim() || "named audience"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn-draft-action"
+                  onClick={() => sendTimelinePreview(openNote.id)}
+                  disabled={
+                    timelineSending ||
+                    !openNote.workspaceId ||
+                    !timelineDraft.title.trim() ||
+                    !timelineDraft.date ||
+                    !timelineDraft.audienceLabel.trim()
+                  }
+                >
+                  {timelineSending ? "Checking Timeline…" : "Send this preview to Timeline"}
+                </button>
+                {!openNote.workspaceId ? (
+                  <p className="timeline-promotion-receipt">Choose a workspace for this note first.</p>
+                ) : null}
+                {timelineReceipt ? (
+                  <p className="timeline-promotion-receipt" role="status">{timelineReceipt}</p>
+                ) : null}
+              </details>
+            ) : null}
 
             {/* Row 13, equal-weight siblings for the not-yet-extracted path.
                 "Send as-is" is the canonical promote action; "Shape & send"

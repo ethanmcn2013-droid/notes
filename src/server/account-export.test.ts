@@ -22,7 +22,8 @@ async function freshDb() {
       id text PRIMARY KEY NOT NULL, user_id text NOT NULL, body text NOT NULL,
       created_at integer NOT NULL DEFAULT (unixepoch() * 1000),
       updated_at integer NOT NULL DEFAULT (unixepoch() * 1000),
-      extract_body text, promoted_task_id text, archived_at integer, source text
+      extract_body text, promoted_task_id text, archived_at integer,
+      workspace_id text, source text
     );
     CREATE TABLE calendar_connections (
       user_id text NOT NULL, provider text NOT NULL, calendar_id text NOT NULL,

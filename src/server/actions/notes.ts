@@ -8,6 +8,7 @@ import { requireUser } from "@/server/auth";
 import { db } from "@/server/db/client";
 import { notes, type Note } from "@/server/db/schema";
 import { isDemoMode } from "@/lib/access-mode";
+import { authorizeTasksWorkspace } from "@/server/tasks-personalization";
 import {
   demoArchivedNotes,
   demoNotes,
@@ -28,6 +29,7 @@ export type NoteRead = Pick<
   | "promotedTaskId"
   | "archivedAt"
   | "source"
+  | "workspaceId"
 >;
 
 /**
@@ -44,7 +46,10 @@ export type NoteRead = Pick<
 // constant rather than importing this one.
 const MAX_NOTE_BODY_CHARS = 10_000;
 
-export async function createNote(body: string): Promise<NoteRead> {
+export async function createNote(
+  body: string,
+  requestedWorkspaceId?: string | null,
+): Promise<NoteRead> {
   const userId = await requireUser();
   const trimmed = body.trim();
   if (!trimmed) {
@@ -59,6 +64,14 @@ export async function createNote(body: string): Promise<NoteRead> {
 
   const now = Date.now();
   const id = makeId();
+  let workspaceId: string | null = null;
+  if (requestedWorkspaceId?.trim()) {
+    const access = await authorizeTasksWorkspace(userId, requestedWorkspaceId);
+    // Capture is the load-bearing action. If Tasks is unavailable or the
+    // user's membership changed between render and save, keep the note
+    // private and Unfiled instead of losing their words.
+    if (access === "allowed") workspaceId = requestedWorkspaceId;
+  }
 
   await db.insert(notes).values({
     id,
@@ -66,6 +79,7 @@ export async function createNote(body: string): Promise<NoteRead> {
     body: trimmed,
     createdAt: now,
     updatedAt: now,
+    workspaceId,
   });
 
   // No revalidate: the client owns the optimistic merge and reconciles
@@ -81,6 +95,7 @@ export async function createNote(body: string): Promise<NoteRead> {
     promotedTaskId: null,
     archivedAt: null,
     source: null,
+    workspaceId,
   };
 }
 
@@ -111,6 +126,7 @@ export async function listNotes(): Promise<NoteRead[]> {
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     })
     .from(notes)
     .where(and(eq(notes.userId, userId), isNull(notes.archivedAt)))
@@ -174,8 +190,9 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
     promoted_task_id: string | null;
     archived_at: number | null;
     source: string | null;
+    workspace_id: string | null;
   }>(sql`
-    SELECT n.id, n.body, n.created_at, n.updated_at, n.extract_body, n.promoted_task_id, n.archived_at, n.source
+    SELECT n.id, n.body, n.created_at, n.updated_at, n.extract_body, n.promoted_task_id, n.archived_at, n.source, n.workspace_id
     FROM notes_fts fts
     JOIN notes n ON n.rowid = fts.rowid
     WHERE fts.user_id = ${userId}
@@ -194,6 +211,7 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
     promotedTaskId: r.promoted_task_id,
     archivedAt: r.archived_at,
     source: r.source,
+    workspaceId: r.workspace_id,
   }));
 }
 
@@ -208,6 +226,50 @@ export async function deleteNote(id: string): Promise<void> {
     .where(and(eq(notes.id, id), eq(notes.userId, userId)));
 
   revalidatePath("/app", "page");
+}
+
+/**
+ * Move one owned note into a currently-authorized canonical workspace, or
+ * return it to Unfiled. This is deliberately single-note: Notes never offers
+ * a mass owner/workspace reassignment seam.
+ */
+export async function setNoteWorkspace(
+  noteId: string,
+  requestedWorkspaceId: string | null,
+): Promise<NoteRead> {
+  const userId = await requireUser();
+  const workspaceId = requestedWorkspaceId?.trim() || null;
+
+  if (workspaceId) {
+    const access = await authorizeTasksWorkspace(userId, workspaceId);
+    if (access === "unavailable") {
+      throw new Error("Workspaces are unavailable right now. Your note is still private.");
+    }
+    if (access !== "allowed") {
+      throw new Error("That workspace is no longer available to your account.");
+    }
+  }
+
+  const now = Date.now();
+  const result = await db
+    .update(notes)
+    .set({ workspaceId, updatedAt: now })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .returning({
+      id: notes.id,
+      body: notes.body,
+      createdAt: notes.createdAt,
+      updatedAt: notes.updatedAt,
+      extractBody: notes.extractBody,
+      promotedTaskId: notes.promotedTaskId,
+      archivedAt: notes.archivedAt,
+      source: notes.source,
+      workspaceId: notes.workspaceId,
+    });
+
+  const row = result[0];
+  if (!row) throw new Error("Note not found");
+  return row;
 }
 
 /**
@@ -247,6 +309,7 @@ export async function setNoteExtract(
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     });
 
   const row = result[0];
@@ -280,6 +343,7 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     });
 
   const row = result[0];
@@ -420,6 +484,7 @@ export async function sendExtractToTasks(
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     });
 
   const noteRow = updated[0];
@@ -491,6 +556,7 @@ export async function promoteNoteToTasks(
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     })
     .from(notes)
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
@@ -581,6 +647,7 @@ export async function promoteNoteToTasks(
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     });
 
   const noteRow = updated[0];
@@ -620,6 +687,7 @@ export async function listArchivedNotes(): Promise<NoteRead[]> {
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     })
     .from(notes)
     .where(
@@ -669,6 +737,7 @@ export async function unPromoteNote(noteId: string): Promise<NoteRead> {
       promotedTaskId: notes.promotedTaskId,
       archivedAt: notes.archivedAt,
       source: notes.source,
+      workspaceId: notes.workspaceId,
     });
 
   const row = result[0];

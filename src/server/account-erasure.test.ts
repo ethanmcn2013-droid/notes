@@ -34,6 +34,7 @@ async function freshDb() {
       extract_body text,
       promoted_task_id text,
       archived_at integer,
+      workspace_id text,
       source text
     );
     CREATE TABLE calendar_connections (

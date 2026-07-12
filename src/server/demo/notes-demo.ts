@@ -137,6 +137,7 @@ function toNote(s: Seed, now: number): NoteRead {
     promotedTaskId: s.promotedTaskId ?? null,
     archivedAt: s.archived ? now - Math.round(s.ago * 0.6) : null,
     source: s.source ?? null,
+    workspaceId: null,
   };
 }
 

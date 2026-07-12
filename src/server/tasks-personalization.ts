@@ -1,4 +1,6 @@
-import "server-only";
+// Kept free of the `server-only` sentinel so the strict DTO and context
+// selection helpers can run in node:test. Every runtime importer is a server
+// component/action, and the module exposes no credential values.
 import { createHmac, randomUUID } from "node:crypto";
 import { createTasksPersonalizationAssertion } from "./cross-product-assertion";
 
@@ -14,36 +16,183 @@ export type TasksWorkspaceDestination = {
   id: string;
   name: string;
   role: "owner" | "member";
+  planningPeriodId: string | null;
+  planningPeriodName: string | null;
+  contextType: string | null;
+  primaryDate: string | null;
+  primaryDateLabel: string | null;
 };
+
+export type TasksPlanningPeriodDestination = {
+  id: string;
+  name: string;
+  contextType: string;
+  startDate: string | null;
+  endDate: string | null;
+  timezone: string;
+};
+
+export type TasksWorkspaceCatalog =
+  | {
+      status: "ready";
+      planningPeriods: TasksPlanningPeriodDestination[];
+      workspaces: TasksWorkspaceDestination[];
+    }
+  | {
+      status: "unavailable";
+      planningPeriods: TasksPlanningPeriodDestination[];
+      workspaces: TasksWorkspaceDestination[];
+    };
+
+const CATALOG_TIMEOUT_MS = 2_000;
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function parseWorkspace(
+  raw: unknown,
+  period: TasksPlanningPeriodDestination | null,
+): TasksWorkspaceDestination | null {
+  if (!raw || typeof raw !== "object") return null;
+  const value = raw as Record<string, unknown>;
+  const id = stringOrNull(value.id);
+  const name = stringOrNull(value.name);
+  const role = value.role;
+  if (!id || !name || (role !== "owner" && role !== "member")) return null;
+  // Archived rows are never valid destinations, even if an older Tasks
+  // deployment accidentally includes them in the response.
+  if (value.archivedAt != null || value.archived_at != null) return null;
+  return {
+    id,
+    name,
+    role,
+    planningPeriodId:
+      stringOrNull(value.planningPeriodId) ?? period?.id ?? null,
+    planningPeriodName:
+      stringOrNull(value.planningPeriodName) ?? period?.name ?? null,
+    contextType: stringOrNull(value.contextType),
+    primaryDate: stringOrNull(value.primaryDate),
+    primaryDateLabel: stringOrNull(value.primaryDateLabel),
+  };
+}
+
+function parsePeriod(raw: unknown): TasksPlanningPeriodDestination | null {
+  if (!raw || typeof raw !== "object") return null;
+  const value = raw as Record<string, unknown>;
+  const id = stringOrNull(value.id);
+  const name = stringOrNull(value.name);
+  const contextType = stringOrNull(value.contextType);
+  const startDate = stringOrNull(value.startDate);
+  const endDate = stringOrNull(value.endDate);
+  const timezone = stringOrNull(value.timezone);
+  if (!id || !name || !contextType || !timezone) {
+    return null;
+  }
+  return { id, name, contextType, startDate, endDate, timezone };
+}
+
+/** Strict DTO parser, exported for contract tests. Unknown fields are dropped. */
+export function parseTasksWorkspaceCatalog(raw: unknown): TasksWorkspaceCatalog {
+  if (!raw || typeof raw !== "object") {
+    return { status: "unavailable", planningPeriods: [], workspaces: [] };
+  }
+  const value = raw as Record<string, unknown>;
+  const periods: TasksPlanningPeriodDestination[] = [];
+  const workspaces: TasksWorkspaceDestination[] = [];
+
+  // v2 may return grouped periods (`periods`) or one group (`period`). Keep
+  // the consumer rollout-tolerant while retaining the same strict DTO.
+  const groups = Array.isArray(value.periods)
+    ? value.periods
+    : value.period
+      ? [{ period: value.period, workspaces: value.workspaces }]
+      : [];
+  for (const groupRaw of groups) {
+    if (!groupRaw || typeof groupRaw !== "object") continue;
+    const group = groupRaw as Record<string, unknown>;
+    const period = parsePeriod(group.period ?? group);
+    if (!period) continue;
+    periods.push(period);
+    for (const workspaceRaw of Array.isArray(group.workspaces) ? group.workspaces : []) {
+      const workspace = parseWorkspace(workspaceRaw, period);
+      if (workspace) workspaces.push(workspace);
+    }
+  }
+
+  // v1 compatibility during ordered rollout. These workspaces remain
+  // selectable but have no Planning Period projection until Tasks is v2.
+  if (workspaces.length === 0 && Array.isArray(value.workspaces)) {
+    for (const workspaceRaw of value.workspaces) {
+      const workspace = parseWorkspace(workspaceRaw, null);
+      if (workspace) workspaces.push(workspace);
+    }
+  }
+
+  return { status: "ready", planningPeriods: periods, workspaces };
+}
+
+export async function fetchTasksWorkspaceCatalog(
+  clerkId: string,
+): Promise<TasksWorkspaceCatalog> {
+  const baseRaw = process.env.TASKS_API_URL ??
+    (process.env.VERCEL_ENV === "production" ? "https://tasks.signalstudio.ie" : null);
+  const secret = process.env.NOTES_TO_TASKS_SECRET;
+  if (!baseRaw || !secret || !clerkId.trim()) {
+    return { status: "unavailable", planningPeriods: [], workspaces: [] };
+  }
+  const base = baseRaw.replace(/\/+$/, "");
+  try {
+    const assertion = createTasksWorkspaceAssertion(clerkId, secret);
+    const res = await fetch(`${base}/api/internal/workspaces?contractVersion=2`, {
+      headers: { authorization: `Bearer ${assertion}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(CATALOG_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      return { status: "unavailable", planningPeriods: [], workspaces: [] };
+    }
+    return parseTasksWorkspaceCatalog(await res.json());
+  } catch {
+    return { status: "unavailable", planningPeriods: [], workspaces: [] };
+  }
+}
 
 export async function fetchTasksWorkspaces(
   clerkId: string,
 ): Promise<TasksWorkspaceDestination[]> {
-  const baseRaw = process.env.TASKS_API_URL ??
-    (process.env.VERCEL_ENV === "production" ? "https://tasks.signalstudio.ie" : null);
-  if (!baseRaw) return [];
-  const base = baseRaw.replace(/\/+$/, "");
-  const secret = process.env.NOTES_TO_TASKS_SECRET;
-  if (!secret) return [];
-  try {
-    const assertion = createTasksWorkspaceAssertion(clerkId, secret);
-    const res = await fetch(`${base}/api/internal/workspaces`, {
-      headers: { authorization: `Bearer ${assertion}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const json = (await res.json()) as {
-      workspaces?: Array<{ id?: unknown; name?: unknown; role?: unknown }>;
-    };
-    return (json.workspaces ?? []).flatMap((workspace) =>
-      typeof workspace.id === "string" && typeof workspace.name === "string" &&
-      (workspace.role === "owner" || workspace.role === "member")
-        ? [{ id: workspace.id, name: workspace.name, role: workspace.role }]
-        : [],
-    );
-  } catch {
-    return [];
-  }
+  const catalog = await fetchTasksWorkspaceCatalog(clerkId);
+  return catalog.workspaces;
+}
+
+export async function authorizeTasksWorkspace(
+  clerkId: string,
+  workspaceId: string,
+): Promise<"allowed" | "denied" | "unavailable"> {
+  const catalog = await fetchTasksWorkspaceCatalog(clerkId);
+  if (catalog.status === "unavailable") return "unavailable";
+  return catalog.workspaces.some((workspace) => workspace.id === workspaceId)
+    ? "allowed"
+    : "denied";
+}
+
+export function selectAuthorizedWorkspaceHint(
+  catalog: TasksWorkspaceCatalog,
+  workspaceId: string | null,
+  planningPeriodId: string | null,
+): TasksWorkspaceDestination | null {
+  if (catalog.status !== "ready") return null;
+  return (
+    (workspaceId
+      ? catalog.workspaces.find((workspace) => workspace.id === workspaceId)
+      : undefined) ??
+    (planningPeriodId
+      ? catalog.workspaces.find(
+          (workspace) => workspace.planningPeriodId === planningPeriodId,
+        )
+      : undefined) ??
+    null
+  );
 }
 
 function createTasksWorkspaceAssertion(subject: string, secret: string): string {

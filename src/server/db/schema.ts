@@ -44,6 +44,15 @@ export const notes = sqliteTable(
     promotedTaskId: text("promoted_task_id"),
     archivedAt: integer("archived_at", { mode: "number" }),
     /**
+     * Optional projection of the canonical Signal Tasks workspace id.
+     *
+     * Notes never owns or copies Workspace membership. A null value is the
+     * normal, durable "Unfiled" state. Every write of a non-null id is
+     * authorized against Tasks using the current Clerk subject before this
+     * projection is stored.
+     */
+    workspaceId: text("workspace_id"),
+    /**
      * N·24 (Pattern 4), calendar-spawned note provenance.
      *   NULL       = ordinary capture (textarea, paste, email, clipper…)
      *   "calendar" = spawned 5 minutes pre-event by the calendar worker.
@@ -64,6 +73,11 @@ export const notes = sqliteTable(
     userCreated: index("notes_user_created_idx").on(
       table.userId,
       table.createdAt
+    ),
+    userWorkspaceCreated: index("notes_user_workspace_created_idx").on(
+      table.userId,
+      table.workspaceId,
+      table.createdAt,
     ),
   })
 );
