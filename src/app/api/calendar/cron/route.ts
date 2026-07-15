@@ -43,14 +43,14 @@ function authOk(req: Request): boolean {
 }
 
 export async function GET(req: Request) {
+  if (!authOk(req)) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
   if (!calendarSpawnEnabled()) {
     // Cron continues to fire even when the surface is off; quietly
     // 200 so Vercel doesn't mark the cron as failing while we soak.
     return NextResponse.json({ ok: true, disabled: true });
-  }
-
-  if (!authOk(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
   try {
