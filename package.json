@@ -8,6 +8,14 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "ds:check": "node scripts/ds/ds-check.mjs",
+    "experience:discover": "node scripts/experience/discover.mjs",
+    "experience:validate": "node scripts/experience/validate.mjs",
+    "experience:self-test": "node scripts/experience/self-test.mjs",
+    "experience:capture": "node scripts/experience/capture.mjs",
+    "experience:audit": "node scripts/experience/audit.mjs --enforce",
+    "experience:report": "node scripts/experience/audit.mjs",
+    "test:accessibility": "node scripts/experience/audit.mjs --enforce",
+    "test:fixtures": "node --import tsx --test src/server/demo/fixtures.test.ts",
     "test": "node scripts/check-suite-switcher-contract.mjs && node scripts/check-chrome-contract.mjs && node scripts/check-loading-contract.mjs && node scripts/check-suiteloader-identity.mjs && node --test src/server/cross-tenant-isolation.test.mjs && node --import tsx --test src/lib/access-mode.test.ts src/lib/sentry-scrub.test.ts src/lib/timeline-promotion.test.ts src/server/account-erasure.test.ts src/server/account-export.test.ts src/server/cross-product-assertion.test.ts src/server/tasks-personalization.test.ts",
     "check:suite-switcher": "node scripts/check-suite-switcher-contract.mjs",
     "check:loading": "node scripts/check-loading-contract.mjs"
@@ -23,6 +31,8 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

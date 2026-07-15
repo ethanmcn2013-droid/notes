@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "signal-experience-registrations/1",
+  "routeOverrides": {
+    "notes.page.anatomy": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.app-account": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.building-project": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.freelance-studio": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.root": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.app": {
+      "primaryJob": "Capture, find, shape, and promote private notes.",
+      "primaryAction": "Write a note.",
+      "fixtureCoverage": "partial",
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.sign-in-by-sign-in": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.sign-up-by-sign-up": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.waitlist": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.state.app-loading": {
+      "fixtureCoverage": "partial",
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.state.app-error": {
+      "fixtureCoverage": "partial",
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.state.root-error": {
+      "fixtureCoverage": "partial",
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.state.root-not-found": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.wedding-planning": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    "notes.page.teaching-week": {
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    }
+  },
+  "surfaces": [
+    {
+      "id": "notes.surface.notebook",
+      "product": "notes",
+      "surfaceType": "embedded-workspace",
+      "trigger": "Open the signed-in notebook",
+      "source": "notes/src/app/app/Notebook.tsx",
+      "parentJourney": "signed-in-work",
+      "archetype": "editor-or-canvas",
+      "primaryJob": "Capture, find, shape, and promote notes without changing tools.",
+      "primaryAction": "Write a note.",
+      "roles": ["owner"],
+      "reviewTier": "critical",
+      "fixtureCoverage": "partial",
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    {
+      "id": "notes.surface.first-capture",
+      "product": "notes",
+      "surfaceType": "success",
+      "trigger": "Save the first note",
+      "source": "notes/src/app/app/FirstCaptureMoment.tsx",
+      "parentJourney": "signed-in-work",
+      "archetype": "feedback-interruption-and-exception",
+      "primaryJob": "Know that the first capture is safely held.",
+      "primaryAction": "Continue writing.",
+      "roles": ["owner"],
+      "reviewTier": "critical",
+      "fixtureCoverage": "partial",
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    },
+    {
+      "id": "notes.surface.capture-email",
+      "product": "notes",
+      "surfaceType": "nested-view",
+      "trigger": "Open the notebook with capture-email availability resolved",
+      "source": "notes/src/app/app/CaptureEmailRow.tsx",
+      "parentJourney": "signed-in-work",
+      "archetype": "feedback-interruption-and-exception",
+      "primaryJob": "Know whether email capture is available and copy the address when entitled.",
+      "primaryAction": "Copy the capture address or review the Workspace plan.",
+      "roles": ["owner"],
+      "requiredStates": ["default", "restricted", "success", "error", "keyboard-only"],
+      "reviewTier": "supporting",
+      "fixtureCoverage": "partial",
+      "automatedTestCoverage": "partial",
+      "screenshotCoverage": "partial",
+      "accessibilityCoverage": "partial"
+    }
+  ]
+}

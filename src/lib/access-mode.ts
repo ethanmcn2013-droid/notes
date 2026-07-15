@@ -61,8 +61,10 @@ export function getAccessMode(): AccessMode {
 
 /** Production deployments never accept the public demo/review posture. */
 function isProductionDeployment(): boolean {
-  return process.env.VERCEL_ENV === "production" ||
-    (process.env.NODE_ENV === "production" && !process.env.VERCEL_ENV);
+  const deploymentEnv =
+    process.env.NEXT_PUBLIC_SIGNAL_DEPLOYMENT_ENV ?? process.env.VERCEL_ENV;
+  if (deploymentEnv) return deploymentEnv === "production";
+  return process.env.NODE_ENV === "production";
 }
 
 /** demo OR review, i.e. the public, seed-data, no-login-wall posture. */

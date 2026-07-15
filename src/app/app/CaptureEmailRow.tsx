@@ -26,10 +26,13 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
 
   if (state.tier === "free") {
     return (
-      <p className="capture-email capture-email--free">
+      <aside
+        aria-label="Email capture availability"
+        className="capture-email capture-email--free"
+      >
         <span aria-hidden>✉</span>
         <span>Send notes by email. Available on the <a href={PRICING_URL} target="_blank" rel="noopener noreferrer">Workspace plan</a>.</span>
-      </p>
+      </aside>
     );
   }
 
@@ -55,7 +58,10 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
   }
 
   return (
-    <p className="capture-email capture-email--entitled">
+    <aside
+      aria-label="Email capture address"
+      className="capture-email capture-email--entitled"
+    >
       <span aria-hidden>✉</span>
       <span>Email a note: </span>
       {showFallback ? (
@@ -79,6 +85,6 @@ export function CaptureEmailRow({ state }: { state: CaptureState }) {
           <span className="capture-email__hint">{copied ? "copied" : "copy"}</span>
         </button>
       )}
-    </p>
+    </aside>
   );
 }

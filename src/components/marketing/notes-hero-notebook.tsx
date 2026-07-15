@@ -194,7 +194,7 @@ const CSS = `
 .ntb-head { max-width: 680px; margin: 0 auto clamp(22px, 3.2vh, 40px); text-align: center; }
 .ntb-kicker {
   margin: 0 0 18px; font-family: var(--ntb-mono); font-size: 11px;
-  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ntb-faint);
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ntb-soft);
 }
 .ntb-headline {
   margin: 0; font-size: clamp(2rem, 1.35rem + 2.9vw, 3.5rem);
@@ -269,7 +269,7 @@ const CSS = `
 .ntb-caret-ready { left: 0; }
 .ntb-placeholder {
   display: inline-block; margin-left: 14px;
-  color: color-mix(in srgb, var(--ntb-faint) 72%, var(--ntb-paper));
+  color: var(--ntb-soft);
   font-weight: 520;
 }
 /* the three typed notes — each hidden at rest, each types in its window */
@@ -282,7 +282,7 @@ const CSS = `
 .ntb-caret-type { left: 100%; margin-left: 3px; opacity: 0; }
 .ntb-hint {
   margin: 14px 0 0; font-family: var(--ntb-mono);
-  font-size: 10.5px; letter-spacing: 0.03em; color: var(--ntb-faint);
+  font-size: 10.5px; letter-spacing: 0.03em; color: var(--ntb-soft);
 }
 .ntb-hint kbd {
   font-family: var(--ntb-mono); font-size: 10px;
@@ -301,12 +301,12 @@ const CSS = `
 }
 .ntb-streamhead-kind {
   margin-left: 8px; font-family: var(--ntb-mono); font-size: 9.5px;
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ntb-faint);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ntb-soft);
 }
 .ntb-streamhead-count {
   position: relative; display: inline-grid;
   font-family: var(--ntb-mono); font-size: 9.5px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ntb-faint); font-variant-numeric: tabular-nums;
+  text-transform: uppercase; color: var(--ntb-soft); font-variant-numeric: tabular-nums;
 }
 .ntb-count { grid-area: 1 / 1; white-space: nowrap; text-align: right; opacity: 0; }
 .ntb-count-3 { opacity: 1; } /* rest: three notes logged */
@@ -347,7 +347,7 @@ const CSS = `
 }
 .ntb-row-meta {
   display: inline-flex; align-items: center; gap: 14px;
-  color: var(--ntb-faint); font-size: 11.5px; white-space: nowrap;
+  color: var(--ntb-soft); font-size: 11.5px; white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .ntb-row-crossed {
@@ -364,7 +364,7 @@ const CSS = `
 .ntb-edge {
   position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; color: var(--ntb-faint);
+  gap: 8px; color: var(--ntb-soft);
 }
 .ntb-edge::before {
   content: ""; position: absolute; top: 8%; bottom: 8%; left: 50%;
@@ -377,7 +377,7 @@ const CSS = `
 .ntb-edge-label {
   position: relative;
   font-family: var(--ntb-mono); font-size: 9.5px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ntb-faint);
+  text-transform: uppercase; color: var(--ntb-soft);
   background: var(--ntb-paper); padding: 3px 0;
 }
 .ntb-edge-arrow {
@@ -405,7 +405,7 @@ const CSS = `
 }
 .ntb-tasks-kind {
   font-family: var(--ntb-mono); font-size: 9.5px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ntb-faint);
+  text-transform: uppercase; color: var(--ntb-soft);
 }
 .ntb-tasklist { list-style: none; margin: 0; padding: 0; }
 .ntb-task {
@@ -415,7 +415,7 @@ const CSS = `
   border-bottom: 1px solid var(--ntb-line-soft);
 }
 .ntb-task:last-child { border-bottom: 0; }
-.ntb-task.is-quiet { opacity: 0.55; }
+.ntb-task.is-quiet { opacity: 1; }
 .ntb-check {
   flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px;
   border: 1.5px solid var(--ntb-accent); border-radius: 5px;
@@ -435,7 +435,7 @@ const CSS = `
 }
 .ntb-task-meta {
   font-family: var(--ntb-mono); font-size: 10px; letter-spacing: 0.04em;
-  color: var(--ntb-faint);
+  color: var(--ntb-soft);
 }
 
 /* ── Travelling extract chip — invisible at rest, transform-only ballistic arc ── */
@@ -572,7 +572,7 @@ const CSS = `
            border-bottom-color: var(--ntb-line-soft); background: transparent; }
   }
   @keyframes ntb-tap { 0% { transform: scale(0.3); opacity: 0; } 28% { opacity: 0.5; } 100% { transform: scale(1.9); opacity: 0; } }
-  @keyframes ntb-privacy { 0%,100% { color: var(--ntb-faint); } 40% { color: var(--ntb-accent); } }
+  @keyframes ntb-privacy { 0%,100% { color: var(--ntb-soft); } 40% { color: var(--ntb-accent); } }
   @keyframes ntb-source-pulse {
     0%   { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--ntb-accent) 40%, transparent); background: transparent; }
     40%  { box-shadow: inset 2px 0 0 var(--ntb-accent); background: color-mix(in srgb, var(--ntb-accent) 9%, transparent); }

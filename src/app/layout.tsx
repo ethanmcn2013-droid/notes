@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DevBanner } from "@/components/dev-banner";
+import { SkipNavigation } from "@/components/skip-navigation";
 import {
   clerkPublishableKey,
   isDemoMode,
@@ -51,6 +52,7 @@ export const metadata: Metadata = {
 function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
+      <SkipNavigation />
       {children}
       <DevBanner />
     </>
@@ -58,7 +60,10 @@ function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
 }
 
 function AuthShell({ children }: Readonly<{ children: React.ReactNode }>) {
-  if (isUxAssuranceMode() || isDemoMode()) {
+  if (isDemoMode() || isUxAssuranceMode()) {
+    // Demo/review is keyless and seed-only. Demo-aware children render local
+    // controls, so mounting Clerk here would add an unnecessary network and
+    // console failure to the review path.
     return <AppShell>{children}</AppShell>;
   }
 

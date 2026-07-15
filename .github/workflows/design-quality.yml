@@ -1,0 +1,92 @@
+name: Design quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: notes-design-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  registry-and-system:
+    name: registry · fixtures · design system
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SIGNAL_ACCESS_MODE: review
+      NEXT_PUBLIC_SIGNAL_ACCESS_MODE: review
+      VERCEL_ENV: preview
+      EXPERIENCE_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Prove route drift is rejected
+        run: pnpm run experience:self-test
+
+      - name: Validate Experience Registry
+        run: pnpm run experience:validate
+
+      - name: Verify deterministic fixtures
+        run: pnpm run test:fixtures
+
+      - name: Enforce design-system drift ratchet
+        run: pnpm run ds:check
+
+      - name: Type-check
+        run: pnpm run typecheck
+
+      - name: Build review application
+        run: pnpm run build
+
+      - name: Install capture browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start review application
+        run: |
+          pnpm start > /tmp/signal-notes-next.log 2>&1 &
+          if ! node --input-type=module -e '
+            const deadline = Date.now() + 60_000;
+            while (Date.now() < deadline) {
+              try {
+                const response = await fetch("http://127.0.0.1:3000/");
+                if (response.ok) process.exit(0);
+              } catch {}
+              await new Promise((resolve) => setTimeout(resolve, 1_000));
+            }
+            process.exit(1);
+          '; then
+            cat /tmp/signal-notes-next.log
+            exit 1
+          fi
+
+      - name: Capture critical experiences
+        run: pnpm run experience:capture
+
+      - name: Enforce rendered accessibility and runtime audit
+        run: pnpm run experience:audit
+
+      - name: Upload rendered quality evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: notes-experience-quality-${{ github.sha }}
+          path: experience/output/
+          if-no-files-found: warn
+          retention-days: 14

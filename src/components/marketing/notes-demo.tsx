@@ -96,7 +96,7 @@ const CSS = `
   text-transform: uppercase;
   color: var(--nd-ink-faint);
 }
-.nd-meta { font-size: 10.5px; opacity: 0.7; }
+.nd-meta { font-size: 10.5px; color: var(--color-ink-soft); opacity: 1; }
 
 /* Reserve the body height so lines appearing never shift the card. */
 .nd-body { min-height: 92px; }

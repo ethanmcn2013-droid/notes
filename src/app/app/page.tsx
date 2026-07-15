@@ -4,11 +4,18 @@ import { isDemoMode } from "@/lib/access-mode";
 import { listArchivedNotes, listNotes } from "@/server/actions/notes";
 import { getCaptureEmail } from "@/server/actions/capture-email";
 import {
+  DEMO_REFERENCE_TIME,
+  demoArchivedNotes,
+  demoNotes,
+} from "@/server/demo/notes-demo";
+import { resolveDemoFixture } from "@/server/demo/fixtures";
+import {
   fetchTasksWorkspaceCatalog,
   selectAuthorizedWorkspaceHint,
 } from "@/server/tasks-personalization";
 import { Notebook } from "./Notebook";
 import { CaptureEmailRow } from "./CaptureEmailRow";
+import AppLoading from "./loading";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +27,11 @@ export const metadata = {
 // Server component, fetches the user's notes once, hands the initial
 // stream to the client Notebook. Subsequent edits flow through server
 // actions; the client applies optimistic updates and reconciles.
-export default async function NotebookPage({
-  searchParams,
-}: {
+type NotebookPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+};
+
+export default async function NotebookPage({ searchParams }: NotebookPageProps) {
   // Fail open to sign-in, never to a 500. The proxy middleware gates
   // /app when Clerk keys are configured, but it bypasses entirely in
   // keyless/dev mode (see proxy.ts), and listNotes()/requireUser()
@@ -34,30 +41,61 @@ export default async function NotebookPage({
   // middleware is doing its job.
   // Demo/Review mode skips the sign-in gate entirely, the notebook renders
   // from the in-memory seed (listNotes/listArchivedNotes short-circuit).
-  if (!isDemoMode()) {
-    const { userId } = await auth();
+  const demoMode = isDemoMode();
+  const params = await searchParams;
+  const fixture = demoMode ? resolveDemoFixture(params.fixture) : "populated";
+
+  if (demoMode && fixture === "loading") {
+    return <AppLoading />;
+  }
+  if (demoMode && fixture === "error") {
+    throw new Error("Deliberate Signal Notes review fixture: notebook load failed");
+  }
+
+  let userId: string | null = null;
+  if (!demoMode) {
+    ({ userId } = await auth());
     if (!userId) {
       redirect("/sign-in");
     }
   }
 
-  const { userId } = await auth();
   const planningPeriodsEnabled =
     process.env.SIGNAL_PLANNING_PERIODS_ENABLED === "1" ||
     process.env.SIGNAL_PLANNING_PERIODS_ENABLED === "true";
-  const params = await searchParams;
   const workspaceHint = typeof params.workspaceId === "string" ? params.workspaceId : null;
   const periodHint =
     typeof params.planningPeriodId === "string" ? params.planningPeriodId : null;
 
-  const [initialNotes, initialArchivedNotes, captureEmail, tasksCatalog] = await Promise.all([
-    listNotes(),
-    listArchivedNotes(),
-    getCaptureEmail(),
-    userId && !isDemoMode()
-      ? fetchTasksWorkspaceCatalog(userId)
-      : Promise.resolve({ status: "unavailable" as const, planningPeriods: [], workspaces: [] }),
-  ]);
+  let initialNotes: Awaited<ReturnType<typeof listNotes>>;
+  let initialArchivedNotes: Awaited<ReturnType<typeof listArchivedNotes>>;
+  let captureEmail: Awaited<ReturnType<typeof getCaptureEmail>>;
+  let tasksCatalog: Awaited<ReturnType<typeof fetchTasksWorkspaceCatalog>>;
+
+  if (demoMode) {
+    initialNotes = demoNotes(fixture);
+    initialArchivedNotes = demoArchivedNotes(fixture);
+    captureEmail =
+      fixture === "capture-email"
+        ? {
+            ok: true,
+            address: "review-notebook@capture.signalstudio.test",
+            slug: "review-notebook",
+          }
+        : fixture === "partial-failure"
+          ? { ok: false, reason: "inbound-not-configured" }
+          : { ok: false, reason: "free-tier-not-enabled" };
+    tasksCatalog = { status: "unavailable", planningPeriods: [], workspaces: [] };
+  } else {
+    [initialNotes, initialArchivedNotes, captureEmail, tasksCatalog] =
+      await Promise.all([
+        listNotes(),
+        listArchivedNotes(),
+        getCaptureEmail(),
+        fetchTasksWorkspaceCatalog(userId as string),
+      ]);
+  }
+
   // URL context is navigation state, never authorization. Only select a hint
   // when the current subject's freshly-read Tasks catalog contains it.
   const hintedWorkspace = planningPeriodsEnabled
@@ -85,7 +123,15 @@ export default async function NotebookPage({
         tasksCatalogAvailable={tasksCatalog.status === "ready"}
         planningPeriodsEnabled={planningPeriodsEnabled}
         initialWorkspaceId={hintedWorkspace?.id ?? null}
+        reviewFirstCapture={demoMode && fixture === "first-capture"}
+        referenceTime={demoMode ? DEMO_REFERENCE_TIME : undefined}
       />
+      {demoMode && fixture === "partial-failure" ? (
+        <aside className="capture-email" role="status" data-review-fixture="partial-failure">
+          Connected details are temporarily unavailable. Your notebook is
+          ready, and you can keep writing.
+        </aside>
+      ) : null}
       {captureState ? <CaptureEmailRow state={captureState} /> : null}
     </>
   );

@@ -84,14 +84,6 @@ const clerkConfigured = Boolean(
 
 const productionProxy = clerkMiddleware(
   async (auth, req) => {
-    // Demo/Review mode: the whole app, including /app/*, is publicly
-    // reachable. No Clerk session exists; the server auth layer resolves to
-    // the synthetic demo user bound to in-memory seed data. We still let
-    // clerkMiddleware run (so auth() stays callable on public pages), but we
-    // never gate. Flip SIGNAL_ACCESS_MODE back to production to restore the
-    // exact gate below.
-    if (isDemoMode()) return;
-
     if (!clerkConfigured) {
       // Fail CLOSED in production. A prod deploy missing Clerk keys must
       // not silently serve /app unauthenticated, the proxy is the edge
@@ -139,6 +131,9 @@ const productionProxy = clerkMiddleware(
 );
 
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  // Demo/review is a deliberately keyless, seed-only posture. Bypass Clerk at
+  // the request boundary and keep every demo server path free of auth(). The
+  // production branch below is unchanged and still fails closed.
   if (isDemoMode()) return NextResponse.next();
   return productionProxy(req, event);
 }
