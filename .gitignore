@@ -9,6 +9,7 @@ node_modules/
 
 # Build artefacts
 .swc/
+experience/output/
 
 # Local env
 .env.local

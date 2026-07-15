@@ -9,8 +9,7 @@ export const metadata = {
 };
 
 export default function SignInPage() {
-  const showReviewShortcut =
-    isDemoMode() && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const showReviewShortcut = isDemoMode();
 
   return (
     <>

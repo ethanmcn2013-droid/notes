@@ -236,7 +236,7 @@ function LegalLinks() {
       aria-label="Legal"
       className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-1 font-mono text-[11px] uppercase"
       style={{
-        color: "var(--color-ink-faint)",
+        color: "var(--color-ink-soft)",
         letterSpacing: "0.08em",
         paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))",
       }}
@@ -252,8 +252,7 @@ function LegalLinks() {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[32px] items-center px-2 py-1 transition-opacity hover:opacity-100"
-            style={{ opacity: 0.8 }}
+            className="inline-flex min-h-[32px] items-center px-2 py-1 text-ink-soft transition-colors hover:text-ink"
           >
             {link.label}
           </a>

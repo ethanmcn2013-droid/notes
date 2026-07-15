@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { NoteRead } from "@/server/actions/notes";
+import type { DemoFixtureId } from "@/server/demo/fixtures";
 
 /**
  * In-memory demo dataset for Signal Notes.
@@ -24,6 +25,9 @@ export const DEMO_USER_ID = "demo-user";
 const MIN = 60_000;
 const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
+
+// Fixed so screenshots and browser audits never depend on wall-clock time.
+export const DEMO_REFERENCE_TIME = Date.UTC(2026, 6, 15, 9, 0, 0);
 
 type Seed = {
   id: string;
@@ -95,6 +99,29 @@ const ACTIVE: Seed[] = [
   },
 ];
 
+const LONG_CONTENT: Seed[] = [
+  {
+    id: "demo_n_long_01",
+    body: "Post-event debrief for Maria and James. The orchard ceremony moved inside at 13:20 when the rain line reached the west gate, so the team reset eighty-four chairs in eighteen minutes and kept the terrace drinks plan intact. What worked: Aoife held family photographs until the room settled; the bar moved one person to the entrance before guests arrived; the florist reused the aisle foliage around the fireplace without needing another decision. What to change next time: keep a printed wet-weather sequence in the duty folder, confirm who owns the accessibility route before opening the side doors, and label the supplier crate for the extraordinarily long North Coast Botanical Installations and Seasonal Hire Company name so it does not disappear into general storage. Follow up with Maria on Thursday, send the revised room-turn checklist to the Saturday team, and keep this note as the source for the winter brochure case study.",
+    ago: 18 * MIN,
+    extractBody: "Write the wet-weather room-turn checklist and share it with the Saturday team",
+  },
+  ...ACTIVE.slice(0, 5),
+];
+
+// Enough rows to exercise scanning, sticky chrome, and large-stream layout
+// without relying on production data. The source notes repeat intentionally:
+// density is the variable under review, while IDs and timestamps stay unique.
+const DENSE: Seed[] = Array.from({ length: 36 }, (_, index) => {
+  const source = ACTIVE[index % ACTIVE.length];
+  return {
+    ...source,
+    id: `demo_n_dense_${String(index + 1).padStart(2, "0")}`,
+    ago: (index + 1) * 23 * MIN,
+    promotedTaskId: index % 7 === 0 ? `demo_task_dense_${index + 1}` : undefined,
+  };
+});
+
 // Notes that crossed the one-way edge into Tasks. Each kept its private body
 // here; the creator-authored extract is the action that now lives in Tasks.
 // This is the surface that shows how Notes behaves in the ecosystem.
@@ -141,18 +168,38 @@ function toNote(s: Seed, now: number): NoteRead {
   };
 }
 
-export function demoNotes(): NoteRead[] {
-  const now = Date.now();
-  return ACTIVE.map((s) => toNote(s, now));
+export function demoNotes(fixture: DemoFixtureId = "populated"): NoteRead[] {
+  if (fixture === "empty" || fixture === "first-use") return [];
+  if (fixture === "first-capture") {
+    return [toNote(ACTIVE[0], DEMO_REFERENCE_TIME)];
+  }
+  const seeds =
+    fixture === "long-content"
+      ? LONG_CONTENT
+      : fixture === "dense"
+        ? DENSE
+        : ACTIVE;
+  return seeds.map((seed) => toNote(seed, DEMO_REFERENCE_TIME));
 }
 
-export function demoArchivedNotes(): NoteRead[] {
-  const now = Date.now();
-  return ARCHIVED.map((s) => toNote(s, now));
+export function demoArchivedNotes(
+  fixture: DemoFixtureId = "populated",
+): NoteRead[] {
+  if (
+    fixture === "empty" ||
+    fixture === "first-use" ||
+    fixture === "first-capture"
+  ) {
+    return [];
+  }
+  return ARCHIVED.map((seed) => toNote(seed, DEMO_REFERENCE_TIME));
 }
 
-export function demoSearchNotes(query: string): NoteRead[] {
+export function demoSearchNotes(
+  query: string,
+  fixture: DemoFixtureId = "populated",
+): NoteRead[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  return demoNotes().filter((n) => n.body.toLowerCase().includes(q));
+  return demoNotes(fixture).filter((note) => note.body.toLowerCase().includes(q));
 }

@@ -92,14 +92,21 @@ function friendlyError(err: unknown, fallback: string): string {
   return err.message || fallback;
 }
 
-function RelativeTime({ ts }: { ts: number }) {
+function RelativeTime({
+  ts,
+  referenceTime,
+}: {
+  ts: number;
+  referenceTime?: number;
+}) {
   // Self-contained tick so the whole notebook doesn't re-render once
   // a minute just to refresh a timestamp. Only the timestamp updates.
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => referenceTime ?? Date.now());
   useEffect(() => {
+    if (referenceTime !== undefined) return;
     const id = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [referenceTime]);
   return <>{relativeTime(ts, now)}</>;
 }
 
@@ -143,6 +150,8 @@ interface NotebookProps {
   tasksCatalogAvailable: boolean;
   planningPeriodsEnabled: boolean;
   initialWorkspaceId: string | null;
+  reviewFirstCapture?: boolean;
+  referenceTime?: number;
 }
 
 export function Notebook({
@@ -152,6 +161,8 @@ export function Notebook({
   tasksCatalogAvailable,
   planningPeriodsEnabled,
   initialWorkspaceId,
+  reviewFirstCapture = false,
+  referenceTime,
 }: NotebookProps) {
   const [notes, setNotes] = useState<NoteRead[]>(initialNotes);
   const [archivedNotes, setArchivedNotes] = useState<NoteRead[]>(initialArchivedNotes);
@@ -186,7 +197,7 @@ export function Notebook({
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
   // The one signature moment, fires once, ever, on the first note a
   // brand-new notebook receives (see FirstCaptureMoment).
-  const [firstCapture, setFirstCapture] = useState(false);
+  const [firstCapture, setFirstCapture] = useState(reviewFirstCapture);
   const [editingExtractFor, setEditingExtractFor] = useState<string | null>(null);
   const [draftAction, setDraftAction] = useState("");
   const [extractError, setExtractError] = useState<string | null>(null);
@@ -1192,6 +1203,7 @@ export function Notebook({
 
   return (
     <main className="shell">
+      <h1 className="sr-only">Signal Notes notebook</h1>
       {/* ── The notebook ────────────────────────────────────────── */}
       <section className="notebook" aria-label="Signal Notes notebook">
         <div className="notebook-top">
@@ -1415,7 +1427,7 @@ export function Notebook({
                         )}
                       {!isPromoting && (
                         <span>
-                          <RelativeTime ts={note.createdAt} />
+                          <RelativeTime ts={note.createdAt} referenceTime={referenceTime} />
                         </span>
                       )}
                     </span>
@@ -1514,7 +1526,7 @@ export function Notebook({
                 earn the same gravity. */}
             <div className="open-note-head">
               <span>
-                Captured <RelativeTime ts={openNote.createdAt} />
+                Captured <RelativeTime ts={openNote.createdAt} referenceTime={referenceTime} />
               </span>
               <div className="open-note-head-controls">
                 {planningPeriodsEnabled ? (
@@ -2034,7 +2046,7 @@ export function Notebook({
             <dd>
               {lastSavedTs ? (
                 <em>
-                  <RelativeTime ts={lastSavedTs} />
+                  <RelativeTime ts={lastSavedTs} referenceTime={referenceTime} />
                 </em>
               ) : (
                 "—"

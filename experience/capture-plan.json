@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "signal-experience-capture-plan/1",
+  "determinism": {
+    "locale": "en-GB",
+    "timezoneId": "Europe/London",
+    "colorScheme": "light",
+    "reducedMotion": "reduce",
+    "fixedTime": "2026-07-15T09:00:00.000Z",
+    "settleMilliseconds": 350
+  },
+  "breakpoints": ["mobile", "tablet", "desktop", "wide"],
+  "captures": [
+    {
+      "experienceId": "notes.page.root",
+      "state": "default",
+      "path": "/",
+      "expectedContent": "Findable later, never filed."
+    },
+    {
+      "experienceId": "notes.page.anatomy",
+      "state": "default",
+      "path": "/anatomy",
+      "expectedContent": "Five honest slots."
+    },
+    {
+      "experienceId": "notes.page.app-account",
+      "state": "default",
+      "path": "/app/account",
+      "expectedContent": "Your Signal account"
+    },
+    {
+      "experienceId": "notes.page.building-project",
+      "state": "default",
+      "path": "/building-project",
+      "expectedContent": "What a site note looks like."
+    },
+    {
+      "experienceId": "notes.page.freelance-studio",
+      "state": "default",
+      "path": "/freelance-studio",
+      "expectedContent": "What a freelancer"
+    },
+    {
+      "experienceId": "notes.page.teaching-week",
+      "state": "default",
+      "path": "/teaching-week",
+      "expectedContent": "What a teacher"
+    },
+    {
+      "experienceId": "notes.page.wedding-planning",
+      "state": "default",
+      "path": "/wedding-planning",
+      "expectedContent": "What a venue meeting note looks like."
+    },
+    {
+      "experienceId": "notes.state.root-error",
+      "state": "error",
+      "path": "/?fixture=error",
+      "expectedContent": "This didn",
+      "expectedStatus": [200, 500],
+      "expectedRuntimeErrors": true
+    },
+    {
+      "experienceId": "notes.state.root-not-found",
+      "state": "error",
+      "path": "/experience-quality-missing",
+      "expectedContent": "This page faded.",
+      "expectedStatus": 404,
+      "expectedRuntimeErrors": true
+    },
+    {
+      "experienceId": "notes.page.sign-in-by-sign-in",
+      "state": "default",
+      "path": "/sign-in",
+      "expectedContent": "Open the review notebook."
+    },
+    {
+      "experienceId": "notes.page.sign-up-by-sign-up",
+      "state": "default",
+      "path": "/sign-up",
+      "expectedContent": "Open the review notebook."
+    },
+    {
+      "experienceId": "notes.page.app",
+      "state": "first-use",
+      "path": "/app?fixture=first-use",
+      "expectedContent": "No notes yet",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.page.app",
+      "state": "empty",
+      "path": "/app?fixture=empty",
+      "expectedContent": "Nothing here yet.",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.page.app",
+      "state": "populated",
+      "path": "/app?fixture=populated",
+      "expectedContent": "Saturday wedding",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.page.app",
+      "state": "dense",
+      "path": "/app?fixture=dense",
+      "expectedContent": "36 notes",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.page.app",
+      "state": "long-content",
+      "path": "/app?fixture=long-content",
+      "expectedContent": "Post-event debrief",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.page.app",
+      "state": "partial-failure",
+      "path": "/app?fixture=partial-failure",
+      "expectedContent": "Connected details are temporarily unavailable",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.page.app",
+      "state": "restricted",
+      "path": "/app?fixture=restricted",
+      "expectedContent": "Available on the Workspace plan",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.surface.capture-email",
+      "state": "default",
+      "path": "/app?fixture=capture-email",
+      "expectedContent": "review-notebook@capture.signalstudio.test",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.surface.notebook",
+      "state": "default",
+      "path": "/app?fixture=populated",
+      "expectedContent": "Saturday wedding",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.surface.first-capture",
+      "state": "success",
+      "path": "/app?fixture=first-capture",
+      "expectedContent": "Your notebook starts here.",
+      "keyboardMode": "skip-main"
+    },
+    {
+      "experienceId": "notes.state.app-loading",
+      "state": "loading",
+      "path": "/app?fixture=loading",
+      "expectedContent": "notes",
+      "keyboardMode": "none"
+    },
+    {
+      "experienceId": "notes.state.app-error",
+      "state": "error",
+      "path": "/app?fixture=error",
+      "expectedContent": "The notebook didn",
+      "expectedStatus": [200, 500],
+      "expectedRuntimeErrors": true
+    },
+    {
+      "experienceId": "notes.page.waitlist",
+      "state": "restricted",
+      "path": "/waitlist",
+      "expectedContent": "Signal Studio is in private preview."
+    }
+  ]
+}

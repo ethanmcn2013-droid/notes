@@ -5,10 +5,19 @@ import { NotesDemo } from "@/components/marketing/notes-demo";
 import { NotesHeader } from "@/components/marketing/notes-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { isDemoMode, isUxAssuranceMode } from "@/lib/access-mode";
+import { resolveDemoFixture } from "@/server/demo/fixtures";
 
-export default async function HomePage() {
+type HomePageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const demoMode = isDemoMode();
+  if (demoMode && resolveDemoFixture((await searchParams).fixture) === "error") {
+    throw new Error("Deliberate Signal Notes review fixture: homepage load failed");
+  }
   const { userId } =
-    isUxAssuranceMode() || isDemoMode() ? { userId: null } : await auth();
+    isUxAssuranceMode() || demoMode ? { userId: null } : await auth();
   const isSignedIn = Boolean(userId);
 
   return (

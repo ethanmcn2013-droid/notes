@@ -221,6 +221,81 @@ body::after { content: none; }
 a { color: inherit; }
 button, input, textarea { font: inherit; }
 
+/* Keyboard entry point. Kept out of flow until focused and built entirely
+   from the shared semantic token contract. */
+.skip-navigation {
+  position: fixed;
+  inset-block-start: var(--space-4);
+  inset-inline-start: var(--space-4);
+  z-index: var(--x-skip-navigation-z, 10000);
+  transform: translateY(calc(-100% - var(--space-6)));
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  background: var(--paper);
+  box-shadow: var(--shadow-float);
+  color: var(--ink);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+.skip-navigation:focus { transform: translateY(0); }
+
+/* Branded recovery state for route misses. */
+.notes-not-found {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-10) var(--space-6);
+  background: var(--paper-soft);
+  text-align: center;
+}
+.notes-not-found__content { max-width: 65ch; }
+.notes-not-found__eyebrow {
+  margin: 0 0 var(--space-4);
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.notes-not-found h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--text-title);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-title);
+  line-height: var(--leading-title);
+  text-wrap: balance;
+}
+.notes-not-found p:not(.notes-not-found__eyebrow) {
+  margin: var(--space-5) auto 0;
+  color: var(--ink-soft);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  text-wrap: pretty;
+}
+.notes-not-found__action {
+  display: inline-flex;
+  min-height: var(--control-h-md);
+  align-items: center;
+  margin-top: var(--space-7);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  background: var(--accent);
+  color: var(--paper);
+  font-size: var(--text-body-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    transform var(--motion-instant) var(--ease-out);
+}
+.notes-not-found__action:hover { background: var(--accent-hover); }
+.notes-not-found__action:active { transform: translateY(1px); }
+
 /* ── Notes wordmark · the shared suite grammar with the caret gesture ── */
 /* Per suite gesture-vocab ratification (2026-05-16): Notes gesture is
    caret — 1.1s steps(1,end). The dot blinks like a held text cursor:
@@ -668,6 +743,7 @@ button, input, textarea { font: inherit; }
   border: 1px solid var(--color-line-strong);
   border-radius: 4px;
   background: var(--color-field);
+  color: var(--color-ink-soft);
   font-family: var(--font-mono);
   font-size: 10.5px;
   margin: 0 1px;
@@ -1462,7 +1538,7 @@ button, input, textarea { font: inherit; }
    Uses body sans (Geist since SDS 2.0 Wave 4) to match the surface register. */
 .capture-email {
   align-items: center;
-  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  color: var(--color-ink-soft);
   display: flex;
   font-size: 12px;
   gap: 8px;
@@ -1500,7 +1576,7 @@ button, input, textarea { font: inherit; }
   text-underline-offset: 2px;
 }
 .capture-email__hint {
-  color: color-mix(in srgb, var(--color-ink) 35%, transparent);
+  color: var(--color-ink-soft);
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;

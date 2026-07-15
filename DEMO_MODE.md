@@ -39,8 +39,9 @@ npm run dev
 ```
 
 Preview deployment (Vercel): set both env vars to `demo` (or `review`) on the
-preview environment. Keep the Clerk keys present (Clerk's middleware needs
-them); demo requires no valid session and no Turso DB.
+preview environment. Demo/review bypass Clerk entirely and require neither a
+valid session nor Clerk keys. Production continues to require both Clerk keys
+and a real session, and still fails closed if auth is misconfigured.
 
 ## Disable it / restore production auth
 
@@ -56,6 +57,22 @@ return to their exact prior behaviour; no other code changes are needed.
   — audience showcase pages (already public)
 
 The suite-wide review hub lives at `https://signalstudio.ie/review`.
+
+### Deterministic `/app` fixtures
+
+Fixtures are accepted only in demo/review mode; production ignores the query
+parameter and follows the real authenticated data path.
+
+| Fixture | URL | Purpose |
+|---|---|---|
+| Populated | `/app?fixture=populated` | Normal seeded notebook |
+| Empty | `/app?fixture=empty` | First-use and no-notes state |
+| Loading | `/app?fixture=loading` | Canonical notebook loading boundary |
+| Error | `/app?fixture=error` | Recoverable notebook error boundary |
+| Long content | `/app?fixture=long-content` | Wrapping and dense-content stress |
+
+Seed timestamps use a fixed review reference so captures do not drift between
+runs. The fixture resolver fails safely to `populated` for unknown values.
 
 ## Files
 

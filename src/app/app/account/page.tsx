@@ -20,8 +20,9 @@ export const metadata: Metadata = {
 export default async function AccountPage() {
   // Demo/Review: render the settings surface with a synthetic identity so it
   // is reviewable without a session. Never touches Clerk.
+  const demoMode = isDemoMode();
   let email: string;
-  if (isDemoMode()) {
+  if (demoMode) {
     email = "you@theorchard.example";
   } else {
     const user = await currentUser();
@@ -46,9 +47,18 @@ export default async function AccountPage() {
         account.
       </p>
 
-      <ManageIdentityButton />
-
-      <DangerZone email={email} />
+      {demoMode ? (
+        <p className="rounded-lg border border-hairline bg-paper px-5 py-4 text-body-sm leading-body text-ink-soft">
+          Identity and account deletion controls are unavailable in this
+          seed-only review. Production keeps both controls behind your real
+          Signal account.
+        </p>
+      ) : (
+        <>
+          <ManageIdentityButton />
+          <DangerZone email={email} />
+        </>
+      )}
     </main>
   );
 }

@@ -52,6 +52,13 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // `VERCEL_ENV` is server-only, but access-mode safety must make the same
+  // production/preview decision in client components. Expose only the coarse
+  // deployment posture, never credentials or provider configuration.
+  env: {
+    NEXT_PUBLIC_SIGNAL_DEPLOYMENT_ENV:
+      process.env.VERCEL_ENV ?? (isDev ? "development" : "production"),
+  },
   experimental: {
     // Tree-shake heavy barrel imports — Clerk is used in 13 files across
     // the notebook + marketing; the full barrel ships ~6× what we call.
