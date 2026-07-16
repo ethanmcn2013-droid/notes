@@ -81,6 +81,12 @@ if (switcher.file) {
     ".suitesw-pill--current",
     "current product must be a visible active pill",
   );
+  mustContain(
+    switcher.file,
+    switcher.source,
+    "sourceProduct",
+    "suite links must identify Notes so Signal can normalize authorized context",
+  );
   mustNotContain(
     switcher.file,
     switcher.source,
