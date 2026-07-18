@@ -18,6 +18,7 @@ jobs:
       SIGNAL_ACCESS_MODE: review
       NEXT_PUBLIC_SIGNAL_ACCESS_MODE: review
       VERCEL_ENV: preview
+      NOTES_HYBRID_NOTEBOOK_ENABLED: "1"
       EXPERIENCE_BASE_URL: http://127.0.0.1:3000
     steps:
       - name: Checkout
