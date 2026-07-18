@@ -1,6 +1,6 @@
 # Signal Notes redesign decision log
 
-Status: Phase 1 complete locally; selection open
+Status: Phase 1 complete in a protected preview; selection open
 Decision owner: Ethan
 Review date: 18 July 2026
 Production implementation: not started
@@ -66,12 +66,20 @@ Why: A is the safest coherent base, B is the strongest reading system, and C con
 
 - Source branch: `feat/notes-world-class-lab-20260716`
 - Lab route: `/__design-lab/notes`
-- Local evidence origin: `http://127.0.0.1:4330`
-- Protected preview origin: pending final protected-deployment verification
-- Source candidate commit: pending immutable candidate commit
-- Pull request: pending publication
-- HQ feature record: pending protected URL and immutable commit
-- HQ operator selection todo: pending protected URL and immutable commit
+- Local evidence origin: `http://127.0.0.1:4329`
+- Protected preview origin: `https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app`
+- Source candidate commit: `b844108f34c6a8281f873ee5739df5d6ac35fbd9`
+- Source pull request: [notes#24](https://github.com/ethanmcn2013-droid/notes/pull/24)
+- Deployment: `dpl_D7PLHydCpJV1TtzfZ3EcGWJ9S4jd` in [Vercel Inspector](https://vercel.com/ethanmcn2013-1730s-projects/signal-notes-design-lab/D7PLHydCpJV1TtzfZ3EcGWJ9S4jd)
+- Vercel project: `signal-notes-design-lab` (`prj_hg1BjcZCrm77Agk9D0ofDKcMVE8S`)
+- Preview protection: `ssoProtection.deploymentType=preview`
+- Hosted environment: exactly three plain Preview flags (`SIGNAL_NOTES_DESIGN_LAB=1`, `SIGNAL_ACCESS_MODE=review`, `NEXT_PUBLIC_SIGNAL_ACCESS_MODE=review`); no production secrets, integrations, or analytics
+- Anonymous access: 302 to `vercel.com/sso-api`; 15-byte body with no A/B/C or fixture strings
+- Authenticated access: all 12 A/B/C by Capture/Stream/Search/Detail routes returned 200 with the correct `data-option` and `noindex`
+- Hosted build: Vercel Next.js build and TypeScript passed
+- HQ feature record: [`notes-three-direction-review-lab`](https://github.com/ethanmcn2013-droid/studio/blob/55104951e6b5dfbba44b0f4ca08f9ce59908bd40/content/hq/features/notes-three-direction-review-lab.md)
+- HQ operator selection todo: [`choose-notes-design-lab-direction`](https://github.com/ethanmcn2013-droid/studio/blob/55104951e6b5dfbba44b0f4ca08f9ce59908bd40/content/hq/operator-todos/choose-notes-design-lab-direction.md)
+- HQ review pull request: [studio#77](https://github.com/ethanmcn2013-droid/studio/pull/77)
 
 All exact queries follow:
 

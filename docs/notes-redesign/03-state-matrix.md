@@ -23,7 +23,11 @@ Current local origin:
 
     http://127.0.0.1:4329
 
-The protected preview uses the same path and query contract. Its exact origin is recorded after deployment verification.
+Protected preview origin:
+
+    https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app
+
+The protected preview uses the same path and query contract. Vercel Authentication is enabled for preview deployments; authenticated verification passed for all 12 A/B/C by scenario routes. Exact protected links are recorded in the three option briefs and `evidence/deployment-receipt.md`.
 
 ## Scenario matrix
 
@@ -234,7 +238,7 @@ Do not announce:
 
 ## Known matrix limitation
 
-The state matrix is broader than a single screenshot pass. Saved and conflict are implemented and automated in the fixture lab, but external screen-reader, protected-preview, and production-performance results remain evidence tasks. The final scorecard must call out any unclosed cell rather than treating this document as proof by itself.
+The state matrix is broader than a single screenshot pass. Saved and conflict are implemented and automated in the fixture lab. The protected preview, anonymous authentication challenge, authenticated 12-route matrix, secret-free project posture, Next.js build, and TypeScript build are verified. External screen-reader, non-Chromium, physical-device, field-performance, energy, and real-radio results remain evidence tasks. The scorecard retains the measured synthetic latency misses rather than treating this document as proof by itself.
 
 ## Production non-change statement
 

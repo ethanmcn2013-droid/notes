@@ -1,6 +1,6 @@
 # Signal Notes Phase 1: council reviews
 
-Status: three review rounds complete; hosted protection receipt pending
+Status: three review rounds complete; protected hosted receipt verified; selection pending
 Council chair: primary implementation agent
 Review date: 18 July 2026
 
@@ -67,7 +67,7 @@ Final acceptance ran against a newly built preview-shaped production artifact.
 | Interaction/mobile | Pass | No real soft-keyboard or touch-selection device run. |
 | Accessibility | Automated acceptance pass | No external screen-reader, Safari, Firefox, or physical-device run. |
 | Front-end architecture | Pass for isolated lab | Shared root Clerk/Sentry weight remains in the build; performance budgets miss. |
-| Privacy/boundary | Pass inside lab source/runtime | Hosted environment and Vercel protection still require explicit verification. |
+| Privacy/boundary | Pass for the isolated lab source, runtime, and protected preview | This does not certify production Notes/Tasks APIs or production creator scoping. |
 | Red-team benchmark | Pass with no imported taxonomy | Competitive review is documentation- and interaction-based, not a user study. |
 
 Final receipts:
@@ -80,6 +80,8 @@ Final receipts:
 - The browser matrix includes 27 A/B/C by mode automated WCAG scans.
 - 24 screenshots, three videos, three traces, and a five-run-per-option performance record were regenerated from the final candidate.
 - The preview-shaped route returns 200 and ordinary production markers hard-return 404 with no lab content.
+- The immutable candidate was deployed to the separate `signal-notes-design-lab` Vercel project with preview authentication and exactly three non-secret preview flags.
+- Anonymous access returned a 302 authentication challenge with no option or fixture content; all 12 authenticated A/B/C by scenario routes returned 200 with the correct direction marker and `noindex`.
 
 ## Specialist final positions
 
@@ -87,7 +89,7 @@ Final receipts:
 
 Verified strengths: one shared 96-note model, save-only capture, exact selection, editable approval, deterministic idempotency, retained source note, honest failure/conflict recovery, and no bloat taxonomy.
 
-Risk retained: hosted privacy is operational until the separate project is proven secret-free and protected. Production creator scoping is audited, not simulated by owner-bearing fixtures.
+Risk retained: hosted privacy is operationally verified for this immutable preview, but production creator scoping is audited, not simulated by owner-bearing fixtures.
 
 Position: A is the best spine; add B reading and C deliberate-depth components.
 
@@ -127,9 +129,9 @@ Position: A is the safest implementation spine; C should contribute only high-va
 
 Verified strengths: no server/auth/database/persistence/network import in the lab; no interaction fetch/XHR/beacon/WebSocket; exact three-field approved payload; no whole-note or first-line fallback; note remains private and present.
 
-Risk retained: global CSP permits production-service hosts and the scanner deliberately focuses the lab module. The separate project must contain no inherited production credentials and must use platform authentication.
+Risk retained: global CSP permits production-service hosts and the scanner deliberately focuses the lab module. The separate project has no inherited production credentials or integrations and uses platform authentication, but that does not widen the scanner's source boundary.
 
-Position: pass only after hosted environment/protection receipts.
+Position: pass for Phase 1 after hosted environment and protection receipts; retain production API claims as out of scope.
 
 ### 7. Red-team benchmark critic
 

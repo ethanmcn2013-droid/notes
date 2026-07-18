@@ -1,6 +1,6 @@
 # Signal Notes Phase 1: comparison scorecard
 
-Status: final local acceptance evidence; protected-preview receipt pending
+Status: final candidate accepted locally and verified on the protected preview
 Review date: 18 July 2026
 Scoring rule: equal-weight 15-category review; no score is rounded up to meet the brief
 Production status: unchanged
@@ -50,7 +50,7 @@ Ethan still selects A, B, C, or an exact hybrid before any production route chan
 
 ## Final production-shaped performance evidence
 
-Source: `docs/notes-redesign/evidence/performance.json`, generated 18 July 2026 against the production build at `http://127.0.0.1:4330`.
+Source: `docs/notes-redesign/evidence/performance.json`, generated 18 July 2026 against the production build at `http://127.0.0.1:4329`.
 
 | Metric | A | B | C | Brief target | Verdict |
 | --- | ---: | ---: | ---: | --- | --- |
@@ -80,6 +80,8 @@ The final run is slower than an earlier rehearsal in save/search medians but mat
 | Interaction records | Three videos and three source-bearing Playwright traces | `evidence/videos/` and `evidence/traces/` |
 | Production build | Next.js optimized build passed | Build receipt recorded in council review |
 | Ordinary production boundary | Same build returns hard 404 with no fixture/lab content under production markers | Access tests plus production-shaped route receipt |
+| Protected Vercel preview | Preview authentication enabled; anonymous request challenged; 12/12 authenticated scenario routes returned 200 with the correct option marker and `noindex` | `evidence/deployment-receipt.md` |
+| Hosted environment isolation | Exactly three plain preview flags; no production secrets, integrations, or analytics | `evidence/deployment-receipt.md` |
 
 ## Automatic-failure audit
 
@@ -95,7 +97,7 @@ The final run is slower than an earlier rehearsal in save/search medians but mat
 | Failed sync or navigation loses writing | Denied | Exact note bodies, detail edits, and unsent approved wording remain protected; stable identities are retryable and cross-mode timers are guarded. |
 | Recolour-only option | Denied | A inline detail, B replacement Reading view, and C desktop split/mobile full-screen detail are structurally distinct. |
 | Dense or long text breaks layout | Denied in tested matrix | 96-note corpus, 1,500-character fixture, 320/390/1440/1728 checks, visible-focus scrolling, and text-spacing checks pass. |
-| Accessibility or keyboard missing | Denied | 36-test matrix includes full keyboard paths, 27 axe scans, forced colours, reflow, focus, and announcement behavior. |
+| Accessibility or keyboard missing | Denied | 37-test matrix includes full keyboard paths, 27 axe scans, forced colours, reflow, focus, and announcement behavior. |
 
 ## Evidence limitations that remain
 
@@ -103,7 +105,7 @@ The final run is slower than an earlier rehearsal in save/search medians but mat
 - Timing evidence is synthetic local evidence and does not prove field Core Web Vitals, energy, memory, or real radio behavior.
 - Offline, sync, conflict, and Tasks behavior are deterministic simulations; they do not certify the production persistence APIs.
 - The lab proves its own exact-selection payload and isolation model. It does not prove production creator scoping or guest/public exclusions beyond the audited production source.
-- Vercel protection and zero-secret project posture require separate hosted receipts before the preview is called review-ready.
+- Hosted access was verified on the immutable candidate, but Vercel Authentication proves preview access control rather than production authorization or production Notes/Tasks behavior.
 
 ## Selection posture
 

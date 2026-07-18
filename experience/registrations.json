@@ -1,6 +1,30 @@
 {
   "schemaVersion": "signal-experience-registrations/1",
   "routeOverrides": {
+    "notes.page.5-f-5-fdesign-lab-notes": {
+      "parentJourney": "isolated-design-review",
+      "primaryJob": "Review the isolated Signal Notes design directions without production data or mutations.",
+      "primaryAction": "Compare the review directions and record a selection.",
+      "roles": ["reviewer"],
+      "reviewTier": "supporting",
+      "implementationStatus": "review-only",
+      "fixtureCoverage": "complete",
+      "automatedTestCoverage": "complete",
+      "screenshotCoverage": "complete",
+      "accessibilityCoverage": "complete"
+    },
+    "notes.page.design-lab-notes": {
+      "parentJourney": "isolated-design-review",
+      "primaryJob": "Render the isolated Signal Notes design review from deterministic fixtures.",
+      "primaryAction": "Compare the review directions and record a selection.",
+      "roles": ["reviewer"],
+      "reviewTier": "supporting",
+      "implementationStatus": "review-only",
+      "fixtureCoverage": "complete",
+      "automatedTestCoverage": "complete",
+      "screenshotCoverage": "complete",
+      "accessibilityCoverage": "complete"
+    },
     "notes.page.anatomy": {
       "automatedTestCoverage": "partial",
       "screenshotCoverage": "partial",

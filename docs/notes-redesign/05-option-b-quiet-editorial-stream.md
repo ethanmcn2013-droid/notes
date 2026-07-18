@@ -160,7 +160,16 @@ Why it fits B:
 | Search | [Open B search mobile](http://127.0.0.1:4329/__design-lab/notes?option=b&scenario=search&dataset=normal&mode=default&viewport=390) |
 | Detail + extraction | [Open B detail mobile](http://127.0.0.1:4329/__design-lab/notes?option=b&scenario=detail&dataset=normal&mode=default&viewport=390) |
 
-The protected preview uses identical queries on the verified preview origin. Exact protected links are added after deployment protection is tested.
+### Protected preview, 1440 canvas
+
+Vercel Authentication is enabled. These exact routes passed authenticated 200, `data-option="b"`, and `noindex` checks.
+
+| Review moment | Protected URL |
+| --- | --- |
+| Capture | [Open protected B capture](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=capture&dataset=normal&mode=default&viewport=1440) |
+| Stream | [Open protected B stream](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=stream&dataset=normal&mode=default&viewport=1440) |
+| Search | [Open protected B search](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=search&dataset=normal&mode=default&viewport=1440) |
+| Detail + extraction | [Open protected B detail](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=detail&dataset=normal&mode=default&viewport=1440) |
 
 ## Stress routes
 
