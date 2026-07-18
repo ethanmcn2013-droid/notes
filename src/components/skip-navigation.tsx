@@ -1,25 +1,8 @@
 "use client";
 
-import { useEffect, type MouseEvent } from "react";
-import { usePathname } from "next/navigation";
+import type { MouseEvent } from "react";
 
 export function SkipNavigation() {
-  const pathname = usePathname();
-
-  useEffect(() => {
-    const main = document.querySelector<HTMLElement>("main");
-    if (!main || main.id) return;
-    main.id = "main-content";
-    main.dataset.skipNavigationTarget = "true";
-
-    return () => {
-      if (main.dataset.skipNavigationTarget === "true") {
-        main.removeAttribute("id");
-        delete main.dataset.skipNavigationTarget;
-      }
-    };
-  }, [pathname]);
-
   function moveFocusToMain(event: MouseEvent<HTMLAnchorElement>) {
     const main = document.querySelector<HTMLElement>("main");
     if (!main) return;

@@ -144,6 +144,7 @@ try {
       let response = null;
       let navigationError = null;
       let contentMatched = false;
+      let targetMatched = !item.targetSelector;
       let accessibility = { violations: 0, blocking: 0, ruleIds: [], details: [] };
       let runtime = {
         overflowPixels: null,
@@ -164,7 +165,24 @@ try {
         });
         await page.evaluate(() => document.fonts.ready);
         await page.waitForTimeout(plan.determinism.settleMilliseconds);
-        contentMatched = (await page.locator("body").innerText()).includes(item.expectedContent);
+        if (item.targetSelector) {
+          try {
+            await page.locator(item.targetSelector).first().waitFor({ state: "attached", timeout: 5_000 });
+            targetMatched = true;
+          } catch {
+            targetMatched = false;
+          }
+        }
+        try {
+          await page.waitForFunction(
+            (expectedContent) => document.body.innerText.includes(expectedContent),
+            item.expectedContent,
+            { timeout: 5_000 },
+          );
+          contentMatched = true;
+        } catch {
+          contentMatched = false;
+        }
 
         const axe = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
@@ -267,6 +285,7 @@ try {
         status !== null &&
         isExpectedStatus(item, status) &&
         contentMatched &&
+        targetMatched &&
         accessibility.blocking === 0 &&
         runtime.overflowPixels === 0 &&
         runtime.keyboardPass &&
@@ -284,6 +303,8 @@ try {
         expectedStatus: item.expectedStatus ?? "2xx/3xx",
         expectedContent: item.expectedContent,
         contentMatched,
+        targetSelector: item.targetSelector ?? null,
+        targetMatched,
         navigationError,
         candidateScreenshot: navigationError ? null : relativeScreenshot,
         candidateHash: navigationError ? null : fileHash(screenshot),

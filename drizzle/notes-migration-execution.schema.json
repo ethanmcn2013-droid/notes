@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://notes.signalstudio.ie/schemas/notes-migration-execution-1.json",
+  "title": "Signal Notes production migration execution receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "environment",
+    "databaseIdentitySha256",
+    "ledgerSha256",
+    "releaseSha",
+    "migration",
+    "backup",
+    "dryRun",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "notes-migration-execution/1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$" },
+    "environment": {
+      "enum": ["test", "development", "preview", "staging", "production"]
+    },
+    "databaseIdentitySha256": { "$ref": "#/$defs/sha256" },
+    "ledgerSha256": { "$ref": "#/$defs/sha256" },
+    "releaseSha": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sqlSha256", "schemaFingerprintSha256"],
+      "properties": {
+        "id": { "const": "0007_note_task_send_outbox" },
+        "sqlSha256": { "$ref": "#/$defs/sha256" },
+        "schemaFingerprintSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "backup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "sha256", "databaseIdentitySha256", "verifiedAt"],
+      "properties": {
+        "status": { "const": "verified" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "databaseIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "verifiedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "dryRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "sourceBackupSha256",
+        "databaseSha256",
+        "migrationId",
+        "migrationSqlSha256",
+        "schemaFingerprintSha256",
+        "notesCountBefore",
+        "notesCountAfter",
+        "integrityCheck",
+        "foreignKeyViolations",
+        "completedAt"
+      ],
+      "properties": {
+        "status": { "const": "passed" },
+        "sourceBackupSha256": { "$ref": "#/$defs/sha256" },
+        "databaseSha256": { "$ref": "#/$defs/sha256" },
+        "migrationId": { "const": "0007_note_task_send_outbox" },
+        "migrationSqlSha256": { "$ref": "#/$defs/sha256" },
+        "schemaFingerprintSha256": { "$ref": "#/$defs/sha256" },
+        "notesCountBefore": { "type": "integer", "minimum": 0 },
+        "notesCountAfter": { "type": "integer", "minimum": 0 },
+        "integrityCheck": { "const": "ok" },
+        "foreignKeyViolations": { "const": 0 },
+        "completedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "createdAt": { "$ref": "#/$defs/timestamp" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

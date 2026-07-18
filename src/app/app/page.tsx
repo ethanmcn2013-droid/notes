@@ -1,7 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
+import { createHash } from "node:crypto";
 import { redirect } from "next/navigation";
 import { isDemoMode } from "@/lib/access-mode";
-import { listArchivedNotes, listNotes } from "@/server/actions/notes";
+import {
+  listArchivedNotes,
+  listNotes,
+  listPendingApprovedTaskSendsForHybrid,
+} from "@/server/actions/notes";
 import { getCaptureEmail } from "@/server/actions/capture-email";
 import {
   DEMO_REFERENCE_TIME,
@@ -15,6 +20,8 @@ import {
 } from "@/server/tasks-personalization";
 import { Notebook } from "./Notebook";
 import { CaptureEmailRow } from "./CaptureEmailRow";
+import { EarlyCaptureBootstrap } from "./hybrid/EarlyCaptureBootstrap";
+import { HybridNotebook } from "./hybrid/HybridNotebook";
 import AppLoading from "./loading";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +49,10 @@ export default async function NotebookPage({ searchParams }: NotebookPageProps) 
   // Demo/Review mode skips the sign-in gate entirely, the notebook renders
   // from the in-memory seed (listNotes/listArchivedNotes short-circuit).
   const demoMode = isDemoMode();
+  // Server-only, fail-off release switch. The legacy notebook stays compiled
+  // and immediately reachable by removing this flag and redeploying.
+  const hybridNotebookEnabled =
+    process.env.NOTES_HYBRID_NOTEBOOK_ENABLED === "1";
   const params = await searchParams;
   const fixture = demoMode ? resolveDemoFixture(params.fixture) : "populated";
 
@@ -71,6 +82,7 @@ export default async function NotebookPage({ searchParams }: NotebookPageProps) 
   let initialArchivedNotes: Awaited<ReturnType<typeof listArchivedNotes>>;
   let captureEmail: Awaited<ReturnType<typeof getCaptureEmail>>;
   let tasksCatalog: Awaited<ReturnType<typeof fetchTasksWorkspaceCatalog>>;
+  let pendingApprovedTaskSends: Awaited<ReturnType<typeof listPendingApprovedTaskSendsForHybrid>>;
 
   if (demoMode) {
     initialNotes = demoNotes(fixture);
@@ -86,13 +98,17 @@ export default async function NotebookPage({ searchParams }: NotebookPageProps) 
           ? { ok: false, reason: "inbound-not-configured" }
           : { ok: false, reason: "free-tier-not-enabled" };
     tasksCatalog = { status: "unavailable", planningPeriods: [], workspaces: [] };
+    pendingApprovedTaskSends = [];
   } else {
-    [initialNotes, initialArchivedNotes, captureEmail, tasksCatalog] =
+    [initialNotes, initialArchivedNotes, captureEmail, tasksCatalog, pendingApprovedTaskSends] =
       await Promise.all([
         listNotes(),
         listArchivedNotes(),
         getCaptureEmail(),
         fetchTasksWorkspaceCatalog(userId as string),
+        hybridNotebookEnabled
+          ? listPendingApprovedTaskSendsForHybrid()
+          : Promise.resolve([]),
       ]);
   }
 
@@ -114,18 +130,38 @@ export default async function NotebookPage({ searchParams }: NotebookPageProps) 
   } else {
     captureState = null;
   }
+  const notebookProps = {
+    initialNotes,
+    initialArchivedNotes,
+    tasksWorkspaces: tasksCatalog.workspaces,
+    tasksCatalogAvailable: tasksCatalog.status === "ready",
+    planningPeriodsEnabled,
+    initialWorkspaceId: hintedWorkspace?.id ?? null,
+    reviewFirstCapture: demoMode && fixture === "first-capture",
+    // Capture once on the server so SSR and hydration share the same relative
+    // time boundary even when a note is exactly one minute/hour/day old.
+    referenceTime: demoMode ? DEMO_REFERENCE_TIME : Date.now(),
+    // Browser recovery contains private writing. Namespace it with a stable,
+    // opaque account scope so signing out and into another account in the
+    // same tab can never adopt the previous creator's draft or queue.
+    recoveryScope: demoMode
+      ? `review-${fixture}`
+      : createHash("sha256").update(`signal-notes:${userId}`).digest("hex").slice(0, 24),
+  };
   return (
     <>
-      <Notebook
-        initialNotes={initialNotes}
-        initialArchivedNotes={initialArchivedNotes}
-        tasksWorkspaces={tasksCatalog.workspaces}
-        tasksCatalogAvailable={tasksCatalog.status === "ready"}
-        planningPeriodsEnabled={planningPeriodsEnabled}
-        initialWorkspaceId={hintedWorkspace?.id ?? null}
-        reviewFirstCapture={demoMode && fixture === "first-capture"}
-        referenceTime={demoMode ? DEMO_REFERENCE_TIME : undefined}
-      />
+      {hybridNotebookEnabled ? (
+        <>
+          <EarlyCaptureBootstrap />
+          <HybridNotebook
+            {...notebookProps}
+            initialPendingApprovedTaskSends={pendingApprovedTaskSends}
+            demoMode={demoMode}
+          />
+        </>
+      ) : (
+        <Notebook {...notebookProps} />
+      )}
       {demoMode && fixture === "partial-failure" ? (
         <aside className="capture-email" role="status" data-review-fixture="partial-failure">
           Connected details are temporarily unavailable. Your notebook is

@@ -1,0 +1,270 @@
+{
+  "generatedAt": "2026-07-18T15:00:08.020Z",
+  "baseUrl": "http://127.0.0.1:4330",
+  "captures": [
+    {
+      "option": "a",
+      "scenario": "capture",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=a&scenario=capture&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-capture-mobile.png"
+    },
+    {
+      "option": "a",
+      "scenario": "stream",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=a&scenario=stream&dataset=dense&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-stream-mobile.png"
+    },
+    {
+      "option": "a",
+      "scenario": "search",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=a&scenario=search&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-search-mobile.png"
+    },
+    {
+      "option": "a",
+      "scenario": "detail",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=a&scenario=detail&dataset=edge&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-detail-mobile.png"
+    },
+    {
+      "option": "b",
+      "scenario": "capture",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=b&scenario=capture&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-capture-mobile.png"
+    },
+    {
+      "option": "b",
+      "scenario": "stream",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=b&scenario=stream&dataset=dense&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-stream-mobile.png"
+    },
+    {
+      "option": "b",
+      "scenario": "search",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=b&scenario=search&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-search-mobile.png"
+    },
+    {
+      "option": "b",
+      "scenario": "detail",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=b&scenario=detail&dataset=edge&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-detail-mobile.png"
+    },
+    {
+      "option": "c",
+      "scenario": "capture",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=c&scenario=capture&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-capture-mobile.png"
+    },
+    {
+      "option": "c",
+      "scenario": "stream",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=c&scenario=stream&dataset=dense&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-stream-mobile.png"
+    },
+    {
+      "option": "c",
+      "scenario": "search",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=c&scenario=search&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-search-mobile.png"
+    },
+    {
+      "option": "c",
+      "scenario": "detail",
+      "viewport": "mobile",
+      "dimensions": {
+        "width": 390,
+        "height": 844
+      },
+      "url": "/__design-lab/notes?option=c&scenario=detail&dataset=edge&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-detail-mobile.png"
+    },
+    {
+      "option": "a",
+      "scenario": "capture",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=a&scenario=capture&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-capture-desktop.png"
+    },
+    {
+      "option": "a",
+      "scenario": "stream",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=a&scenario=stream&dataset=dense&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-stream-desktop.png"
+    },
+    {
+      "option": "a",
+      "scenario": "search",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=a&scenario=search&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-search-desktop.png"
+    },
+    {
+      "option": "a",
+      "scenario": "detail",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=a&scenario=detail&dataset=edge&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/a-detail-desktop.png"
+    },
+    {
+      "option": "b",
+      "scenario": "capture",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=b&scenario=capture&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-capture-desktop.png"
+    },
+    {
+      "option": "b",
+      "scenario": "stream",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=b&scenario=stream&dataset=dense&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-stream-desktop.png"
+    },
+    {
+      "option": "b",
+      "scenario": "search",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=b&scenario=search&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-search-desktop.png"
+    },
+    {
+      "option": "b",
+      "scenario": "detail",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=b&scenario=detail&dataset=edge&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/b-detail-desktop.png"
+    },
+    {
+      "option": "c",
+      "scenario": "capture",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=c&scenario=capture&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-capture-desktop.png"
+    },
+    {
+      "option": "c",
+      "scenario": "stream",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=c&scenario=stream&dataset=dense&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-stream-desktop.png"
+    },
+    {
+      "option": "c",
+      "scenario": "search",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=c&scenario=search&dataset=normal&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-search-desktop.png"
+    },
+    {
+      "option": "c",
+      "scenario": "detail",
+      "viewport": "desktop",
+      "dimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "url": "/__design-lab/notes?option=c&scenario=detail&dataset=edge&mode=default&viewport=auto",
+      "file": "docs/notes-redesign/evidence/screenshots/c-detail-desktop.png"
+    }
+  ]
+}

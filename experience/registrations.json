@@ -1,6 +1,30 @@
 {
   "schemaVersion": "signal-experience-registrations/1",
   "routeOverrides": {
+    "notes.page.5-f-5-fdesign-lab-notes": {
+      "parentJourney": "isolated-design-review",
+      "primaryJob": "Review the isolated Signal Notes design directions without production data or mutations.",
+      "primaryAction": "Compare the review directions and record a selection.",
+      "roles": ["reviewer"],
+      "reviewTier": "supporting",
+      "implementationStatus": "review-only",
+      "fixtureCoverage": "complete",
+      "automatedTestCoverage": "complete",
+      "screenshotCoverage": "complete",
+      "accessibilityCoverage": "complete"
+    },
+    "notes.page.design-lab-notes": {
+      "parentJourney": "isolated-design-review",
+      "primaryJob": "Render the isolated Signal Notes design review from deterministic fixtures.",
+      "primaryAction": "Compare the review directions and record a selection.",
+      "roles": ["reviewer"],
+      "reviewTier": "supporting",
+      "implementationStatus": "review-only",
+      "fixtureCoverage": "complete",
+      "automatedTestCoverage": "complete",
+      "screenshotCoverage": "complete",
+      "accessibilityCoverage": "complete"
+    },
     "notes.page.anatomy": {
       "automatedTestCoverage": "partial",
       "screenshotCoverage": "partial",
@@ -27,12 +51,64 @@
       "accessibilityCoverage": "partial"
     },
     "notes.page.app": {
-      "primaryJob": "Capture, find, shape, and promote private notes.",
-      "primaryAction": "Write a note.",
-      "fixtureCoverage": "partial",
-      "automatedTestCoverage": "partial",
+      "parentJourney": "signed-in-work",
+      "archetype": "editor-or-canvas",
+      "primaryJob": "Capture exact private writing, find it in a flat newest-first stream, edit it with explicit recovery, and deliberately approve only selected wording into Tasks.",
+      "primaryAction": "Capture a private note in the focused field.",
+      "roles": ["owner"],
+      "requiredStates": [
+        "first-use",
+        "empty",
+        "populated",
+        "capture-saving",
+        "capture-recovery",
+        "offline",
+        "search-results",
+        "search-empty",
+        "detail-open",
+        "detail-unsaved",
+        "detail-conflict",
+        "approved-action-review",
+        "approved-send-pending",
+        "approved-action-receipt",
+        "previously-sent",
+        "loading",
+        "partial-failure",
+        "error",
+        "restricted",
+        "dense",
+        "long-content",
+        "read-only",
+        "reduced-motion",
+        "keyboard-only"
+      ],
+      "requiredBreakpoints": ["compactMobile", "mobile", "tablet", "desktop", "wide"],
+      "componentDependencies": [
+        "notes/src/app/app/hybrid/EarlyCaptureBootstrap.tsx",
+        "notes/src/app/app/hybrid/HybridNotebook.tsx",
+        "notes/src/app/app/hybrid/hybrid-notebook.module.css"
+      ],
+      "patternDependencies": [
+        "SSR-first capture handoff",
+        "flat newest-first stream",
+        "integrated private-note search",
+        "desktop selected-row split",
+        "serial mobile and tablet detail",
+        "exact approved Tasks extraction",
+        "version conflict recovery",
+        "device-local exact-writing recovery"
+      ],
+      "implementationStatus": "built-shipping-not-production-shipped",
+      "auditStatus": "live-capture-and-production-receipt-pending",
+      "openFindingIds": [
+        "notes-hybrid-live-capture-pending",
+        "notes-hybrid-production-receipt-pending"
+      ],
+      "fixtureCoverage": "complete",
+      "automatedTestCoverage": "complete",
       "screenshotCoverage": "partial",
-      "accessibilityCoverage": "partial"
+      "accessibilityCoverage": "partial",
+      "lastReviewedAt": "2026-07-18"
     },
     "notes.page.sign-in-by-sign-in": {
       "automatedTestCoverage": "partial",
@@ -88,18 +164,63 @@
       "id": "notes.surface.notebook",
       "product": "notes",
       "surfaceType": "embedded-workspace",
-      "trigger": "Open the signed-in notebook",
-      "source": "notes/src/app/app/Notebook.tsx",
+      "trigger": "Open /app while the server-only NOTES_HYBRID_NOTEBOOK_ENABLED=1 release gate is active",
+      "source": "notes/src/app/app/hybrid/HybridNotebook.tsx",
       "parentJourney": "signed-in-work",
       "archetype": "editor-or-canvas",
-      "primaryJob": "Capture, find, shape, and promote notes without changing tools.",
-      "primaryAction": "Write a note.",
+      "primaryJob": "Capture and recover exact private writing, find it without organising it, edit it in place, and approve only an exact selected extract into Tasks.",
+      "primaryAction": "Capture a private note.",
       "roles": ["owner"],
+      "requiredStates": [
+        "default",
+        "first-use",
+        "empty",
+        "capture-saving",
+        "capture-offline",
+        "capture-error",
+        "search-results",
+        "search-empty",
+        "detail-open",
+        "detail-unsaved",
+        "detail-conflict",
+        "approved-action-review",
+        "approved-action-error",
+        "approved-action-receipt",
+        "recovered-edit",
+        "previously-sent",
+        "dense",
+        "long-content",
+        "read-only",
+        "reduced-motion",
+        "keyboard-only"
+      ],
+      "requiredBreakpoints": ["compactMobile", "mobile", "tablet", "desktop", "wide"],
+      "componentDependencies": [
+        "notes/src/app/app/hybrid/EarlyCaptureBootstrap.tsx",
+        "notes/src/app/app/hybrid/hybrid-notebook.module.css",
+        "notes/src/server/actions/notes.ts"
+      ],
+      "patternDependencies": [
+        "SSR-first capture handoff",
+        "flat newest-first stream",
+        "integrated search with contextual snippets",
+        "64-72 character detail measure",
+        "desktop split and serial narrow detail",
+        "explicit exact-text approval",
+        "durable idempotent Tasks receipt"
+      ],
       "reviewTier": "critical",
-      "fixtureCoverage": "partial",
-      "automatedTestCoverage": "partial",
+      "implementationStatus": "built-shipping-not-production-shipped",
+      "auditStatus": "live-capture-and-production-receipt-pending",
+      "openFindingIds": [
+        "notes-hybrid-live-capture-pending",
+        "notes-hybrid-production-receipt-pending"
+      ],
+      "fixtureCoverage": "complete",
+      "automatedTestCoverage": "complete",
       "screenshotCoverage": "partial",
-      "accessibilityCoverage": "partial"
+      "accessibilityCoverage": "partial",
+      "lastReviewedAt": "2026-07-18"
     },
     {
       "id": "notes.surface.first-capture",

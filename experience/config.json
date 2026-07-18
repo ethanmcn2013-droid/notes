@@ -6,6 +6,7 @@
     "baseUrl": "https://notes.signalstudio.ie"
   },
   "breakpoints": {
+    "compactMobile": { "width": 320, "height": 800 },
     "mobile": { "width": 390, "height": 844 },
     "tablet": { "width": 768, "height": 1024 },
     "desktop": { "width": 1280, "height": 900 },

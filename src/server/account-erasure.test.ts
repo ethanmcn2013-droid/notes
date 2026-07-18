@@ -3,7 +3,7 @@
  * App Store 5.1.1(v) guard.
  *
  * Runs the REAL `eraseAccountData` against a real in-memory libSQL DB
- * across all four user-keyed tables, with a second "bystander" user whose
+ * across all five user-keyed tables, with a second "bystander" user whose
  * rows must survive. The load-bearing assertion is that
  * `calendar_connections`, which holds a long-lived Google OAuth refresh
  * token, is fully cleared and the token is surfaced for revocation. A
@@ -37,6 +37,24 @@ async function freshDb() {
       workspace_id text,
       source text
     );
+    CREATE TABLE note_task_send_outbox (
+      operation_id text PRIMARY KEY NOT NULL,
+      note_id text NOT NULL,
+      user_id text NOT NULL,
+      source_selection text NOT NULL,
+      approved_body text NOT NULL,
+      approved_body_sha256 text NOT NULL,
+      workspace_id text NOT NULL,
+      base_updated_at integer NOT NULL,
+      reserved_updated_at integer NOT NULL,
+      status text NOT NULL DEFAULT 'pending',
+      task_id text,
+      created_at integer NOT NULL DEFAULT (unixepoch() * 1000),
+      updated_at integer NOT NULL DEFAULT (unixepoch() * 1000),
+      completed_at integer
+    );
+    CREATE UNIQUE INDEX note_task_send_outbox_user_note_uq
+      ON note_task_send_outbox (user_id, note_id);
     CREATE TABLE calendar_connections (
       user_id text NOT NULL,
       provider text NOT NULL,
@@ -76,6 +94,14 @@ async function seed(client: Client) {
       ('n-t1','u-target','target note'),
       ('n-t2','u-target','target note 2'),
       ('n-b1','u-bystander','bystander note');
+    INSERT INTO note_task_send_outbox (
+      operation_id, note_id, user_id, source_selection, approved_body,
+      approved_body_sha256, workspace_id, base_updated_at, reserved_updated_at
+    ) VALUES
+      ('o-target','n-t1','u-target','target','exact pending approved text',
+       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','w-target',1,2),
+      ('o-bystander','n-b1','u-bystander','bystander','bystander approved text',
+       'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','w-bystander',1,2);
     INSERT INTO calendar_connections (user_id, provider, calendar_id, refresh_token) VALUES
       ('u-target','google','primary','REFRESH-TARGET'),
       ('u-bystander','google','primary','REFRESH-BYSTANDER');
@@ -88,7 +114,7 @@ async function seed(client: Client) {
   `);
 }
 
-test("erasure clears all four user-keyed tables and returns the calendar token", async () => {
+test("erasure clears all five user-keyed tables and returns the calendar token", async () => {
   const { client, db } = await freshDb();
   try {
     await seed(client);
@@ -102,6 +128,7 @@ test("erasure clears all four user-keyed tables and returns the calendar token",
     // calendar tables the old erasure left behind.
     for (const where of [
       "notes WHERE user_id='u-target'",
+      "note_task_send_outbox WHERE user_id='u-target'",
       "calendar_connections WHERE user_id='u-target'",
       "spawned_calendar_events WHERE user_id='u-target'",
       "user_preferences WHERE user_id='u-target'",
@@ -111,6 +138,11 @@ test("erasure clears all four user-keyed tables and returns the calendar token",
 
     // Bystander fully intact.
     assert.equal(await count(client, "notes"), 1);
+    assert.equal(await count(client, "note_task_send_outbox"), 1);
+    assert.equal(
+      await count(client, "note_task_send_outbox WHERE approved_body='exact pending approved text'"),
+      0,
+    );
     assert.equal(await count(client, "calendar_connections"), 1);
     assert.equal(await count(client, "spawned_calendar_events"), 1);
     assert.equal(await count(client, "user_preferences"), 1);
