@@ -4,6 +4,8 @@
 
 Drafted in Plan 1 · Cycle 1.2 (Strategic Foundation). Companion to BRAND.md and the Signal product definition.
 
+**Hybrid amendment — 18 July 2026.** Ethan selected the exact Phase 1 advisory hybrid and authorised Phase 2 production implementation. This amendment is the implementation contract for that work. It does **not** record a production shipment: until the gated implementation is built, verified, and promoted, the legacy notebook remains the production surface. The historical `CHANGELOG.md` stays untouched until that shipment has a verified production receipt.
+
 ---
 
 ## 1 · Position
@@ -48,17 +50,19 @@ If any of these three drift, the product is no longer Signal Notes — it has be
 
 ## 4 · The artifact: the notebook
 
-The product surface is one screen. It is called the **notebook**.
+The product surface is one responsive screen. It is called the **notebook**.
 
-**Top:** the capture field. Always-visible, always-focused on open. Cursor lives here. Pressing Enter saves. There is no "save" button. There is no title field — the first line becomes the title. There is no folder picker. There is no tag picker. There is one keystroke (`⌘↵` or `⇧↵`) to commit; one keystroke (`Esc`) to discard.
+**Top:** a compact, SSR-first capture field rendered in the initial HTML and focused as soon as the browser permits. Cursor lives here. Pressing Enter saves. There is no required title, folder, tag, project, or metadata step. The capture field remains the fastest path from thought to private note.
 
-**Below:** the stream. Recent notes, newest first. Each note shows: title (first line), one-line preview (next line), captured-at (relative time), one indigo dot if the note has produced an approved action draft. Clicking opens the note in place; the stream below scrolls down.
+**Stream:** a flat, newest-first list with no date grouping. Each row shows the first line, a contextual excerpt, captured-at, and one indigo receipt indicator when the note has produced an approved Tasks extract. Search is integrated into the notebook command surface on every viewport; there is no search rail, folder tree, tag cloud, or graph view. Search results use longer contextual snippets so the match is understandable without opening every note.
 
-**Left rail (collapsible):** search. That's it. No folder tree. No tag cloud. No graph view. Search is fuzzy, full-text, and the only navigation primitive in v1.
+**Detail:** on desktop, selecting a stream row opens an adjacent stream/detail split while preserving recency context. The note body is editable and its reading column stays within a 64–72 character measure. On mobile, selection opens a serial full-screen detail surface rather than compressing two panes into one viewport.
 
-**Bottom-right corner:** a single icon — the draft-action button — visible only when a note is open. One click should let the user approve a selected action extract for Signal Tasks and add the indigo dot to the note. The note itself is unchanged and private. The extraction is a one-way edge, not a move.
+**Tasks extraction:** the user selects the exact wording in an open note, opens an editable approval preview, and explicitly chooses **Send to Tasks**. Only that approved wording crosses the boundary. The source note remains private, editable, and present in the stream. A successful handoff produces an idempotent receipt attached to the note.
 
-**No views.** No "card view", "outline view", "timeline view", "kanban view". One stream. Search to find. Recency to browse.
+**Superseded behavior:** `Cmd/Ctrl+Enter` may save where the keyboard model supports it, but it must never promote a whole note, its first line, or surrounding context to Tasks. Sending an extract must never archive, remove, or move the source note. Direct whole-note/first-line promotion and archive-on-send are no longer valid product behavior.
+
+**No views.** No "card view", "outline view", "timeline view", "kanban view". One stream. Integrated search to find. Flat recency to browse.
 
 **No required structure.** No fields. No metadata. The note is a body of free text. The user can use markdown if they want; they don't have to.
 
@@ -70,17 +74,20 @@ The product surface is one screen. It is called the **notebook**.
 
 | Step | Budget | Mechanism |
 |---|---|---|
-| Open | < 200ms | Static prerender of `/app`. Capture field is in initial HTML. No client-render dependency for first paint. |
+| Open | < 200ms | Compact SSR-first render of `/app`. Capture field is in initial HTML. No client-render dependency for first paint. |
 | Focus | 0ms | Capture field is autofocused on mount. No click required. |
-| Type | n/a | Plain `<textarea>`-equivalent (contentEditable in v1.x for markdown later). No editor framework. No plugins. |
+| Type | n/a | Plain `<textarea>`-equivalent for capture and an editable note body in detail. No heavyweight editor framework or plugin dependency. |
 | Save | < 100ms perceived | Optimistic local write, server sync in background. No spinner. The note is in the stream the moment Enter fires. |
+| Reopen | < 200ms perceived | Desktop opens the selected row in the adjacent detail pane; mobile opens full-screen detail. Both preserve a 64–72 character reading measure. |
 
 **Capture from outside the app** (deferred to v1.5, but designed for now):
 - Email-to-capture: `capture@notes.signalstudio.ie` writes the email body as a note.
 - iOS / Android share sheet (mobile, deferred to Plan 10).
 - Quick-capture URL pattern: `notes.signalstudio.ie/c?text=...` for clipboard and shortcut integrations.
 
-**No real-time sync.** Multiplayer is out of scope for v1. Notes are single-user. Conflict resolution is "last write wins" for the rare cross-device edit case.
+**Offline retention.** Losing connectivity must not lose, replace, or normalise the user's exact writing. Capture and edit operations retain their exact body, stable note identity, base version, and pending state locally, then retry when connectivity returns. Retries are safe and visible; a failed attempt never clears the writing surface.
+
+**No real-time sync.** Multiplayer is out of scope for v1. Notes are single-user. Every edit is version-checked against the server version. A stale write opens an explicit conflict state with three recoveries: **Keep local**, **Use remote**, or **Keep both**. There is no silent last-write-wins overwrite.
 
 ---
 
@@ -88,12 +95,12 @@ The product surface is one screen. It is called the **notebook**.
 
 **Notes reads:** nothing automatically. It is purely a capture surface.
 
-**Notes writes:** to its own database. Notes are stored as `{id, body, created_at, updated_at, extract_body?, promoted_task_id?}`. That is the whole schema in v1. `extract_body` holds the creator-authored action wording (Cycle 9.4b extraction-half, 2026-05-12). `promoted_task_id` is filled in by the cross-repo write to Tasks via `sendExtractToTasks` (Cycle 9.4b second half, 2026-05-12, also today). The cross-repo write hits `POST /api/notes-extract` on `tasks.signalstudio.ie` with the user's clerk userId + the noteId + the extract_body, authed via a shared `NOTES_TO_TASKS_SECRET` bearer. Only `extract_body` ever crosses the boundary. Raw note bodies stay private by design.
+**Notes writes:** to its own database. The Phase 2 contract stores each note with a stable id, exact body, timestamps, and a version used for compare-and-write conflict detection. Approved extraction state records the exact selected-and-approved `extract_body`, resulting Tasks id, and an idempotent receipt. The cross-repo write continues through `POST /api/notes-extract` on `tasks.signalstudio.ie`, authenticated by the existing server boundary. Only the editable approval's final exact wording ever crosses that boundary. Raw note bodies stay private by design.
 
 **Notes privacy boundary:** raw note bodies are private by default and are intentionally excluded from shared workspaces, timeline views, task views, signal summaries, and public collaboration surfaces. Notes can create work from a note only through explicit user approval.
 
 **Notes shares with the suite:**
-- *Notes → Tasks:* one-way extraction. User approves a selected action from the note, that action is sent to Tasks, and Notes stores the resulting task id. The full note body stays private.
+- *Notes → Tasks:* one-way extraction. The user selects exact wording, may edit it in approval, and explicitly sends that approved text to Tasks. Notes stores the idempotent receipt and resulting task id; retrying the same approved operation cannot create a duplicate. The full source note stays private, editable, and unarchived.
 - *Notes → Signal:* deferred to v2+. Signal may receive approved, non-sensitive extracts or aggregate signals, but raw note text does not enter briefings by default.
 - *Tasks → Notes:* never. A task does not become a note. A task can *reference* a note through an approved extraction edge, but the data flows one way.
 
@@ -157,9 +164,10 @@ A capture product is brand-coherent only if capture is genuinely fast. Below the
 - Search → first results: < 200ms for a corpus < 10k notes.
 
 **Locked visual budget:**
-- One screen. No nav header. No sidebar (search rail is collapsible and starts collapsed).
+- One responsive screen. No nav header and no standalone sidebar or search rail; search is integrated into the notebook command surface.
 - Capture field is the largest element by visual weight on first paint.
-- The stream is typography only. No card chrome, no shadows, no rounded panels per-item.
+- The stream is typography only. No card chrome, no shadows, no rounded panels per-item. Desktop detail uses a selected-row split; mobile detail is full-screen and serial.
+- Note and search-result reading text stays within a 64–72 character measure and uses contextual snippets rather than arbitrary line truncation.
 - The notebook wordmark gesture (per BRAND.md + suite design-system): `notes.` with the M·02 caret — a held cursor blink that indicates the capture surface is ready for input. It does not breathe, drift, or loop as ambient decoration.
 - Marketing hero contract: Notebook First. First paint shows a focused capture surface. Within about one second, the note is visible in the stream. Any extraction beat must be explicit approval into Tasks and must end as an indigo approved-action indicator. Reduced motion renders the final notebook state directly.
 
@@ -172,16 +180,23 @@ A capture product is brand-coherent only if capture is genuinely fast. Below the
 
 ## 10 · Implementation map
 
-Notes is now scaffolded as a Next.js 16 private preview with Clerk auth,
-Turso-backed persistence, and the locked notebook surface live at `/app`.
+Notes is scaffolded as a Next.js 16 application with Clerk auth,
+Turso-backed persistence, and the legacy notebook surface live at `/app`.
+The selected hybrid is now in Phase 2 implementation and is not yet recorded as
+shipped. It must remain server-gated and fail off to the retained legacy notebook
+until production verification is complete.
 
 | Concern | Where it gets built | Plan |
 |---|---|---|
 | Project scaffold | Next 16, Turso, Drizzle, Clerk | Shipped |
-| Capture field + stream | `src/app/app/Notebook.tsx` | Shipped |
+| Compact SSR-first capture + flat recency stream | `/app` server shell + `src/app/app/Notebook.tsx` | Phase 2 in progress; legacy surface remains live |
 | Private empty state | `src/app/app/PrivateNotesEmptyState.tsx` | Shipped |
-| Search | Turso FTS5 via debounced server action with client-side fallback during first round-trip | Shipped (N-2) |
-| Approved action extraction | Cross-repo POST to tasks.signalstudio.ie/api/notes-extract, bearer-authed, idempotent on (userId, noteId) | Shipped (Cycle 9.4b) |
+| Integrated search + contextual snippets | Turso FTS5 via debounced server action; no search rail | Phase 2 in progress |
+| Desktop selected-row split + mobile full-screen detail | `/app` notebook and detail components | Phase 2 in progress |
+| Editable body + version-checked conflict recovery | Notes persistence/actions with Keep local, Use remote, and Keep both paths | Phase 2 in progress |
+| Offline exact-writing retention + retry | Notebook pending-operation state and retry path | Phase 2 in progress |
+| Approved action extraction | Exact selection → editable approval → explicit cross-repo POST to `tasks.signalstudio.ie/api/notes-extract`; source retained; idempotent receipt | Phase 2 contract in progress; legacy direct-promotion/archive behavior superseded |
+| Reversible release | Server-only `NOTES_HYBRID_NOTEBOOK_ENABLED=1` selects the hybrid component; absent/other values select the retained legacy component | Required before production promotion |
 | Email capture | Resend Inbound webhook → `/api/capture/email` → slug-routed user_preferences | Code shipped (N-1); operator-blocked on `NOTES_CAPTURE_INBOUND_SECRET` + DNS |
 | Marketing site | `src/app/page.tsx` | Shipped |
 
@@ -214,4 +229,4 @@ When this document is wrong, fix it here first. Then the code. Then the marketin
 
 ---
 
-*Locked 2026-05-09 in Plan 1 · Cycle 1.2 (Strategic Foundation). Companion documents: BRAND.md (voice and visual rules), Signal product definition (sibling product definition, locked in Cycle 1.1).*
+*Locked 2026-05-09 in Plan 1 · Cycle 1.2 (Strategic Foundation). Amended 2026-07-18 after Ethan's exact hybrid selection; Phase 2 implementation is in progress and no production shipment is claimed by this amendment. Companion documents: BRAND.md (voice and visual rules), Signal product definition (sibling product definition, locked in Cycle 1.1).*

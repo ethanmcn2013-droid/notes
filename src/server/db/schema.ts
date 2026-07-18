@@ -1,5 +1,12 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  check,
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 /**
  * Locked schema (PRODUCT.md §6), one row per note, plus the
@@ -25,7 +32,8 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
  *   non-null = note has been promoted and archived from the stream.
  * listNotes() filters WHERE archived_at IS NULL; listArchivedNotes()
  * returns the complement. unPromoteNote() clears both this and
- * promoted_task_id, restoring the note to the stream.
+ * promoted_task_id only for legacy receipts without a durable outbox row;
+ * completed Hybrid receipts remain bound until the note is explicitly deleted.
  */
 
 export const notes = sqliteTable(
@@ -84,6 +92,106 @@ export const notes = sqliteTable(
 
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+
+/**
+ * Durable, owner-scoped reservation for the deliberate Notes -> Tasks edge.
+ *
+ * The request fields are immutable while pending. A pending row means Tasks
+ * may already have accepted the request even when Notes did not receive the
+ * response, so edits and deletion of the source note are blocked until an
+ * exact retry reconciles the receipt. The approved wording is intentionally
+ * stored here: it is the only private text authorized to cross products.
+ *
+ * On completion, the duplicate source selection and approved wording are
+ * scrubbed from this table; the note holds the approved extract and this row
+ * retains only its SHA-256 + task receipt metadata. The note's approved
+ * extract, Task id, and workspace projection become one immutable receipt
+ * binding at that point, including while the product flag is rolled back to
+ * the legacy notebook. One row per (user, note) is enough because a note has
+ * one durable Tasks receipt. Account and note deletion explicitly remove both
+ * sides as a defense in depth even though the FK also cascades when enabled.
+ */
+export const noteTaskSendOutbox = sqliteTable(
+  "note_task_send_outbox",
+  {
+    operationId: text("operation_id").primaryKey(),
+    noteId: text("note_id")
+      .notNull()
+      .references(() => notes.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    sourceSelection: text("source_selection").notNull(),
+    approvedBody: text("approved_body").notNull(),
+    approvedBodySha256: text("approved_body_sha256").notNull(),
+    workspaceId: text("workspace_id").notNull(),
+    baseUpdatedAt: integer("base_updated_at", { mode: "number" }).notNull(),
+    reservedUpdatedAt: integer("reserved_updated_at", {
+      mode: "number",
+    }).notNull(),
+    status: text("status")
+      .$type<"pending" | "completed">()
+      .notNull()
+      .default("pending"),
+    taskId: text("task_id"),
+    leaseToken: text("lease_token"),
+    leaseExpiresAt: integer("lease_expires_at", { mode: "number" }),
+    attemptCount: integer("attempt_count", { mode: "number" })
+      .notNull()
+      .default(1),
+    createdAt: integer("created_at", { mode: "number" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updated_at", { mode: "number" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    completedAt: integer("completed_at", { mode: "number" }),
+  },
+  (table) => ({
+    userNoteUnique: uniqueIndex("note_task_send_outbox_user_note_uq").on(
+      table.userId,
+      table.noteId,
+    ),
+    userStatus: index("note_task_send_outbox_user_status_idx").on(
+      table.userId,
+      table.status,
+      table.updatedAt,
+    ),
+    noteLookup: index("note_task_send_outbox_note_idx").on(table.noteId),
+    approvedHashShape: check(
+      "note_task_send_outbox_approved_hash_ck",
+      sql`length(${table.approvedBodySha256}) = 64 AND ${table.approvedBodySha256} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    reservationVersion: check(
+      "note_task_send_outbox_version_ck",
+      sql`${table.reservedUpdatedAt} > ${table.baseUpdatedAt}`,
+    ),
+    lifecycle: check(
+      "note_task_send_outbox_lifecycle_ck",
+      sql`(
+          ${table.status} = 'pending'
+          AND ${table.taskId} IS NULL
+          AND ${table.completedAt} IS NULL
+          AND (
+            (${table.leaseToken} IS NULL AND ${table.leaseExpiresAt} IS NULL)
+            OR
+            (${table.leaseToken} IS NOT NULL AND ${table.leaseExpiresAt} IS NOT NULL)
+          )
+        ) OR (
+          ${table.status} = 'completed'
+          AND ${table.taskId} IS NOT NULL
+          AND ${table.completedAt} IS NOT NULL
+          AND ${table.leaseToken} IS NULL
+          AND ${table.leaseExpiresAt} IS NULL
+        )`,
+    ),
+    attemptCountPositive: check(
+      "note_task_send_outbox_attempt_count_ck",
+      sql`${table.attemptCount} >= 1`,
+    ),
+  }),
+);
+
+export type NoteTaskSendOutbox = typeof noteTaskSendOutbox.$inferSelect;
+export type NewNoteTaskSendOutbox = typeof noteTaskSendOutbox.$inferInsert;
 
 /**
  * N·24 (Pattern 4), calendar OAuth connection.

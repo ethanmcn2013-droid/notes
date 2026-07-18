@@ -1,24 +1,21 @@
 # Signal Notes redesign decision log
 
-Status: Phase 1 complete in a protected preview; selection open
+Status: Founder selected the exact hybrid; Phase 2 in progress
 Decision owner: Ethan
 Review date: 18 July 2026
-Production implementation: not started
+Production implementation: in progress behind a fail-off server gate; not yet shipped
 
-## Decision required
+## Founder selection - recorded 18 July 2026
 
-Choose one of:
+Ethan authorised Codex to proceed with the council's exact hybrid recommendation and push the verified implementation to production. The normalised selection record is:
 
-- A - Instant Notebook
-- B - Quiet Editorial Stream
-- C - Capture Field
-- Hybrid - with the exact components to combine
+> SELECT HYBRID — A's compact SSR-first capture, flat newest-first stream, integrated search, keyboard and recovery model; B's 64–72 character reading measure, contextual snippets, and editorial rhythm; C's selected-row desktop split, mobile full-screen detail, focused readiness caret, and private-to-approved boundary; plus the shared exact-selection, editable approval, idempotent receipt, source-note retention, and version-checked conflict model. Exclude B's masthead/date grouping and C's search rail.
 
-The branch deliberately retains all three directions. No recommendation is treated as a decision.
+This selection ends the Phase 1 decision gate and authorises Phase 2 implementation. The protected A/B/C evidence remains intact for provenance and comparison. It does not itself claim that the hybrid has shipped to production.
 
-## Advisory recommendation
+## Selected hybrid implementation contract
 
-The council recommends this exact hybrid:
+The founder selected this exact hybrid:
 
 1. Use A's compact SSR-first capture, flat newest-first stream, integrated search, keyboard model, and attached failure recovery as the product spine.
 2. Use B's 64-72 character detail measure, longer contextual search snippets, and editorial reading rhythm.
@@ -26,6 +23,9 @@ The council recommends this exact hybrid:
 4. Keep the shared exact-selection, editable approval, idempotent receipt, source-note retention, and conflict-recovery model.
 5. Exclude B's masthead and date grouping.
 6. Exclude C's search rail; search remains integrated like A on every viewport.
+7. Keep the note body editable in detail and retain exact offline writing plus safe retry.
+8. Replace silent last-write-wins with version-checked conflicts and explicit **Keep local**, **Use remote**, and **Keep both** recovery.
+9. Supersede direct whole-note/first-line `Cmd/Ctrl+Enter` promotion and archive-on-send. The only Tasks path is exact selected wording → editable approval → explicit send; the source note remains.
 
 Why: A is the safest coherent base, B is the strongest reading system, and C contributes the most distinctive high-value depth without requiring its full responsive/search complexity.
 
@@ -56,8 +56,8 @@ Why: A is the safest coherent base, B is the strongest reading system, and C con
 - Folders, tags, projects, databases, graphs, wiki/backlink systems, or a second-brain model.
 - Required titles, due dates, statuses, assignees, or workspace choice during capture.
 - Automatic todo detection or silent task creation.
-- Whole-note, first-line, or surrounding-context fallback in a Tasks payload.
-- Archiving/removing a note merely because an extract was sent.
+- Whole-note, first-line, or surrounding-context fallback in a Tasks payload, including direct `Cmd/Ctrl+Enter` promotion.
+- Archiving/removing a note merely because an extract was sent, including archive-on-send.
 - A card-grid stream, floating glass panels, ambient motion, gradient/neon theatre, or decorative state colours.
 - A shared DOM with three colour themes.
 - Replacing the production `/app` route before Ethan selects.
@@ -88,8 +88,15 @@ All exact queries follow:
 
     /__design-lab/notes?option={a|b|c}&scenario={capture|stream|search|detail}&dataset={sparse|normal|dense|edge}&mode={default|empty|loading|saving|saved|offline|error|conflict|read-only}&viewport={auto|390|768|1280|1440|1728}
 
-## Selection status
+## Phase 2 release and rollback status
 
-Awaiting Ethan. Phase 2 is hard-blocked until an explicit A, B, C, or specified hybrid selection is recorded.
+Phase 2 implementation is in progress. The release mechanism is locked before code promotion:
 
-After selection, the next decision-log entry must record the exact chosen components, rationale, reversible release mechanism, Phase 2 verification, production URL, rollback, HQ update, and changelog status.
+- `NOTES_HYBRID_NOTEBOOK_ENABLED=1` is a server-only flag that selects the new hybrid component.
+- Missing, empty, or any non-`1` value fails off to the retained legacy component.
+- The legacy component remains in the production build through rollout verification. The safe rollback is forward-only: disable the flag and redeploy the current compatibility code so pending and completed outbox receipts remain protected.
+- The pre-Hybrid deployment `dpl_4AHTSVtR65ozDzwfVn8xNnzLSQQa` is eligible only while a production query proves the total `note_task_send_outbox` row count is zero. Once any row exists, that older binary is not a safe rollback target.
+- Promotion requires production build/tests, authenticated journey checks, the production URL and deployment receipt, a rollback drill/receipt, and the HQ record update.
+- The historical `CHANGELOG.md` remains untouched while implementation is in progress. It will be updated only after verified production shipment.
+
+No production shipment is claimed in this entry. The production implementation, verification receipts, production URL, rollback result, HQ closeout, and changelog entry remain pending.

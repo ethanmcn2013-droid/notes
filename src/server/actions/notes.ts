@@ -2,13 +2,48 @@
 
 import { and, desc, eq, isNull, isNotNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { createTasksAssertion } from "@/server/cross-product-assertion";
+import {
+  createTasksAssertion,
+  createTasksExtractAssertionV2,
+} from "@/server/cross-product-assertion";
 
 import { requireUser } from "@/server/auth";
 import { db } from "@/server/db/client";
-import { notes, type Note } from "@/server/db/schema";
+import {
+  noteTaskSendOutbox,
+  notes,
+  type Note,
+  type NoteTaskSendOutbox,
+} from "@/server/db/schema";
 import { isDemoMode } from "@/lib/access-mode";
+import {
+  assertSelectionBelongsToNote,
+  createApprovedTasksPayload,
+  createAttemptedVersion,
+  createRemoteConflict,
+  createVersionConflict,
+  nextUpdatedAt,
+  normalizeOptionalWorkspaceId,
+  validateApprovedBody,
+  validateExpectedUpdatedAt,
+  validateNoteBody,
+  validateSourceSelection,
+  validateStableNoteId,
+} from "@/lib/notes-hybrid";
 import { authorizeTasksWorkspace } from "@/server/tasks-personalization";
+import {
+  approvedBodySha256,
+  canResumePendingTasksSend,
+  makeTasksSendOperationId,
+  makeTasksSendLeaseToken,
+  parseTrustedLegacyTasksSendReceipt,
+  parseTrustedTasksSendReceipt,
+  replayedTasksSendReceipt,
+  sameImmutableTasksSendRequest,
+  shouldReleaseTasksSendReservation,
+  TASKS_SEND_LEASE_MS,
+  type TrustedTasksSendReceipt,
+} from "@/server/notes-task-send-contract";
 import {
   demoArchivedNotes,
   demoNotes,
@@ -31,6 +66,66 @@ export type NoteRead = Pick<
   | "source"
   | "workspaceId"
 >;
+
+function noPendingTasksSend(userId: string, noteId: string) {
+  return sql`NOT EXISTS (
+    SELECT 1
+    FROM ${noteTaskSendOutbox}
+    WHERE ${noteTaskSendOutbox.userId} = ${userId}
+      AND ${noteTaskSendOutbox.noteId} = ${noteId}
+      AND ${noteTaskSendOutbox.status} = 'pending'
+  )`;
+}
+
+/**
+ * Legacy mutations that can rewrite the Tasks receipt projection must see no
+ * durable send row at all. Pending rows protect an in-flight request;
+ * completed rows permanently bind extractBody + promotedTaskId + workspaceId.
+ */
+function noTasksSendBinding(userId: string, noteId: string) {
+  return sql`NOT EXISTS (
+    SELECT 1
+    FROM ${noteTaskSendOutbox}
+    WHERE ${noteTaskSendOutbox.userId} = ${userId}
+      AND ${noteTaskSendOutbox.noteId} = ${noteId}
+  )`;
+}
+
+async function throwTasksSendBindingMutationError(
+  userId: string,
+  noteId: string,
+  fallback: string,
+): Promise<never> {
+  const [binding] = await db
+    .select({ status: noteTaskSendOutbox.status })
+    .from(noteTaskSendOutbox)
+    .where(
+      and(
+        eq(noteTaskSendOutbox.userId, userId),
+        eq(noteTaskSendOutbox.noteId, noteId),
+      ),
+    )
+    .limit(1);
+  if (binding?.status === "completed") {
+    throw new Error(
+      "This note already has a completed Tasks receipt. Its approved extract, workspace, and Task link cannot be changed.",
+    );
+  }
+  if (binding?.status === "pending") {
+    throw new Error(
+      "This note has an approved Tasks send still reconciling. Retry that send before changing its Tasks receipt.",
+    );
+  }
+  throw new Error(fallback);
+}
+
+function refuseLegacyTasksSendWhenHybridEnabled(): void {
+  if (process.env.NOTES_HYBRID_NOTEBOOK_ENABLED === "1") {
+    throw new Error(
+      "This Tasks send flow was replaced. Refresh Notes and approve an exact selection.",
+    );
+  }
+}
 
 /**
  * Server action: create a note for the signed-in user.
@@ -221,9 +316,38 @@ export async function searchNotes(query: string): Promise<NoteRead[]> {
 export async function deleteNote(id: string): Promise<void> {
   const userId = await requireUser();
 
-  await db
-    .delete(notes)
-    .where(and(eq(notes.id, id), eq(notes.userId, userId)));
+  await db.transaction(async (tx) => {
+    const pending = await tx
+      .select({ operationId: noteTaskSendOutbox.operationId })
+      .from(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.userId, userId),
+          eq(noteTaskSendOutbox.noteId, id),
+          eq(noteTaskSendOutbox.status, "pending"),
+        ),
+      )
+      .limit(1);
+    if (pending[0]) {
+      throw new Error(
+        "This note has an approved Tasks send still reconciling. Retry that send before deleting it.",
+      );
+    }
+
+    // A completed outbox contains creator-approved private text. Remove it in
+    // the same transaction as the note instead of relying on FK enforcement.
+    await tx
+      .delete(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.userId, userId),
+          eq(noteTaskSendOutbox.noteId, id),
+        ),
+      );
+    await tx
+      .delete(notes)
+      .where(and(eq(notes.id, id), eq(notes.userId, userId)));
+  });
 
   revalidatePath("/app", "page");
 }
@@ -254,7 +378,13 @@ export async function setNoteWorkspace(
   const result = await db
     .update(notes)
     .set({ workspaceId, updatedAt: now })
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.id, noteId),
+        eq(notes.userId, userId),
+        noTasksSendBinding(userId, noteId),
+      ),
+    )
     .returning({
       id: notes.id,
       body: notes.body,
@@ -268,7 +398,9 @@ export async function setNoteWorkspace(
     });
 
   const row = result[0];
-  if (!row) throw new Error("Note not found");
+  if (!row) {
+    await throwTasksSendBindingMutationError(userId, noteId, "Note not found");
+  }
   return row;
 }
 
@@ -299,7 +431,13 @@ export async function setNoteExtract(
   const result = await db
     .update(notes)
     .set({ extractBody: trimmed, updatedAt: now })
-    .where(and(eq(notes.id, id), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.id, id),
+        eq(notes.userId, userId),
+        noTasksSendBinding(userId, id),
+      ),
+    )
     .returning({
       id: notes.id,
       body: notes.body,
@@ -314,7 +452,7 @@ export async function setNoteExtract(
 
   const row = result[0];
   if (!row) {
-    throw new Error("Note not found");
+    await throwTasksSendBindingMutationError(userId, id, "Note not found");
   }
 
   return row;
@@ -333,7 +471,13 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
   const result = await db
     .update(notes)
     .set({ extractBody: null, updatedAt: now })
-    .where(and(eq(notes.id, id), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.id, id),
+        eq(notes.userId, userId),
+        noTasksSendBinding(userId, id),
+      ),
+    )
     .returning({
       id: notes.id,
       body: notes.body,
@@ -348,7 +492,7 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
 
   const row = result[0];
   if (!row) {
-    throw new Error("Note not found");
+    await throwTasksSendBindingMutationError(userId, id, "Note not found");
   }
 
   return row;
@@ -367,18 +511,13 @@ export async function clearNoteExtract(id: string): Promise<NoteRead> {
  * Idempotency: Tasks keys on (subject, noteId), a repeat call returns
  * the same task instead of creating a duplicate. Safe to retry.
  */
-export type ExtractSendResult = {
-  taskId: string;
-  workspaceName: string;
-  workspaceSlug: string;
-  taskUrl: string;
-  created: boolean;
-};
+export type ExtractSendResult = TrustedTasksSendReceipt;
 
 export async function sendExtractToTasks(
   noteId: string,
   workspaceId: string,
 ): Promise<{ note: NoteRead; result: ExtractSendResult }> {
+  refuseLegacyTasksSendWhenHybridEnabled();
   const userId = await requireUser();
   const tasksUrlRaw =
     process.env.TASKS_API_URL ??
@@ -414,11 +553,17 @@ export async function sendExtractToTasks(
       promotedTaskId: notes.promotedTaskId,
     })
     .from(notes)
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.id, noteId),
+        eq(notes.userId, userId),
+        noTasksSendBinding(userId, noteId),
+      ),
+    )
     .limit(1);
 
   if (!note) {
-    throw new Error("Note not found");
+    await throwTasksSendBindingMutationError(userId, noteId, "Note not found");
   }
   const extract = note.extractBody?.trim() ?? "";
   if (!extract) {
@@ -431,7 +576,12 @@ export async function sendExtractToTasks(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${createTasksAssertion(userId, noteId, workspaceId, secret)}`,
+        authorization: `Bearer ${createTasksAssertion(
+          userId,
+          noteId,
+          workspaceId,
+          secret,
+        )}`,
       },
       body: JSON.stringify({ noteId, body: extract, workspaceId }),
       cache: "no-store",
@@ -455,16 +605,7 @@ export async function sendExtractToTasks(
     throw new Error(detail);
   }
 
-  const raw = await response.json();
-  if (
-    typeof raw !== "object" ||
-    !raw ||
-    typeof (raw as Record<string, unknown>).taskId !== "string" ||
-    typeof (raw as Record<string, unknown>).taskUrl !== "string"
-  ) {
-    throw new Error("Tasks returned an invalid response, try again");
-  }
-  const result = raw as ExtractSendResult;
+  const result = parseTrustedLegacyTasksSendReceipt(await response.json());
 
   // Persist the task id and archive the note Notes-side (RW-3a D1
   // semantics). The note leaves the active stream; listArchivedNotes()
@@ -474,7 +615,13 @@ export async function sendExtractToTasks(
   const updated = await db
     .update(notes)
     .set({ promotedTaskId: result.taskId, archivedAt: now2, updatedAt: now2 })
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.id, noteId),
+        eq(notes.userId, userId),
+        noTasksSendBinding(userId, noteId),
+      ),
+    )
     .returning({
       id: notes.id,
       body: notes.body,
@@ -489,7 +636,11 @@ export async function sendExtractToTasks(
 
   const noteRow = updated[0];
   if (!noteRow) {
-    throw new Error("Note vanished between send and store");
+    await throwTasksSendBindingMutationError(
+      userId,
+      noteId,
+      "Note vanished between send and store",
+    );
   }
 
   // Revalidation is best-effort: a Turso hiccup here must not surface
@@ -524,6 +675,7 @@ export async function promoteNoteToTasks(
   noteId: string,
   workspaceId: string,
 ): Promise<{ note: NoteRead; result: ExtractSendResult }> {
+  refuseLegacyTasksSendWhenHybridEnabled();
   const userId = await requireUser();
 
   const tasksUrlRaw =
@@ -559,11 +711,17 @@ export async function promoteNoteToTasks(
       workspaceId: notes.workspaceId,
     })
     .from(notes)
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.id, noteId),
+        eq(notes.userId, userId),
+        noTasksSendBinding(userId, noteId),
+      ),
+    )
     .limit(1);
 
   if (!note) {
-    throw new Error("Note not found");
+    await throwTasksSendBindingMutationError(userId, noteId, "Note not found");
   }
   if (note.archivedAt !== null) {
     throw new Error("Note is already promoted");
@@ -590,7 +748,12 @@ export async function promoteNoteToTasks(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${createTasksAssertion(userId, noteId, workspaceId, secret)}`,
+        authorization: `Bearer ${createTasksAssertion(
+          userId,
+          noteId,
+          workspaceId,
+          secret,
+        )}`,
       },
       body: JSON.stringify({ noteId, body: taskTitle, workspaceId }),
       cache: "no-store",
@@ -614,16 +777,7 @@ export async function promoteNoteToTasks(
     throw new Error(detail);
   }
 
-  const raw = await response.json();
-  if (
-    typeof raw !== "object" ||
-    !raw ||
-    typeof (raw as Record<string, unknown>).taskId !== "string" ||
-    typeof (raw as Record<string, unknown>).taskUrl !== "string"
-  ) {
-    throw new Error("Tasks returned an invalid response, try again");
-  }
-  const result = raw as ExtractSendResult;
+  const result = parseTrustedLegacyTasksSendReceipt(await response.json());
 
   // Archive the note (D1 semantics) and persist the taskId + extractBody
   // in a single atomic write. All three fields are written together so a
@@ -637,7 +791,13 @@ export async function promoteNoteToTasks(
       archivedAt: archiveTs,
       updatedAt: archiveTs,
     })
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(
+      and(
+        eq(notes.id, noteId),
+        eq(notes.userId, userId),
+        noTasksSendBinding(userId, noteId),
+      ),
+    )
     .returning({
       id: notes.id,
       body: notes.body,
@@ -652,7 +812,11 @@ export async function promoteNoteToTasks(
 
   const noteRow = updated[0];
   if (!noteRow) {
-    throw new Error("Note vanished between promote and archive");
+    await throwTasksSendBindingMutationError(
+      userId,
+      noteId,
+      "Note vanished between promote and archive",
+    );
   }
 
   // Revalidation is best-effort: a Turso hiccup here must not surface
@@ -725,7 +889,8 @@ export async function unPromoteNote(noteId: string): Promise<NoteRead> {
       and(
         eq(notes.id, noteId),
         eq(notes.userId, userId),
-        isNotNull(notes.archivedAt)
+        isNotNull(notes.archivedAt),
+        noTasksSendBinding(userId, noteId),
       )
     )
     .returning({
@@ -742,9 +907,1006 @@ export async function unPromoteNote(noteId: string): Promise<NoteRead> {
 
   const row = result[0];
   if (!row) {
-    throw new Error("Note not found or not promoted");
+    await throwTasksSendBindingMutationError(
+      userId,
+      noteId,
+      "Note not found or not promoted",
+    );
   }
 
   revalidatePath("/app", "page");
   return row;
+}
+
+export type CreateNoteIdempotentInput = {
+  id: string;
+  body: string;
+  workspaceId: string | null;
+};
+
+export type UpdateNoteWithVersionInput = {
+  id: string;
+  body: string;
+  expectedUpdatedAt: number;
+};
+
+export type UpdateNoteWithVersionResult =
+  | { status: "saved"; note: NoteRead }
+  | {
+      status: "conflict";
+      attempted: { body: string; updatedAt: number };
+      remote: NoteRead;
+    };
+
+export type DeleteNoteWithVersionInput = {
+  id: string;
+  expectedUpdatedAt: number;
+};
+
+export type DeleteNoteWithVersionResult =
+  | { status: "deleted"; id: string }
+  | { status: "conflict"; remote: NoteRead };
+
+export type SendApprovedExtractInput = {
+  noteId: string;
+  sourceSelection: string;
+  approvedBody: string;
+  workspaceId: string;
+  expectedUpdatedAt: number;
+};
+
+export type SendApprovedExtractResult =
+  | { status: "sent"; note: NoteRead; result: ExtractSendResult }
+  | { status: "conflict"; remote: NoteRead };
+
+export type PendingApprovedTasksSendRead = Pick<
+  NoteTaskSendOutbox,
+  | "operationId"
+  | "noteId"
+  | "sourceSelection"
+  | "approvedBody"
+  | "workspaceId"
+  | "baseUpdatedAt"
+  | "reservedUpdatedAt"
+  | "createdAt"
+>;
+
+export type ApprovedTasksSendRecoveryRead =
+  | { status: "pending"; send: PendingApprovedTasksSendRead }
+  | { status: "completed"; note: NoteRead; result: ExtractSendResult }
+  | { status: "none" };
+
+const hybridNoteSelection = {
+  id: notes.id,
+  body: notes.body,
+  createdAt: notes.createdAt,
+  updatedAt: notes.updatedAt,
+  extractBody: notes.extractBody,
+  promotedTaskId: notes.promotedTaskId,
+  archivedAt: notes.archivedAt,
+  source: notes.source,
+  workspaceId: notes.workspaceId,
+};
+
+const tasksSendOutboxSelection = {
+  operationId: noteTaskSendOutbox.operationId,
+  noteId: noteTaskSendOutbox.noteId,
+  userId: noteTaskSendOutbox.userId,
+  sourceSelection: noteTaskSendOutbox.sourceSelection,
+  approvedBody: noteTaskSendOutbox.approvedBody,
+  approvedBodySha256: noteTaskSendOutbox.approvedBodySha256,
+  workspaceId: noteTaskSendOutbox.workspaceId,
+  baseUpdatedAt: noteTaskSendOutbox.baseUpdatedAt,
+  reservedUpdatedAt: noteTaskSendOutbox.reservedUpdatedAt,
+  status: noteTaskSendOutbox.status,
+  taskId: noteTaskSendOutbox.taskId,
+  leaseToken: noteTaskSendOutbox.leaseToken,
+  leaseExpiresAt: noteTaskSendOutbox.leaseExpiresAt,
+  attemptCount: noteTaskSendOutbox.attemptCount,
+  createdAt: noteTaskSendOutbox.createdAt,
+  updatedAt: noteTaskSendOutbox.updatedAt,
+  completedAt: noteTaskSendOutbox.completedAt,
+};
+
+const pendingApprovedTaskSendSelection = {
+  operationId: noteTaskSendOutbox.operationId,
+  noteId: noteTaskSendOutbox.noteId,
+  sourceSelection: noteTaskSendOutbox.sourceSelection,
+  approvedBody: noteTaskSendOutbox.approvedBody,
+  workspaceId: noteTaskSendOutbox.workspaceId,
+  baseUpdatedAt: noteTaskSendOutbox.baseUpdatedAt,
+  reservedUpdatedAt: noteTaskSendOutbox.reservedUpdatedAt,
+  createdAt: noteTaskSendOutbox.createdAt,
+};
+
+function refuseDemoMutation(): void {
+  if (isDemoMode()) {
+    throw new Error("Review mode keeps changes on this device only");
+  }
+}
+
+async function readOwnedNote(
+  userId: string,
+  noteId: string,
+): Promise<NoteRead | null> {
+  const [row] = await db
+    .select(hybridNoteSelection)
+    .from(notes)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .limit(1);
+  return row ?? null;
+}
+
+async function requireAuthorizedTasksWorkspace(
+  userId: string,
+  workspaceId: string,
+): Promise<void> {
+  const access = await authorizeTasksWorkspace(userId, workspaceId);
+  if (access === "unavailable") {
+    throw new Error(
+      "Tasks workspaces are unavailable right now. Nothing was sent.",
+    );
+  }
+  if (access !== "allowed") {
+    throw new Error(
+      "That Tasks workspace is no longer available to your account.",
+    );
+  }
+}
+
+function tasksApiUrl(): string {
+  const raw =
+    process.env.TASKS_API_URL ??
+    (process.env.VERCEL_ENV === "production"
+      ? "https://tasks.signalstudio.ie"
+      : null);
+  if (!raw) {
+    throw new Error("Cross-repo send is not configured (TASKS_API_URL missing)");
+  }
+  return raw.replace(/\/+$/, "");
+}
+
+function tasksSecret(): string {
+  const value = process.env.NOTES_TO_TASKS_SECRET;
+  if (!value) {
+    throw new Error(
+      "Cross-repo send is not configured (NOTES_TO_TASKS_SECRET missing)",
+    );
+  }
+  return value;
+}
+
+async function releaseRejectedTasksSend(
+  userId: string,
+  reservation: NoteTaskSendOutbox,
+  leaseToken: string,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const leaseNow = Date.now();
+    const [pending] = await tx
+      .select(tasksSendOutboxSelection)
+      .from(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.operationId, reservation.operationId),
+          eq(noteTaskSendOutbox.userId, userId),
+          eq(noteTaskSendOutbox.noteId, reservation.noteId),
+          eq(noteTaskSendOutbox.status, "pending"),
+          eq(noteTaskSendOutbox.leaseToken, leaseToken),
+          sql`${noteTaskSendOutbox.leaseExpiresAt} > ${leaseNow}`,
+        ),
+      )
+      .limit(1);
+    if (!pending) return;
+
+    const released = await tx
+      .update(notes)
+      // The reservation changed no user content. Restore the content version
+      // the caller supplied so a corrected retry does not manufacture a body
+      // conflict. A client that observed the reservation version safely loses
+      // its CAS and receives this latest row.
+      .set({ updatedAt: pending.baseUpdatedAt })
+      .where(
+        and(
+          eq(notes.id, pending.noteId),
+          eq(notes.userId, userId),
+          eq(notes.updatedAt, pending.reservedUpdatedAt),
+          isNull(notes.archivedAt),
+          isNull(notes.promotedTaskId),
+        ),
+      )
+      .returning({ id: notes.id });
+    if (!released[0]) {
+      throw new Error("The rejected Tasks send could not release its source note");
+    }
+    const removed = await tx
+      .delete(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.operationId, pending.operationId),
+          eq(noteTaskSendOutbox.status, "pending"),
+          eq(noteTaskSendOutbox.leaseToken, leaseToken),
+        ),
+      )
+      .returning({ operationId: noteTaskSendOutbox.operationId });
+    if (!removed[0]) {
+      throw new Error("The rejected Tasks send reservation changed unexpectedly");
+    }
+  });
+}
+
+async function clearTasksSendLease(
+  userId: string,
+  operationId: string,
+  leaseToken: string,
+): Promise<void> {
+  await db
+    .update(noteTaskSendOutbox)
+    .set({
+      leaseToken: null,
+      leaseExpiresAt: null,
+      updatedAt: Date.now(),
+    })
+    .where(
+      and(
+        eq(noteTaskSendOutbox.operationId, operationId),
+        eq(noteTaskSendOutbox.userId, userId),
+        eq(noteTaskSendOutbox.status, "pending"),
+        eq(noteTaskSendOutbox.leaseToken, leaseToken),
+      ),
+    );
+}
+
+/**
+ * Hybrid capture seam. The client owns the stable id so an offline retry or a
+ * lost response reconciles to the same owned row instead of duplicating text.
+ * Accepted note bodies are stored byte-for-byte; trim is emptiness-only.
+ */
+export async function createNoteIdempotent(
+  input: CreateNoteIdempotentInput,
+): Promise<NoteRead> {
+  refuseDemoMutation();
+  const id = validateStableNoteId(input.id);
+  const body = validateNoteBody(input.body);
+  const requestedWorkspaceId = normalizeOptionalWorkspaceId(input.workspaceId);
+  const userId = await requireUser();
+  // Capture is the load-bearing private action. A stale membership or a
+  // temporarily unavailable sister product must never hold the writing
+  // hostage, so an unconfirmed destination falls back to Unfiled.
+  const workspaceId = requestedWorkspaceId &&
+    (await authorizeTasksWorkspace(userId, requestedWorkspaceId)) === "allowed"
+      ? requestedWorkspaceId
+      : null;
+
+  const now = Date.now();
+  const inserted = await db
+    .insert(notes)
+    .values({
+      id,
+      userId,
+      body,
+      createdAt: now,
+      updatedAt: now,
+      workspaceId,
+    })
+    .onConflictDoNothing()
+    .returning(hybridNoteSelection);
+
+  if (inserted[0]) return inserted[0];
+
+  // Reconcile only through the signed-in owner scope. A collision belonging
+  // to another account is deliberately indistinguishable from any other id
+  // collision and never discloses row contents.
+  const existing = await readOwnedNote(userId, id);
+  if (!existing) throw new Error("Capture id is already in use");
+  // The server may deliberately have fallen back to Unfiled on the first
+  // attempt. Exact body + exact stable identity is therefore sufficient to
+  // reconcile a lost response even if Tasks membership recovered meanwhile.
+  if (existing.body !== body) {
+    throw new Error("Capture id already belongs to different note content");
+  }
+  return existing;
+}
+
+/**
+ * Owner-scoped compare-and-swap save. Neither version is normalized: on a
+ * conflict the client receives its exact attempted body and the exact remote
+ * row so it can retain both until the creator resolves them.
+ */
+export async function updateNoteWithVersion(
+  input: UpdateNoteWithVersionInput,
+): Promise<UpdateNoteWithVersionResult> {
+  refuseDemoMutation();
+  const id = validateStableNoteId(input.id);
+  const attempted = createAttemptedVersion(input.body, input.expectedUpdatedAt);
+  const userId = await requireUser();
+  const updatedAt = nextUpdatedAt(Date.now(), attempted.updatedAt);
+
+  const updated = await db
+    .update(notes)
+    .set({ body: attempted.body, updatedAt })
+    .where(
+      and(
+        eq(notes.id, id),
+        eq(notes.userId, userId),
+        eq(notes.updatedAt, attempted.updatedAt),
+        isNull(notes.archivedAt),
+        noPendingTasksSend(userId, id),
+      ),
+    )
+    .returning(hybridNoteSelection);
+
+  if (updated[0]) return { status: "saved", note: updated[0] };
+
+  const remote = await readOwnedNote(userId, id);
+  if (!remote) throw new Error("Note not found");
+  const [pending] = await db
+    .select({ operationId: noteTaskSendOutbox.operationId })
+    .from(noteTaskSendOutbox)
+    .where(
+      and(
+        eq(noteTaskSendOutbox.userId, userId),
+        eq(noteTaskSendOutbox.noteId, id),
+        eq(noteTaskSendOutbox.status, "pending"),
+      ),
+    )
+    .limit(1);
+  if (pending) {
+    return createVersionConflict(attempted.body, attempted.updatedAt, remote);
+  }
+  // A response may have been lost after an earlier identical CAS succeeded.
+  // Treat that retry as saved instead of manufacturing a conflict.
+  if (remote.body === attempted.body && remote.archivedAt === null) {
+    return { status: "saved", note: remote };
+  }
+  return createVersionConflict(attempted.body, attempted.updatedAt, remote);
+}
+
+/**
+ * Owner-scoped compare-and-swap delete for the hybrid notebook. A pending
+ * approved send deliberately makes the CAS fail: the latest remote row is
+ * returned intact so the UI never removes text while Tasks may be accepting
+ * it. Completed outbox text is deleted atomically with the source note.
+ */
+export async function deleteNoteWithVersion(
+  input: DeleteNoteWithVersionInput,
+): Promise<DeleteNoteWithVersionResult> {
+  refuseDemoMutation();
+  const id = validateStableNoteId(input.id);
+  const expectedUpdatedAt = validateExpectedUpdatedAt(input.expectedUpdatedAt);
+  const userId = await requireUser();
+
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select(hybridNoteSelection)
+      .from(notes)
+      .where(and(eq(notes.id, id), eq(notes.userId, userId)))
+      .limit(1);
+    if (!current) throw new Error("Note not found");
+
+    const [pending] = await tx
+      .select({ operationId: noteTaskSendOutbox.operationId })
+      .from(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.userId, userId),
+          eq(noteTaskSendOutbox.noteId, id),
+          eq(noteTaskSendOutbox.status, "pending"),
+        ),
+      )
+      .limit(1);
+    if (pending || current.updatedAt !== expectedUpdatedAt) {
+      return { status: "conflict" as const, remote: current };
+    }
+
+    const deleted = await tx
+      .delete(notes)
+      .where(
+        and(
+          eq(notes.id, id),
+          eq(notes.userId, userId),
+          eq(notes.updatedAt, expectedUpdatedAt),
+          noPendingTasksSend(userId, id),
+        ),
+      )
+      .returning({ id: notes.id });
+
+    if (deleted[0]) {
+      await tx
+        .delete(noteTaskSendOutbox)
+        .where(
+          and(
+            eq(noteTaskSendOutbox.userId, userId),
+            eq(noteTaskSendOutbox.noteId, id),
+          ),
+        );
+      return { status: "deleted" as const, id };
+    }
+
+    // A late writer won after our first read. Returning the latest row keeps
+    // the user's private text recoverable instead of flattening this to 404.
+    const [remote] = await tx
+      .select(hybridNoteSelection)
+      .from(notes)
+      .where(and(eq(notes.id, id), eq(notes.userId, userId)))
+      .limit(1);
+    if (!remote) throw new Error("Note not found");
+    return { status: "conflict" as const, remote };
+  });
+}
+
+/**
+ * Hybrid compatibility restore. Only archive visibility changes: the durable
+ * Tasks receipt, approved extract, and workspace projection stay attached.
+ */
+export async function restoreArchivedNoteForHybrid(
+  noteIdInput: string,
+): Promise<NoteRead> {
+  refuseDemoMutation();
+  const noteId = validateStableNoteId(noteIdInput);
+  const userId = await requireUser();
+  const now = Date.now();
+  const [row] = await db
+    .update(notes)
+    .set({
+      archivedAt: null,
+      updatedAt: sql`MAX(${notes.updatedAt} + 1, ${now})`,
+    })
+    .where(
+      and(
+        eq(notes.id, noteId),
+        eq(notes.userId, userId),
+        isNotNull(notes.archivedAt),
+        noPendingTasksSend(userId, noteId),
+      ),
+    )
+    .returning(hybridNoteSelection);
+  if (!row) throw new Error("Note not found or not archived");
+  return row;
+}
+
+/**
+ * Owner-only recovery projection. Pending exact wording is returned solely so
+ * a refreshed client can render and retry the immutable request; it is never
+ * joined into collaborative or analytics surfaces.
+ */
+export async function listPendingApprovedTaskSendsForHybrid(): Promise<
+  PendingApprovedTasksSendRead[]
+> {
+  if (isDemoMode()) return [];
+  const userId = await requireUser();
+  return db
+    .select(pendingApprovedTaskSendSelection)
+    .from(noteTaskSendOutbox)
+    .where(
+      and(
+        eq(noteTaskSendOutbox.userId, userId),
+        eq(noteTaskSendOutbox.status, "pending"),
+      ),
+    )
+    .orderBy(desc(noteTaskSendOutbox.createdAt));
+}
+
+/**
+ * Owner-only recovery after an in-session Server Action failure. A response
+ * can be lost after the receipt transaction commits, so callers must
+ * distinguish a still-pending immutable retry from an already-completed send.
+ */
+export async function getApprovedTaskSendRecoveryForHybrid(
+  noteIdInput: string,
+): Promise<ApprovedTasksSendRecoveryRead> {
+  if (isDemoMode()) return { status: "none" };
+  const noteId = validateStableNoteId(noteIdInput);
+  const userId = await requireUser();
+
+  return db.transaction(async (tx) => {
+    const [outbox] = await tx
+      .select(tasksSendOutboxSelection)
+      .from(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.userId, userId),
+          eq(noteTaskSendOutbox.noteId, noteId),
+        ),
+      )
+      .limit(1);
+    if (!outbox) return { status: "none" as const };
+
+    if (outbox.status === "pending") {
+      return {
+        status: "pending" as const,
+        send: {
+          operationId: outbox.operationId,
+          noteId: outbox.noteId,
+          sourceSelection: outbox.sourceSelection,
+          approvedBody: outbox.approvedBody,
+          workspaceId: outbox.workspaceId,
+          baseUpdatedAt: outbox.baseUpdatedAt,
+          reservedUpdatedAt: outbox.reservedUpdatedAt,
+          createdAt: outbox.createdAt,
+        },
+      };
+    }
+
+    const [note] = await tx
+      .select(hybridNoteSelection)
+      .from(notes)
+      .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+      .limit(1);
+    if (
+      !note ||
+      !outbox.taskId ||
+      note.promotedTaskId !== outbox.taskId ||
+      note.workspaceId !== outbox.workspaceId ||
+      !note.extractBody ||
+      approvedBodySha256(note.extractBody) !== outbox.approvedBodySha256
+    ) {
+      throw new Error("The durable Tasks receipt is inconsistent");
+    }
+
+    return {
+      status: "completed" as const,
+      note,
+      result: replayedTasksSendReceipt(outbox.taskId),
+    };
+  });
+}
+
+/**
+ * Deliberate Notes -> Tasks edge for the hybrid notebook. The selected source
+ * must still exist in the current note, the editable approved wording is
+ * preserved exactly, and only the three-field safe payload crosses products.
+ * Unlike the legacy promote action, the private note remains in the stream.
+ */
+export async function sendApprovedExtractToTasks(
+  input: SendApprovedExtractInput,
+): Promise<SendApprovedExtractResult> {
+  refuseDemoMutation();
+  const noteId = validateStableNoteId(input.noteId);
+  const sourceSelection = validateSourceSelection(input.sourceSelection);
+  const approvedBody = validateApprovedBody(input.approvedBody);
+  const workspaceId = createApprovedTasksPayload({
+    noteId,
+    approvedBody,
+    workspaceId: input.workspaceId,
+  }).workspaceId;
+  const expectedUpdatedAt = validateExpectedUpdatedAt(input.expectedUpdatedAt);
+  const userId = await requireUser();
+  const payload = createApprovedTasksPayload({
+    noteId,
+    approvedBody,
+    workspaceId,
+  });
+  const approvedSha256 = approvedBodySha256(approvedBody);
+  const immutableRequest = {
+    noteId,
+    userId,
+    sourceSelection,
+    approvedBody,
+    approvedBodySha256: approvedSha256,
+    workspaceId,
+  };
+
+  // Resolve configuration before reserving. A missing secret is definitive,
+  // so it must not leave the note locked behind a send that never started.
+  const base = tasksApiUrl();
+  const secret = tasksSecret();
+
+  // A previously authorized pending request can resume without a second
+  // catalogue dependency. New requests still prove current membership before
+  // the CAS reservation is written.
+  const [preexistingOutbox] = await db
+    .select(tasksSendOutboxSelection)
+    .from(noteTaskSendOutbox)
+    .where(
+      and(
+        eq(noteTaskSendOutbox.userId, userId),
+        eq(noteTaskSendOutbox.noteId, noteId),
+      ),
+    )
+    .limit(1);
+  if (!preexistingOutbox) {
+    await requireAuthorizedTasksWorkspace(userId, workspaceId);
+  }
+
+  type Reservation =
+    | { kind: "conflict"; remote: NoteRead }
+    | { kind: "receipt"; note: NoteRead; taskId: string }
+    | {
+        kind: "pending";
+        note: NoteRead;
+        outbox: NoteTaskSendOutbox;
+        resumed: boolean;
+        leaseToken: string;
+      };
+
+  const reservation: Reservation = await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select(hybridNoteSelection)
+      .from(notes)
+      .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+      .limit(1);
+    if (!current) throw new Error("Note not found");
+
+    const [existing] = await tx
+      .select(tasksSendOutboxSelection)
+      .from(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.userId, userId),
+          eq(noteTaskSendOutbox.noteId, noteId),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      if (existing.status === "completed") {
+        if (
+          !existing.taskId ||
+          existing.approvedBodySha256 !== approvedSha256 ||
+          existing.workspaceId !== workspaceId ||
+          current.promotedTaskId !== existing.taskId ||
+          current.extractBody !== approvedBody ||
+          current.workspaceId !== workspaceId
+        ) {
+          throw new Error("The durable Tasks receipt is inconsistent");
+        }
+        return {
+          kind: "receipt" as const,
+          note: current,
+          taskId: existing.taskId,
+        };
+      }
+      if (!sameImmutableTasksSendRequest(existing, immutableRequest)) {
+        throw new Error(
+          "A different approved Tasks send is still reconciling for this note",
+        );
+      }
+
+      // A lost response may leave the client holding either the base version
+      // or the reservation version. No other version may resume this request.
+      if (
+        !canResumePendingTasksSend(
+          existing,
+          immutableRequest,
+          expectedUpdatedAt,
+        )
+      ) {
+        return { kind: "conflict" as const, remote: current };
+      }
+      if (
+        current.updatedAt !== existing.reservedUpdatedAt ||
+        current.archivedAt !== null ||
+        current.promotedTaskId !== null
+      ) {
+        throw new Error("The pending Tasks send no longer matches its source note");
+      }
+      assertSelectionBelongsToNote(current.body, sourceSelection);
+
+      const leaseNow = Date.now();
+      if (
+        existing.leaseToken !== null &&
+        existing.leaseExpiresAt !== null &&
+        existing.leaseExpiresAt > leaseNow
+      ) {
+        throw new Error(
+          "This exact Tasks send is already being reconciled in another tab. Wait a moment, then retry.",
+        );
+      }
+      const leaseToken = makeTasksSendLeaseToken();
+      const [leased] = await tx
+        .update(noteTaskSendOutbox)
+        .set({
+          leaseToken,
+          leaseExpiresAt: leaseNow + TASKS_SEND_LEASE_MS,
+          attemptCount: sql`${noteTaskSendOutbox.attemptCount} + 1`,
+          updatedAt: leaseNow,
+        })
+        .where(
+          and(
+            eq(noteTaskSendOutbox.operationId, existing.operationId),
+            eq(noteTaskSendOutbox.userId, userId),
+            eq(noteTaskSendOutbox.noteId, noteId),
+            eq(noteTaskSendOutbox.status, "pending"),
+            sql`(
+              ${noteTaskSendOutbox.leaseToken} IS NULL
+              OR ${noteTaskSendOutbox.leaseExpiresAt} <= ${leaseNow}
+            )`,
+          ),
+        )
+        .returning(tasksSendOutboxSelection);
+      if (!leased) {
+        throw new Error(
+          "This exact Tasks send is already being reconciled in another tab. Wait a moment, then retry.",
+        );
+      }
+      return {
+        kind: "pending" as const,
+        note: current,
+        outbox: leased,
+        resumed: true,
+        leaseToken,
+      };
+    }
+
+    // Compatibility: a receipt written before the outbox migration remains
+    // locally replayable, but no new network call is permitted for it.
+    if (
+      current.promotedTaskId &&
+      current.extractBody === approvedBody &&
+      current.workspaceId === workspaceId &&
+      current.archivedAt === null
+    ) {
+      return {
+        kind: "receipt" as const,
+        note: current,
+        taskId: current.promotedTaskId,
+      };
+    }
+    if (current.updatedAt !== expectedUpdatedAt) {
+      return { kind: "conflict" as const, remote: current };
+    }
+    if (current.archivedAt !== null) {
+      throw new Error("This note is archived and cannot be sent");
+    }
+    if (current.promotedTaskId) {
+      throw new Error("This note was already sent with different approved wording");
+    }
+    assertSelectionBelongsToNote(current.body, sourceSelection);
+
+    const reservedUpdatedAt = nextUpdatedAt(Date.now(), expectedUpdatedAt);
+    const reserved = await tx
+      .update(notes)
+      .set({ updatedAt: reservedUpdatedAt })
+      .where(
+        and(
+          eq(notes.id, noteId),
+          eq(notes.userId, userId),
+          eq(notes.updatedAt, expectedUpdatedAt),
+          isNull(notes.archivedAt),
+          isNull(notes.promotedTaskId),
+        ),
+      )
+      .returning(hybridNoteSelection);
+    if (!reserved[0]) {
+      const [remote] = await tx
+        .select(hybridNoteSelection)
+        .from(notes)
+        .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+        .limit(1);
+      if (!remote) throw new Error("Note not found");
+      return { kind: "conflict" as const, remote };
+    }
+
+    const now = Date.now();
+    const leaseToken = makeTasksSendLeaseToken();
+    const inserted = await tx
+      .insert(noteTaskSendOutbox)
+      .values({
+        operationId: makeTasksSendOperationId(),
+        ...immutableRequest,
+        baseUpdatedAt: expectedUpdatedAt,
+        reservedUpdatedAt,
+        status: "pending",
+        leaseToken,
+        leaseExpiresAt: now + TASKS_SEND_LEASE_MS,
+        attemptCount: 1,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning(tasksSendOutboxSelection);
+    if (!inserted[0]) throw new Error("Could not reserve the Tasks send");
+    return {
+      kind: "pending" as const,
+      note: reserved[0],
+      outbox: inserted[0],
+      resumed: false,
+      leaseToken,
+    };
+  });
+
+  if (reservation.kind === "conflict") {
+    return createRemoteConflict(reservation.remote);
+  }
+  if (reservation.kind === "receipt") {
+    return {
+      status: "sent",
+      note: reservation.note,
+      result: replayedTasksSendReceipt(reservation.taskId),
+    };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${base}/api/notes-extract/v2`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${createTasksExtractAssertionV2(
+          userId,
+          noteId,
+          workspaceId,
+          approvedSha256,
+          secret,
+        )}`,
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (error) {
+    await clearTasksSendLease(
+      userId,
+      reservation.outbox.operationId,
+      reservation.leaseToken,
+    );
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error("Tasks timed out, try again in a moment");
+    }
+    throw error;
+  }
+
+  if (!response.ok) {
+    let detail = `Tasks returned ${response.status}`;
+    try {
+      const data = (await response.json()) as { error?: string };
+      if (data.error) detail = data.error;
+    } catch {
+      // Keep the status-code fallback for a non-JSON upstream response.
+    }
+    if (
+      shouldReleaseTasksSendReservation(response.status, reservation.resumed)
+    ) {
+      await releaseRejectedTasksSend(
+        userId,
+        reservation.outbox,
+        reservation.leaseToken,
+      );
+    } else {
+      await clearTasksSendLease(
+        userId,
+        reservation.outbox.operationId,
+        reservation.leaseToken,
+      );
+    }
+    // Timeouts, throttles, and server/proxy failures retain the durable
+    // pending row; only the exact owner-visible retry may resume them.
+    throw new Error(detail);
+  }
+  let result: TrustedTasksSendReceipt;
+  try {
+    result = parseTrustedTasksSendReceipt(
+      await response.json(),
+      approvedSha256,
+    );
+  } catch (error) {
+    await clearTasksSendLease(
+      userId,
+      reservation.outbox.operationId,
+      reservation.leaseToken,
+    );
+    throw error;
+  }
+
+  let finalized: { note: NoteRead; replayed: boolean };
+  try {
+    finalized = await db.transaction(async (tx) => {
+    const [outbox] = await tx
+      .select(tasksSendOutboxSelection)
+      .from(noteTaskSendOutbox)
+      .where(
+        and(
+          eq(noteTaskSendOutbox.operationId, reservation.outbox.operationId),
+          eq(noteTaskSendOutbox.userId, userId),
+          eq(noteTaskSendOutbox.noteId, noteId),
+        ),
+      )
+      .limit(1);
+    const [current] = await tx
+      .select(hybridNoteSelection)
+      .from(notes)
+      .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+      .limit(1);
+    if (!outbox || !current) {
+      throw new Error("The pending Tasks receipt could not be reconciled");
+    }
+    if (outbox.status === "completed") {
+      if (
+        outbox.taskId !== result.taskId ||
+        outbox.approvedBodySha256 !== approvedSha256 ||
+        outbox.workspaceId !== workspaceId ||
+        current.promotedTaskId !== result.taskId ||
+        current.extractBody !== approvedBody
+      ) {
+        throw new Error("Tasks returned a different task for this note");
+      }
+      return { note: current, replayed: true };
+    }
+    if (!sameImmutableTasksSendRequest(outbox, immutableRequest)) {
+      throw new Error("The pending Tasks request changed unexpectedly");
+    }
+    const completedAt = Date.now();
+    if (
+      outbox.leaseToken !== reservation.leaseToken ||
+      outbox.leaseExpiresAt === null ||
+      outbox.leaseExpiresAt <= completedAt
+    ) {
+      throw new Error(
+        "The Tasks send attempt lease changed before its receipt was stored",
+      );
+    }
+    if (
+      current.updatedAt !== outbox.reservedUpdatedAt ||
+      current.archivedAt !== null ||
+      current.promotedTaskId !== null
+    ) {
+      throw new Error("The source note changed while Tasks was accepting it");
+    }
+
+    const finalUpdatedAt = nextUpdatedAt(completedAt, outbox.reservedUpdatedAt);
+    const stored = await tx
+      .update(notes)
+      .set({
+        extractBody: approvedBody,
+        promotedTaskId: result.taskId,
+        workspaceId,
+        archivedAt: null,
+        updatedAt: finalUpdatedAt,
+      })
+      .where(
+        and(
+          eq(notes.id, noteId),
+          eq(notes.userId, userId),
+          eq(notes.updatedAt, outbox.reservedUpdatedAt),
+          isNull(notes.archivedAt),
+          isNull(notes.promotedTaskId),
+        ),
+      )
+      .returning(hybridNoteSelection);
+    if (!stored[0]) {
+      throw new Error("The source note changed while storing the Tasks receipt");
+    }
+
+    const completed = await tx
+      .update(noteTaskSendOutbox)
+      .set({
+        status: "completed",
+        taskId: result.taskId,
+        // The note now holds the creator-approved extract. Do not retain a
+        // second raw copy (or the private source selection) in the ledger.
+        sourceSelection: "",
+        approvedBody: "",
+        leaseToken: null,
+        leaseExpiresAt: null,
+        updatedAt: completedAt,
+        completedAt,
+      })
+      .where(
+        and(
+          eq(noteTaskSendOutbox.operationId, outbox.operationId),
+          eq(noteTaskSendOutbox.status, "pending"),
+          eq(noteTaskSendOutbox.leaseToken, reservation.leaseToken),
+          sql`${noteTaskSendOutbox.leaseExpiresAt} > ${completedAt}`,
+        ),
+      )
+      .returning({ operationId: noteTaskSendOutbox.operationId });
+    if (!completed[0]) {
+      throw new Error("The Tasks receipt was already being finalized");
+    }
+    return { note: stored[0], replayed: false };
+    });
+  } catch (error) {
+    await clearTasksSendLease(
+      userId,
+      reservation.outbox.operationId,
+      reservation.leaseToken,
+    );
+    throw error;
+  }
+
+  return {
+    status: "sent",
+    note: finalized.note,
+    result: finalized.replayed ? { ...result, created: false } : result,
+  };
 }

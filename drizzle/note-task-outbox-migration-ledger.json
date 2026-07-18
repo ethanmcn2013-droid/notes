@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "notes-migration-ledger/1",
+  "dialect": "sqlite",
+  "databaseLedgerTable": "notes_schema_migrations",
+  "entries": [
+    {
+      "id": "0007_note_task_send_outbox",
+      "file": "drizzle/0007_note_task_send_outbox.sql",
+      "sha256": "7ca4b8ad41ab1b04762b60659e8aa4aef553f42fe7b7d951e2ac67ef8131dbf9",
+      "schemaFingerprintSha256": "43634421861827463660df38784e8a526a945b0dd3e04811bbc9e81bf3c0f98a"
+    }
+  ]
+}

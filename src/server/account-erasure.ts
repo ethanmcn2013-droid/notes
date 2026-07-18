@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import {
   calendarConnections,
+  noteTaskSendOutbox,
   notes,
   spawnedCalendarEvents,
   userPreferences,
@@ -22,8 +23,8 @@ export type ErasureDb = LibSQLDatabase<typeof schema>;
  * attached so the caller can revoke them at Google.
  *
  * GDPR right-to-erasure / App Store 5.1.1(v). Notes keys every row by the
- * Clerk userId directly (no separate users table, no FKs). The four
- * user-keyed tables are `notes`, `calendar_connections`,
+ * Clerk userId directly (no separate users table). The five user-keyed tables
+ * are `notes`, `note_task_send_outbox`, `calendar_connections`,
  * `spawned_calendar_events`, and `user_preferences`.
  *
  * ── Why this changed ──────────────────────────────────────────────────
@@ -53,6 +54,11 @@ export async function eraseAccountData(
     .map((c) => c.refreshToken)
     .filter((t): t is string => Boolean(t));
 
+  // Pending rows contain exact creator-approved text. Delete explicitly before
+  // notes: production must not rely on SQLite FK enforcement being enabled.
+  await database
+    .delete(noteTaskSendOutbox)
+    .where(eq(noteTaskSendOutbox.userId, clerkId));
   await database.delete(notes).where(eq(notes.userId, clerkId));
   await database
     .delete(spawnedCalendarEvents)

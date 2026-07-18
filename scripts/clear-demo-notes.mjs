@@ -36,37 +36,51 @@ if (!userId) {
 
 const client = createClient({ url, authToken });
 
-// Count before
-const beforeResult = await client.execute({
-  sql: `SELECT COUNT(*) AS n FROM notes WHERE user_id = ?`,
-  args: [userId],
-});
+// Count both private stores before deletion. Pending approved wording lives in
+// the durable send outbox and must never survive deletion of its source note.
+const [beforeResult, beforeOutboxResult] = await client.batch([
+  { sql: `SELECT COUNT(*) AS n FROM notes WHERE user_id = ?`, args: [userId] },
+  {
+    sql: `SELECT COUNT(*) AS n FROM note_task_send_outbox WHERE user_id = ?`,
+    args: [userId],
+  },
+], "read");
 const before = Number(beforeResult.rows[0]?.n ?? 0);
+const beforeOutbox = Number(beforeOutboxResult.rows[0]?.n ?? 0);
 
 console.log(`Target user: ${userId}`);
 console.log(`Notes before: ${before}`);
+console.log(`Send reservations before: ${beforeOutbox}`);
 
-if (before === 0) {
+if (before === 0 && beforeOutbox === 0) {
   console.log("Nothing to delete.");
   process.exit(0);
 }
 
-await client.execute({
-  sql: `DELETE FROM notes WHERE user_id = ?`,
-  args: [userId],
-});
+await client.batch([
+  {
+    sql: `DELETE FROM note_task_send_outbox WHERE user_id = ?`,
+    args: [userId],
+  },
+  { sql: `DELETE FROM notes WHERE user_id = ?`, args: [userId] },
+], "write");
 
 // Count after to confirm
-const afterResult = await client.execute({
-  sql: `SELECT COUNT(*) AS n FROM notes WHERE user_id = ?`,
-  args: [userId],
-});
+const [afterResult, afterOutboxResult] = await client.batch([
+  { sql: `SELECT COUNT(*) AS n FROM notes WHERE user_id = ?`, args: [userId] },
+  {
+    sql: `SELECT COUNT(*) AS n FROM note_task_send_outbox WHERE user_id = ?`,
+    args: [userId],
+  },
+], "read");
 const after = Number(afterResult.rows[0]?.n ?? 0);
+const afterOutbox = Number(afterOutboxResult.rows[0]?.n ?? 0);
 
 console.log(`Notes after:  ${after}`);
+console.log(`Send reservations after: ${afterOutbox}`);
 console.log(`Deleted:      ${before - after}`);
 
-if (after !== 0) {
+if (after !== 0 || afterOutbox !== 0) {
   console.error("Warning: some notes may not have been deleted — check Turso permissions.");
   process.exit(1);
 }
