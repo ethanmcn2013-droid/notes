@@ -75,6 +75,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/calendar/cron",
   // Public so the browser can POST CSP violation reports without a session.
   "/api/csp-report",
+  // Phase 1 review surface. The page itself hard-404s in production and only
+  // opens in local development or an explicitly flagged protected preview.
+  "/__design-lab/(.*)",
 ]);
 
 const clerkConfigured = Boolean(
@@ -84,6 +87,15 @@ const clerkConfigured = Boolean(
 
 const productionProxy = clerkMiddleware(
   async (auth, req) => {
+    const { pathname, searchParams } = req.nextUrl;
+
+    // The design-lab page owns the production hard-404 gate. Let only this
+    // exact route reach that server decision even in the secret-free review
+    // project, where missing Clerk keys would otherwise mask it with a 503.
+    if (pathname === "/__design-lab/notes") {
+      return NextResponse.next();
+    }
+
     if (!clerkConfigured) {
       // Fail CLOSED in production. A prod deploy missing Clerk keys must
       // not silently serve /app unauthenticated, the proxy is the edge
@@ -96,8 +108,6 @@ const productionProxy = clerkMiddleware(
       }
       return;
     }
-
-    const { pathname, searchParams } = req.nextUrl;
 
   // ── Layer 2: M → /app redirect ──────────────────────────────────
   // Only fires on M routes. A/C/X routes are never touched.
