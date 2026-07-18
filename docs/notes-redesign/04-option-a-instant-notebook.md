@@ -179,10 +179,10 @@ Vercel Authentication is enabled. These exact routes passed authenticated 200, `
 
 | Review moment | Protected URL |
 | --- | --- |
-| Capture | [Open protected A capture](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=capture&dataset=normal&mode=default&viewport=1440) |
-| Stream | [Open protected A stream](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=stream&dataset=normal&mode=default&viewport=1440) |
-| Search | [Open protected A search](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=search&dataset=normal&mode=default&viewport=1440) |
-| Detail + extraction | [Open protected A detail](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=detail&dataset=normal&mode=default&viewport=1440) |
+| Capture | [Open protected A capture](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=capture&dataset=normal&mode=default&viewport=1440) |
+| Stream | [Open protected A stream](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=stream&dataset=normal&mode=default&viewport=1440) |
+| Search | [Open protected A search](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=search&dataset=normal&mode=default&viewport=1440) |
+| Detail + extraction | [Open protected A detail](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=detail&dataset=normal&mode=default&viewport=1440) |
 
 ## Stress routes
 

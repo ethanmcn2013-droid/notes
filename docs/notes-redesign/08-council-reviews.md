@@ -72,16 +72,18 @@ Final acceptance ran against a newly built preview-shaped production artifact.
 
 Final receipts:
 
-- 45/45 model/access tests passed.
+- 46/46 model/access tests passed, including the pre-auth ordinary-preview boundary case.
 - 17 lab files passed the capability scanner; 4/4 executable boundary tests passed.
 - TypeScript passed with incremental output disabled.
 - Optimized Next.js production build passed.
 - 37/37 Playwright tests passed in 85.4 seconds.
 - The browser matrix includes 27 A/B/C by mode automated WCAG scans.
 - 24 screenshots, three videos, three traces, and a five-run-per-option performance record were regenerated from the final candidate.
-- The preview-shaped route returns 200 and ordinary production markers hard-return 404 with no lab content.
-- The immutable candidate was deployed to the separate `signal-notes-design-lab` Vercel project with preview authentication and exactly three non-secret preview flags.
-- Anonymous access returned a 302 authentication challenge with no option or fixture content; all 12 authenticated A/B/C by scenario routes returned 200 with the correct direction marker and `noindex`.
+- Source `9769f28c96871abae23ee9c3e674db195a54c5f4` was deployed to the ordinary Notes Preview at `https://notes-2gyfkyu96-ethanmcn2013-1730s-projects.vercel.app` (`dpl_6541G26eVBYc9jFKbbovi36j1ao3`); it returned 404 with the literal body `Not Found`, private/no-store caching, `X-Robots-Tag: noindex, nofollow, noarchive`, and no lab or fixture content.
+- The same immutable source was deployed to the separate `signal-notes-design-lab` Vercel project at `https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app` (`dpl_6jaK1j5a82ZaxUQbtahy68MYubjK`) with preview authentication and exactly three non-secret preview flags.
+- Anonymous access to the protected replacement returned a 302 authentication challenge with a 15-byte body and no option or fixture content; all 12 authenticated A/B/C by scenario routes returned 200 with the correct direction marker and `noindex`.
+- Hosted Next.js and TypeScript builds passed, and no runtime error logs were present.
+- The previous protected preview was removed after replacement validation; the isolated project now contains exactly one READY Preview deployment.
 
 ## Specialist final positions
 

@@ -25,9 +25,9 @@ Current local origin:
 
 Protected preview origin:
 
-    https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app
+    https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app
 
-The protected preview uses the same path and query contract. Vercel Authentication is enabled for preview deployments; authenticated verification passed for all 12 A/B/C by scenario routes. Exact protected links are recorded in the three option briefs and `evidence/deployment-receipt.md`.
+The protected preview uses the same path and query contract. Vercel Authentication is enabled for preview deployments; its anonymous response is a 302 SSO challenge with a 15-byte body and no lab or fixture content. Authenticated verification passed for all 12 A/B/C by scenario routes with the correct option marker and `noindex`. The ordinary Notes preview from the same source commit hard-returns a literal `Not Found` body with 404, private/no-store caching, and `noindex, nofollow, noarchive`. Exact protected links and deployment receipts are recorded in the three option briefs and `evidence/deployment-receipt.md`.
 
 ## Scenario matrix
 
@@ -238,7 +238,7 @@ Do not announce:
 
 ## Known matrix limitation
 
-The state matrix is broader than a single screenshot pass. Saved and conflict are implemented and automated in the fixture lab. The protected preview, anonymous authentication challenge, authenticated 12-route matrix, secret-free project posture, Next.js build, and TypeScript build are verified. External screen-reader, non-Chromium, physical-device, field-performance, energy, and real-radio results remain evidence tasks. The scorecard retains the measured synthetic latency misses rather than treating this document as proof by itself.
+The state matrix is broader than a single screenshot pass. Saved and conflict are implemented and automated in the fixture lab. The protected preview, anonymous authentication challenge, authenticated 12-route matrix, secret-free project posture, hosted Next.js and TypeScript builds, and the same-source ordinary-preview hard 404 are verified. The replaced protected deployment was removed after validation; the isolated design-lab project now contains exactly one READY Preview deployment. External screen-reader, non-Chromium, physical-device, field-performance, energy, and real-radio results remain evidence tasks. The scorecard retains the measured synthetic latency misses rather than treating this document as proof by itself.
 
 ## Production non-change statement
 

@@ -67,18 +67,21 @@ Why: A is the safest coherent base, B is the strongest reading system, and C con
 - Source branch: `feat/notes-world-class-lab-20260716`
 - Lab route: `/__design-lab/notes`
 - Local evidence origin: `http://127.0.0.1:4329`
-- Protected preview origin: `https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app`
-- Source candidate commit: `b844108f34c6a8281f873ee5739df5d6ac35fbd9`
+- Protected preview origin: `https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app`
+- Source candidate commit: `9769f28c96871abae23ee9c3e674db195a54c5f4`
 - Source pull request: [notes#24](https://github.com/ethanmcn2013-droid/notes/pull/24)
-- Deployment: `dpl_D7PLHydCpJV1TtzfZ3EcGWJ9S4jd` in [Vercel Inspector](https://vercel.com/ethanmcn2013-1730s-projects/signal-notes-design-lab/D7PLHydCpJV1TtzfZ3EcGWJ9S4jd)
+- Deployment: `dpl_6jaK1j5a82ZaxUQbtahy68MYubjK` in [Vercel Inspector](https://vercel.com/ethanmcn2013-1730s-projects/signal-notes-design-lab/6jaK1j5a82ZaxUQbtahy68MYubjK)
 - Vercel project: `signal-notes-design-lab` (`prj_hg1BjcZCrm77Agk9D0ofDKcMVE8S`)
 - Preview protection: `ssoProtection.deploymentType=preview`
 - Hosted environment: exactly three plain Preview flags (`SIGNAL_NOTES_DESIGN_LAB=1`, `SIGNAL_ACCESS_MODE=review`, `NEXT_PUBLIC_SIGNAL_ACCESS_MODE=review`); no production secrets, integrations, or analytics
-- Anonymous access: 302 to `vercel.com/sso-api`; 15-byte body with no A/B/C or fixture strings
+- Anonymous access: 302 to `vercel.com/sso-api`; 15-byte body with no A/B/C, lab, or fixture strings
 - Authenticated access: all 12 A/B/C by Capture/Stream/Search/Detail routes returned 200 with the correct `data-option` and `noindex`
 - Hosted build: Vercel Next.js build and TypeScript passed
-- HQ feature record: [`notes-three-direction-review-lab`](https://github.com/ethanmcn2013-droid/studio/blob/55104951e6b5dfbba44b0f4ca08f9ce59908bd40/content/hq/features/notes-three-direction-review-lab.md)
-- HQ operator selection todo: [`choose-notes-design-lab-direction`](https://github.com/ethanmcn2013-droid/studio/blob/55104951e6b5dfbba44b0f4ca08f9ce59908bd40/content/hq/operator-todos/choose-notes-design-lab-direction.md)
+- Hosted runtime: no error logs
+- Ordinary Notes preview: `https://notes-2gyfkyu96-ethanmcn2013-1730s-projects.vercel.app` (`dpl_6541G26eVBYc9jFKbbovi36j1ao3`), built from the same source commit, returned 404 with literal body `Not Found`, `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`, `X-Robots-Tag: noindex, nofollow, noarchive`, and no lab or fixture content
+- Deployment lifecycle: previous protected preview removed after replacement validation; the isolated project now contains exactly one READY Preview deployment
+- HQ feature record: [`notes-three-direction-review-lab`](https://github.com/ethanmcn2013-droid/studio/blob/docs/notes-design-lab-phase1-20260718/content/hq/features/notes-three-direction-review-lab.md)
+- HQ operator selection todo: [`choose-notes-design-lab-direction`](https://github.com/ethanmcn2013-droid/studio/blob/docs/notes-design-lab-phase1-20260718/content/hq/operator-todos/choose-notes-design-lab-direction.md)
 - HQ review pull request: [studio#77](https://github.com/ethanmcn2013-droid/studio/pull/77)
 
 All exact queries follow:

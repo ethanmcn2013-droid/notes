@@ -11,14 +11,14 @@ Production Notes status: unchanged
 | Field | Receipt |
 | --- | --- |
 | Source branch | `feat/notes-world-class-lab-20260716` |
-| Candidate commit | `b844108f34c6a8281f873ee5739df5d6ac35fbd9` |
+| Candidate commit | `9769f28c96871abae23ee9c3e674db195a54c5f4` |
 | Source pull request | [notes#24](https://github.com/ethanmcn2013-droid/notes/pull/24) |
-| Preview origin | `https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app` |
-| Deployment id | `dpl_D7PLHydCpJV1TtzfZ3EcGWJ9S4jd` |
-| Inspector | [Open deployment inspector](https://vercel.com/ethanmcn2013-1730s-projects/signal-notes-design-lab/D7PLHydCpJV1TtzfZ3EcGWJ9S4jd) |
+| Preview origin | `https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app` |
+| Deployment id | `dpl_6jaK1j5a82ZaxUQbtahy68MYubjK` |
+| Inspector | [Open deployment inspector](https://vercel.com/ethanmcn2013-1730s-projects/signal-notes-design-lab/6jaK1j5a82ZaxUQbtahy68MYubjK) |
 | Vercel project | `signal-notes-design-lab` (`prj_hg1BjcZCrm77Agk9D0ofDKcMVE8S`) |
 
-The deployment was created from the immutable candidate commit in a separate Vercel project. It is a preview deployment, not a production Notes deployment.
+The deployment was created from the immutable candidate commit in a separate Vercel project. It is a preview deployment, not a production Notes deployment. The previous protected preview was removed after this replacement passed validation; the isolated project now contains exactly one READY Preview deployment.
 
 ## Protection and environment inventory
 
@@ -41,17 +41,32 @@ All 12 routes below returned 200 through authenticated Vercel access. Each respo
 
 | Direction | Capture | Stream | Search | Detail + extraction |
 | --- | --- | --- | --- | --- |
-| A | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=capture&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=stream&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=search&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=detail&dataset=normal&mode=default&viewport=1440) |
-| B | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=capture&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=stream&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=search&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=detail&dataset=normal&mode=default&viewport=1440) |
-| C | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=capture&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=stream&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=search&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-7os3l8464-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=detail&dataset=normal&mode=default&viewport=1440) |
+| A | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=capture&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=stream&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=search&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=a&scenario=detail&dataset=normal&mode=default&viewport=1440) |
+| B | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=capture&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=stream&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=search&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=b&scenario=detail&dataset=normal&mode=default&viewport=1440) |
+| C | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=capture&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=stream&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=search&dataset=normal&mode=default&viewport=1440) | [Open](https://signal-notes-design-ho4ai9mm4-ethanmcn2013-1730s-projects.vercel.app/__design-lab/notes?option=c&scenario=detail&dataset=normal&mode=default&viewport=1440) |
 
 ## Build receipt
 
 - Vercel's Next.js build passed.
 - TypeScript passed as part of the hosted build.
 - The authenticated pages retain `noindex`.
-- The lab's ordinary-production hard-404 behavior remains covered by the production-shaped local build and automated access tests. The hosted deployment intentionally runs with preview markers, so it is not evidence of a production deployment.
+- No runtime error logs were present for the protected deployment.
+
+## Ordinary Notes preview boundary receipt
+
+The same immutable candidate commit was also built as the ordinary Notes Preview, without the isolated project's review flags:
+
+| Field | Receipt |
+| --- | --- |
+| Preview origin | `https://notes-2gyfkyu96-ethanmcn2013-1730s-projects.vercel.app` |
+| Deployment id | `dpl_6541G26eVBYc9jFKbbovi36j1ao3` |
+| Source commit | `9769f28c96871abae23ee9c3e674db195a54c5f4` |
+| Route response | 404 with literal body `Not Found` |
+| Cache control | `private, no-cache, no-store, max-age=0, must-revalidate` |
+| Robots policy | `noindex, nofollow, noarchive` |
+
+The 404 response contained no lab markers, A/B/C option markers, or fixture content. This hosted same-source receipt verifies the ordinary-preview boundary independently of the protected review deployment.
 
 ## Boundary statement
 
-This receipt proves the access control, minimal environment inventory, and route behavior of this one immutable preview deployment. It does not authorize a Phase 2 production replacement, certify production Notes or Tasks persistence, or record a design selection.
+This receipt proves the access control, minimal environment inventory, deployment lifecycle, and route behavior of the current immutable protected preview, plus the same-source ordinary-preview hard boundary. It does not authorize a Phase 2 production replacement, certify production Notes or Tasks persistence, or record a design selection.

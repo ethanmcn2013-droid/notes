@@ -71,7 +71,7 @@ The final run is slower than an earlier rehearsal in save/search medians but mat
 
 | Receipt | Final result | Durable evidence |
 | --- | --- | --- |
-| Pure model and access tests | 45/45 passed | `src/app/__design-lab/notes/lab-model.test.ts`, `lab-access.test.ts` |
+| Pure model and access tests | 46/46 passed | `src/app/__design-lab/notes/lab-model.test.ts`, `lab-access.test.ts` |
 | Capability boundary | 17 source files clean; 4/4 executable tests passed | `scripts/design-lab/privacy-boundary.mjs` and `.test.mjs` |
 | Production browser matrix | 37/37 passed in 85.4 s | `tests/design-lab/notes-lab.spec.ts`, `notes-lab-geometry.spec.ts` |
 | Automated WCAG matrix | 27 option/mode axe scans with no violations | Browser test `all direction and mode combinations pass automated WCAG 2.2 AA checks` |
@@ -79,9 +79,10 @@ The final run is slower than an earlier rehearsal in save/search medians but mat
 | Screenshots | 24 final captures: A/B/C by four scenarios by mobile/desktop | `evidence/screenshot-manifest.json` and `evidence/screenshots/` |
 | Interaction records | Three videos and three source-bearing Playwright traces | `evidence/videos/` and `evidence/traces/` |
 | Production build | Next.js optimized build passed | Build receipt recorded in council review |
-| Ordinary production boundary | Same build returns hard 404 with no fixture/lab content under production markers | Access tests plus production-shaped route receipt |
-| Protected Vercel preview | Preview authentication enabled; anonymous request challenged; 12/12 authenticated scenario routes returned 200 with the correct option marker and `noindex` | `evidence/deployment-receipt.md` |
+| Ordinary production boundary | Ordinary Notes Preview `dpl_6541G26eVBYc9jFKbbovi36j1ao3`, built from source `9769f28c96871abae23ee9c3e674db195a54c5f4`, returned 404 with the literal body `Not Found`, `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`, `X-Robots-Tag: noindex, nofollow, noarchive`, and no lab or fixture content | `evidence/deployment-receipt.md` |
+| Protected Vercel preview | Deployment `dpl_6jaK1j5a82ZaxUQbtahy68MYubjK` from source `9769f28c96871abae23ee9c3e674db195a54c5f4`; preview authentication enabled; anonymous request returned a 302 SSO challenge with a 15-byte non-leaking body; 12/12 authenticated scenario routes returned 200 with the correct option marker and `noindex` | `evidence/deployment-receipt.md` |
 | Hosted environment isolation | Exactly three plain preview flags; no production secrets, integrations, or analytics | `evidence/deployment-receipt.md` |
+| Protected deployment lifecycle | Previous protected preview removed after replacement validation; isolated project contains exactly one READY Preview deployment | `evidence/deployment-receipt.md` |
 
 ## Automatic-failure audit
 
