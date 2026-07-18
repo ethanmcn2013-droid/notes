@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextFetchEvent, NextRequest } from "next/server";
+import { notesDesignLabBoundary } from "@/app/__design-lab/notes/lab-access";
 import { isDemoMode } from "@/lib/access-mode";
 
 /**
@@ -89,13 +90,6 @@ const productionProxy = clerkMiddleware(
   async (auth, req) => {
     const { pathname, searchParams } = req.nextUrl;
 
-    // The design-lab page owns the production hard-404 gate. Let only this
-    // exact route reach that server decision even in the secret-free review
-    // project, where missing Clerk keys would otherwise mask it with a 503.
-    if (pathname === "/__design-lab/notes") {
-      return NextResponse.next();
-    }
-
     if (!clerkConfigured) {
       // Fail CLOSED in production. A prod deploy missing Clerk keys must
       // not silently serve /app unauthenticated, the proxy is the edge
@@ -141,6 +135,23 @@ const productionProxy = clerkMiddleware(
 );
 
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  // Resolve the isolated lab before Clerk initializes. Ordinary previews and
+  // production must receive a clean 404 even when Clerk keys are absent;
+  // only the explicitly flagged review project may reach the lab page.
+  const labBoundary = notesDesignLabBoundary(req.nextUrl.pathname);
+  if (labBoundary === "allow") return NextResponse.next();
+  if (labBoundary === "deny") {
+    return new NextResponse("Not Found", {
+      status: 404,
+      headers: {
+        "Cache-Control": "private, no-store",
+        "Content-Type": "text/plain; charset=utf-8",
+        "Referrer-Policy": "no-referrer",
+        "X-Robots-Tag": "noindex, nofollow, noarchive",
+      },
+    });
+  }
+
   // Demo/review is a deliberately keyless, seed-only posture. Bypass Clerk at
   // the request boundary and keep every demo server path free of auth(). The
   // production branch below is unchanged and still fails closed.

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { isNotesDesignLabAvailable } from "./lab-access";
+import {
+  isNotesDesignLabAvailable,
+  notesDesignLabBoundary,
+} from "./lab-access";
 
 type TestEnv = {
   NODE_ENV: string | undefined;
@@ -25,6 +28,35 @@ function env(overrides: Partial<TestEnv> = {}): TestEnv {
 }
 
 describe("Signal Notes design-lab access boundary", () => {
+  it("denies the exact lab route before auth unless the review gate is complete", () => {
+    assert.equal(
+      notesDesignLabBoundary(
+        "/__design-lab/notes",
+        env({
+          NODE_ENV: "production",
+          VERCEL_ENV: "preview",
+          SIGNAL_ACCESS_MODE: "review",
+          NEXT_PUBLIC_SIGNAL_ACCESS_MODE: "review",
+        }),
+      ),
+      "deny",
+    );
+    assert.equal(
+      notesDesignLabBoundary(
+        "/__design-lab/notes",
+        env({
+          NODE_ENV: "production",
+          VERCEL_ENV: "preview",
+          SIGNAL_NOTES_DESIGN_LAB: "1",
+          SIGNAL_ACCESS_MODE: "review",
+          NEXT_PUBLIC_SIGNAL_ACCESS_MODE: "review",
+        }),
+      ),
+      "allow",
+    );
+    assert.equal(notesDesignLabBoundary("/app", env()), "not-lab");
+  });
+
   it("hard-disables every production deployment, even with every enabling flag", () => {
     for (const productionSource of [
       { VERCEL_ENV: "production" },

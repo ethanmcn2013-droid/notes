@@ -8,6 +8,8 @@ type LabAccessEnv = Partial<Record<
   string
 >>;
 
+export type NotesDesignLabBoundaryDecision = "allow" | "deny" | "not-lab";
+
 /**
  * The lab is intentionally impossible to expose from a production deployment.
  * Local development is frictionless; hosted access requires an explicitly
@@ -51,4 +53,17 @@ export function isNotesDesignLabAvailable(
     env.SIGNAL_NOTES_DESIGN_LAB === "1" &&
     accessMode === "review"
   );
+}
+
+/**
+ * Resolve the route boundary before authentication middleware initializes.
+ * This keeps every ordinary preview and production request on a deterministic
+ * 404 path even when Clerk is intentionally absent or misconfigured.
+ */
+export function notesDesignLabBoundary(
+  pathname: string,
+  env: LabAccessEnv = process.env,
+): NotesDesignLabBoundaryDecision {
+  if (pathname !== "/__design-lab/notes") return "not-lab";
+  return isNotesDesignLabAvailable(env) ? "allow" : "deny";
 }
