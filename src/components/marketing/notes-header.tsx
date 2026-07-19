@@ -71,8 +71,12 @@ export function NotesHeader({
           isSignedIn ? (
             <UserButtonWithSuite current="notes" />
           ) : (
-            <Link href="/sign-in" className="notes-signin">
-              Sign in
+            <Link
+              href="/waitlist?source=header&product=notes"
+              className="inline-flex min-h-8 items-center rounded-full px-3.5 text-[13px] font-medium text-white transition-transform hover:-translate-y-px"
+              style={{ background: "var(--ink)" }}
+            >
+              Join the waitlist
             </Link>
           )
         ) : undefined
