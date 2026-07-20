@@ -14,10 +14,12 @@ type NotesHeaderProps = {
 // carried no nav; it now matches the other three products.
 const UMBRELLA_PRICING = "https://signalstudio.ie/pricing";
 const UMBRELLA_DESIGN = "https://signalstudio.ie/design";
+const UMBRELLA_ABOUT = "https://signalstudio.ie/about";
 
 const NAV: SuiteNavItem[] = [
   { href: UMBRELLA_PRICING, label: "Pricing", external: true },
   { href: UMBRELLA_DESIGN, label: "Design", external: true },
+  { href: UMBRELLA_ABOUT, label: "About", external: true },
 ];
 
 /**
@@ -72,9 +74,9 @@ export function NotesHeader({
             <UserButtonWithSuite current="notes" />
           ) : (
             <Link
-              href="/waitlist?source=header&product=notes"
-              className="inline-flex min-h-8 items-center rounded-full px-3.5 text-[13px] font-medium text-white transition-transform hover:-translate-y-px"
-              style={{ background: "var(--ink)" }}
+              href="https://signalstudio.ie/waitlist?source=header&product=notes"
+              className="inline-flex min-h-8 items-center rounded-full px-3.5 text-[13px] font-medium"
+              style={{ color: "var(--ink-soft)", transition: "color 140ms ease" }}
             >
               Join the waitlist
             </Link>
