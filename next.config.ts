@@ -21,13 +21,17 @@ const turnstile = "https://challenges.cloudflare.com";
 // browser blocks the redirect on strict UAs.
 const googleOauth = "https://accounts.google.com";
 
+const googleTag = "https://www.googletagmanager.com";
+const googleAnalytics =
+  "https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com";
+
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com ${clerkHosts} ${turnstile} https://*.sentry.io`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com ${clerkHosts} ${turnstile} https://*.sentry.io ${googleTag}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob: https:`,
   `font-src 'self' data:`,
-  `connect-src 'self' https://va.vercel-scripts.com ${clerkHosts} https://*.ingest.sentry.io https://*.ingest.us.sentry.io`,
+  `connect-src 'self' https://va.vercel-scripts.com ${clerkHosts} https://*.ingest.sentry.io https://*.ingest.us.sentry.io ${googleTag} ${googleAnalytics}`,
   `frame-src 'self' ${turnstile}`,
   `worker-src 'self' blob:`,
   `frame-ancestors 'none'`,
