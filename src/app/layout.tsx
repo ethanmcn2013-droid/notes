@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleTag } from "@/components/analytics/google-tag";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DevBanner } from "@/components/dev-banner";
@@ -102,6 +103,8 @@ export default function RootLayout({
       style={{ background: "#fff", colorScheme: "light" }}
     >
       <head>
+        {/* Google tag (gtag.js) — production only, on every page. */}
+        <GoogleTag />
         <style dangerouslySetInnerHTML={{ __html: "html{background:#fff}" }} />
       </head>
       <body className="min-h-full" style={{ background: "#fff" }}>
