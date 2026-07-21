@@ -84,6 +84,7 @@ function readSuiteContext(): SuiteContextV2 {
 export function withSuiteContext(url: string, context: SuiteContextV2): string {
   if (!context.workspaceId && !context.planningPeriodId) return url;
   const next = new URL(url);
+  next.searchParams.set("sourceProduct", "notes");
   next.searchParams.set("contextVersion", "2");
   if (context.workspaceId) next.searchParams.set("workspaceId", context.workspaceId);
   if (context.planningPeriodId) {
