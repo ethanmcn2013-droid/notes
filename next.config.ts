@@ -69,6 +69,21 @@ const nextConfig: NextConfig = {
     // Roadmap/Tasks carry the same shape (Phase 6.2).
     optimizePackageImports: ["@clerk/nextjs", "motion"],
   },
+  // Stage C — traffic convergence into the unified app (tasks.signalstudio.ie).
+  // The authed Notes surface now lives at /app/notes in the unified app.
+  // /app/account is intentionally NOT redirected: it stays served here until
+  // the unified /app/settings offers per-module data export + delete
+  // (GDPR precondition — MIGRATION-P08-007). Marketing, /api/*, public and
+  // never-retire routes are untouched (all sources are under /app).
+  async redirects() {
+    return [
+      {
+        source: "/app",
+        destination: "https://tasks.signalstudio.ie/app/notes",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
