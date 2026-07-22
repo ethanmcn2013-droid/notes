@@ -69,12 +69,12 @@ const nextConfig: NextConfig = {
     // Roadmap/Tasks carry the same shape (Phase 6.2).
     optimizePackageImports: ["@clerk/nextjs", "motion"],
   },
-  // Stage C — traffic convergence into the unified app (tasks.signalstudio.ie).
-  // The authed Notes surface now lives at /app/notes in the unified app.
-  // /app/account is intentionally NOT redirected: it stays served here until
-  // the unified /app/settings offers per-module data export + delete
-  // (GDPR precondition — MIGRATION-P08-007). Marketing, /api/*, public and
-  // never-retire routes are untouched (all sources are under /app).
+  // Consolidation — this domain is being retired. The authed Notes surface
+  // moved to /app/notes in the unified app; marketing moved to the umbrella
+  // (signalstudio.ie). Redirecting here means visitors never load this app's
+  // heavy bundle. Query strings are preserved for attribution (Next forwards
+  // them by default). NOT redirected: /sign-in, /sign-up, /api/*, and
+  // /app/account (kept until the unified data export/delete ships — P08-007).
   async redirects() {
     return [
       {
@@ -82,6 +82,14 @@ const nextConfig: NextConfig = {
         destination: "https://tasks.signalstudio.ie/app/notes",
         permanent: true,
       },
+      // Marketing → umbrella (1:1 where it exists, else the umbrella home).
+      { source: "/", destination: "https://signalstudio.ie/", permanent: true },
+      { source: "/waitlist", destination: "https://signalstudio.ie/waitlist", permanent: true },
+      { source: "/anatomy", destination: "https://signalstudio.ie/", permanent: true },
+      { source: "/building-project", destination: "https://signalstudio.ie/", permanent: true },
+      { source: "/freelance-studio", destination: "https://signalstudio.ie/", permanent: true },
+      { source: "/teaching-week", destination: "https://signalstudio.ie/", permanent: true },
+      { source: "/wedding-planning", destination: "https://signalstudio.ie/", permanent: true },
     ];
   },
   async headers() {
