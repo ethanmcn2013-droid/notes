@@ -47,6 +47,13 @@ test("trusted receipt verifies the exact body hash and ignores upstream links", 
   assert.ok(!receipt.taskUrl.includes("attacker.example"));
 });
 
+test("trusted task links use the consolidated app route", () => {
+  assert.equal(
+    buildTrustedTaskUrl("t-ab12cd34"),
+    "https://app.signalstudio.ie/app/tasks?taskId=t-ab12cd34",
+  );
+});
+
 test("trusted receipt rejects a body mismatch and an unbounded task id", () => {
   const expected = approvedBodySha256("approved");
   assert.throws(

@@ -79,7 +79,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/app",
-        destination: "https://tasks.signalstudio.ie/app/notes",
+        destination: "https://app.signalstudio.ie/app/notes",
         permanent: true,
       },
       // Marketing → umbrella (1:1 where it exists, else the umbrella home).
