@@ -8,152 +8,32 @@
     "fixedTime": "2026-07-15T09:00:00.000Z",
     "settleMilliseconds": 350
   },
-  "hybridEvidencePlan": {
-    "releaseGate": "NOTES_HYBRID_NOTEBOOK_ENABLED=1",
-    "implementationStatus": "built-shipping-not-production-shipped",
-    "productionShipped": false,
-    "route": "/app",
-    "fixtureParameter": "fixture",
-    "modeParameter": "hybridMode",
-    "loadableFixtures": [
-      "first-use",
-      "first-capture",
-      "populated",
-      "empty",
-      "dense",
-      "loading",
-      "error",
-      "long-content",
-      "partial-failure",
-      "restricted",
-      "capture-email"
+  "consolidationScope": {
+    "status": "legacy-service-repository",
+    "productOwnerRepository": "ethanmcn2013-droid/tasks",
+    "canonicalAppRoute": "https://app.signalstudio.ie/app/notes",
+    "canonicalMarketingRoute": "https://signalstudio.ie/notes",
+    "retainedLocalRoutes": [
+      "/app/account",
+      "/api/*",
+      "/sign-in",
+      "/sign-up"
     ],
-    "loadableModes": [
-      "save-error",
-      "conflict",
-      "tasks-error",
-      "tasks-lost-reply",
-      "offline",
-      "read-only"
-    ],
-    "requiredViewportEvidence": ["compactMobile", "mobile", "tablet", "desktop"],
-    "supplementaryViewportEvidence": ["wide"],
-    "playwrightLocators": {
-      "root": "[data-hybrid-notebook=\"true\"]",
-      "capture": "getByRole('textbox', { name: 'Capture' })",
-      "search": "getByRole('searchbox', { name: 'Find' })",
-      "streamRows": "[data-note-row=\"true\"]",
-      "detail": "#hybrid-note-detail[data-open=\"true\"]",
-      "detailBody": "getByRole('textbox', { name: 'Private note body' })",
-      "approval": "getByRole('textbox', { name: 'Approved Tasks wording' })",
-      "conflict": "[data-state=\"conflict\"]",
-      "tasksReceipt": "#hybrid-note-detail a[href*='tasks']",
-      "mobileBack": "getByRole('button', { name: 'Back', exact: true })"
-    },
-    "scriptedStates": [
-      {
-        "state": "search-results",
-        "path": "/app?fixture=populated",
-        "setup": "Fill Find with final stem count.",
-        "expectedContent": "1 match",
-        "target": "[data-note-row=\"true\"]"
-      },
-      {
-        "state": "detail-open",
-        "path": "/app?fixture=populated",
-        "setup": "Open the Florist can do the arch row.",
-        "expectedContent": "Edit freely. To make an action",
-        "target": "#hybrid-note-detail[data-open=\"true\"]"
-      },
-      {
-        "state": "detail-conflict",
-        "path": "/app?fixture=populated&hybridMode=conflict",
-        "setup": "Open the florist note, append an exact local edit, then choose Save edit.",
-        "expectedContent": "This note changed somewhere else.",
-        "target": "[data-state=\"conflict\"]"
-      },
-      {
-        "state": "approved-action-review",
-        "path": "/app?fixture=populated",
-        "setup": "Open the florist note, select final stem count Monday, then choose Use selection.",
-        "expectedContent": "Will send: approved wording",
-        "target": "textarea[aria-label=\"Approved Tasks wording\"]"
-      },
-      {
-        "state": "approved-send-recovery",
-        "path": "/app?fixture=populated&hybridMode=tasks-lost-reply",
-        "setup": "Approve an exact extract, send once, then retain the locked retry state after the lost reply.",
-        "expectedContent": "Retry approved send",
-        "target": "#hybrid-note-detail"
-      },
-      {
-        "state": "approved-action-receipt",
-        "path": "/app?fixture=populated",
-        "setup": "Approve and send an exact extract in review mode.",
-        "expectedContent": "The source note remains private and editable here.",
-        "target": "#hybrid-note-detail a[href*='tasks']"
-      },
-      {
-        "state": "narrow-full-screen-detail",
-        "path": "/app?fixture=populated",
-        "setup": "At 320px, 390px, and 768px, open the florist note and verify the serial detail covers the viewport before returning with Back.",
-        "expectedContent": "Back",
-        "target": "#hybrid-note-detail[data-open=\"true\"]"
-      }
-    ]
+    "capturePolicy": "Capture only routes still rendered by this service. Retired marketing and Notes product routes are redirect contracts and are verified by the consolidated route contract instead of following production cross-origin destinations from CI."
   },
-  "breakpoints": ["compactMobile", "mobile", "tablet", "desktop", "wide"],
+  "breakpoints": [
+    "compactMobile",
+    "mobile",
+    "tablet",
+    "desktop",
+    "wide"
+  ],
   "captures": [
-    {
-      "experienceId": "notes.page.root",
-      "state": "default",
-      "path": "/",
-      "expectedContent": "Findable later, never filed."
-    },
-    {
-      "experienceId": "notes.page.anatomy",
-      "state": "default",
-      "path": "/anatomy",
-      "expectedContent": "Five honest slots."
-    },
     {
       "experienceId": "notes.page.app-account",
       "state": "default",
       "path": "/app/account",
       "expectedContent": "Your Signal account"
-    },
-    {
-      "experienceId": "notes.page.building-project",
-      "state": "default",
-      "path": "/building-project",
-      "expectedContent": "What a site note looks like."
-    },
-    {
-      "experienceId": "notes.page.freelance-studio",
-      "state": "default",
-      "path": "/freelance-studio",
-      "expectedContent": "What a freelancer"
-    },
-    {
-      "experienceId": "notes.page.teaching-week",
-      "state": "default",
-      "path": "/teaching-week",
-      "expectedContent": "What a teacher"
-    },
-    {
-      "experienceId": "notes.page.wedding-planning",
-      "state": "default",
-      "path": "/wedding-planning",
-      "expectedContent": "What a venue meeting note looks like."
-    },
-    {
-      "experienceId": "notes.state.root-error",
-      "state": "error",
-      "path": "/?fixture=error",
-      "expectedContent": "This didn",
-      "expectedStatus": [200, 500],
-      "expectedRuntimeErrors": true,
-      "keyboardMode": "none"
     },
     {
       "experienceId": "notes.state.root-not-found",
@@ -162,133 +42,6 @@
       "expectedContent": "This page faded.",
       "expectedStatus": 404,
       "expectedRuntimeErrors": true
-    },
-    {
-      "experienceId": "notes.page.sign-in-by-sign-in",
-      "state": "default",
-      "path": "/sign-in",
-      "expectedContent": "Open the review notebook."
-    },
-    {
-      "experienceId": "notes.page.sign-up-by-sign-up",
-      "state": "default",
-      "path": "/sign-up",
-      "expectedContent": "Open the review notebook."
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "first-use",
-      "path": "/app?fixture=first-use",
-      "expectedContent": "Your notebook starts with one private thought.",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "empty",
-      "path": "/app?fixture=empty",
-      "expectedContent": "Your notebook starts with one private thought.",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "populated",
-      "path": "/app?fixture=populated",
-      "expectedContent": "Saturday wedding, Maria + James.",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "dense",
-      "path": "/app?fixture=dense",
-      "expectedContent": "36 active",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "long-content",
-      "path": "/app?fixture=long-content",
-      "expectedContent": "Post-event debrief for Maria and James.",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "partial-failure",
-      "path": "/app?fixture=partial-failure",
-      "expectedContent": "Connected details are temporarily unavailable",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "restricted",
-      "path": "/app?fixture=restricted",
-      "expectedContent": "Available on the Workspace plan",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "offline",
-      "path": "/app?fixture=populated&hybridMode=offline",
-      "expectedContent": "Offline. New captures stay in this tab and retry on reconnect.",
-      "targetSelector": "[data-hybrid-notebook=\"true\"][data-review-mode=\"offline\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.page.app",
-      "state": "read-only",
-      "path": "/app?fixture=populated&hybridMode=read-only",
-      "expectedContent": "10 active",
-      "targetSelector": "[data-hybrid-notebook=\"true\"][data-review-mode=\"read-only\"] [data-notes-hybrid-capture=\"true\"][readonly]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.surface.capture-email",
-      "state": "default",
-      "path": "/app?fixture=capture-email",
-      "expectedContent": "review-notebook@capture.signalstudio.test",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.surface.notebook",
-      "state": "default",
-      "path": "/app?fixture=populated",
-      "expectedContent": "CAPTURE",
-      "targetSelector": "[data-hybrid-notebook=\"true\"]",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.surface.first-capture",
-      "state": "success",
-      "path": "/app?fixture=first-capture",
-      "expectedContent": "Your notebook starts here.",
-      "keyboardMode": "skip-main"
-    },
-    {
-      "experienceId": "notes.state.app-loading",
-      "state": "loading",
-      "path": "/app?fixture=loading",
-      "expectedContent": "notes",
-      "keyboardMode": "none"
-    },
-    {
-      "experienceId": "notes.state.app-error",
-      "state": "error",
-      "path": "/app?fixture=error",
-      "expectedContent": "The notebook didn",
-      "expectedStatus": [200, 500],
-      "expectedRuntimeErrors": true
-    },
-    {
-      "experienceId": "notes.page.waitlist",
-      "state": "restricted",
-      "path": "/waitlist",
-      "expectedContent": "Signal Studio is in private preview."
     }
   ]
 }

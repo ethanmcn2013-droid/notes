@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { TASKS_URL } from "@/lib/product-urls";
+import { APP_URL } from "@/lib/product-urls";
 
 export type TrustedTasksSendReceipt = {
   taskId: string;
@@ -93,7 +93,7 @@ export function validateTrustedTaskId(value: unknown): string {
 
 export function buildTrustedTaskUrl(taskId: string): string {
   const trustedId = validateTrustedTaskId(taskId);
-  return `${TASKS_URL.replace(/\/+$/, "")}/app/board?taskId=${encodeURIComponent(trustedId)}`;
+  return `${APP_URL.replace(/\/+$/, "")}/app/tasks?taskId=${encodeURIComponent(trustedId)}`;
 }
 
 function boundedLabel(value: unknown, fallback: string): string {
